@@ -46,31 +46,69 @@ const houseHotspots = [
 ] as const
 
 export default function HomeScene() {
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const musicRef = useRef<HTMLAudioElement | null>(null)
+  const doorRef = useRef<HTMLAudioElement | null>(null)
+  const playbackRef = useRef(0)
 
   useEffect(() => {
-    const audio = audioRef.current
+    const music = musicRef.current
+    const door = doorRef.current
 
     return () => {
-      audio?.pause()
+      music?.pause()
+      door?.pause()
     }
   }, [])
 
   async function playHouseTrack(house: keyof typeof houseTracks) {
-    const audio = audioRef.current
+    const music = musicRef.current
+    const door = doorRef.current
 
-    if (!audio) {
+    if (!music || !door) {
       return
     }
 
-    audio.pause()
-    audio.src = houseTracks[house]
-    audio.currentTime = 0
+    const playback = ++playbackRef.current
+
+    music.pause()
+    music.currentTime = 0
+    door.pause()
+    door.currentTime = 0
 
     try {
-      await audio.play()
+      await door.play()
+      await new Promise<void>((resolve) => {
+        door.addEventListener('ended', () => resolve(), { once: true })
+      })
+
+      if (playback !== playbackRef.current) {
+        return
+      }
+
+      music.src = houseTracks[house]
+      music.currentTime = 0
+      await music.play()
     } catch {
-      audio.pause()
+      music.pause()
+      door.pause()
+    }
+  }
+
+  function stopHouseTrack() {
+    const music = musicRef.current
+    const door = doorRef.current
+
+    playbackRef.current += 1
+
+    music?.pause()
+    door?.pause()
+
+    if (music) {
+      music.currentTime = 0
+    }
+
+    if (door) {
+      door.currentTime = 0
     }
   }
 
@@ -86,9 +124,17 @@ export default function HomeScene() {
         className="absolute inset-0 hidden bg-cover bg-center bg-no-repeat sm:block"
         style={{ backgroundImage: "url('/static/images/backgrounds/collage-hill-layout.png')" }}
       />
+      <button
+        type="button"
+        aria-label="Stop house music"
+        className="absolute inset-0 cursor-default bg-transparent outline-none focus-visible:outline-none"
+        onClick={stopHouseTrack}
+      />
       {/* Audio tracks are music-only interactions triggered by the house hotspots. */}
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-      <audio ref={audioRef} preload="auto" />
+      <audio ref={musicRef} preload="auto" />
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+      <audio ref={doorRef} src="/static/audio/open-door.mp3" preload="auto" />
 
       <button
         type="button"
@@ -98,16 +144,23 @@ export default function HomeScene() {
       />
 
       <svg
-        className="absolute inset-0 hidden h-full w-full sm:block"
+        className="pointer-events-none absolute inset-0 hidden h-full w-full sm:block"
         preserveAspectRatio="xMidYMid slice"
         viewBox="0 0 1672 941"
       >
         {houseHotspots.map(({ house, label, x, y, width, height }) => (
-          <foreignObject key={house} x={x} y={y} width={width} height={height}>
+          <foreignObject
+            key={house}
+            x={x}
+            y={y}
+            width={width}
+            height={height}
+            className="pointer-events-auto"
+          >
             <button
               type="button"
               aria-label={label}
-              className="h-full w-full cursor-pointer bg-transparent outline-none focus-visible:outline-none"
+              className="pointer-events-auto h-full w-full cursor-pointer bg-transparent outline-none focus-visible:outline-none"
               onClick={() => playHouseTrack(house)}
             />
           </foreignObject>
