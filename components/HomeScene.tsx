@@ -88,10 +88,7 @@ export default function HomeScene() {
       />
       {/* Audio tracks are music-only interactions triggered by the house hotspots. */}
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-      <audio
-        ref={audioRef}
-        preload="auto"
-      />
+      <audio ref={audioRef} preload="auto" />
 
       <button
         type="button"
@@ -124,7 +121,6 @@ export default function HomeScene() {
         height={985}
         className="pointer-events-none absolute top-[78%] left-1/2 h-auto w-[clamp(12rem,13.5vw,15rem)] -translate-x-1/2 -translate-y-1/2 select-none sm:hidden"
       />
-
     </div>
   )
 }
