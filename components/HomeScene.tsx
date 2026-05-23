@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { PointerEvent } from 'react'
 import Image from '@/components/Image'
 
 const houseTracks = {
@@ -45,10 +46,25 @@ const houseHotspots = [
   },
 ] as const
 
+const flowers = [
+  { id: 0, x: 140, y: 482, scale: 0.92 },
+  { id: 1, x: 182, y: 482, scale: 1.08 },
+  { id: 2, x: 234, y: 482, scale: 1 },
+  { id: 3, x: 276, y: 482, scale: 0.96 },
+] as const
+
+const restingFlowers = flowers.map(() => ({ x: 0, y: 0, dragging: false, sway: 0 }))
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value))
+}
+
 export default function HomeScene() {
   const musicRef = useRef<HTMLAudioElement | null>(null)
   const doorRef = useRef<HTMLAudioElement | null>(null)
   const playbackRef = useRef(0)
+  const dragRef = useRef<{ id: number; startX: number; startY: number } | null>(null)
+  const [flowerPoses, setFlowerPoses] = useState(restingFlowers)
 
   useEffect(() => {
     const music = musicRef.current
@@ -112,6 +128,47 @@ export default function HomeScene() {
     }
   }
 
+  function startFlowerDrag(id: number, event: PointerEvent<SVGGElement>) {
+    dragRef.current = { id, startX: event.clientX, startY: event.clientY }
+    event.currentTarget.setPointerCapture(event.pointerId)
+    setFlowerPoses((poses) =>
+      poses.map((pose, index) => (index === id ? { ...pose, dragging: true } : pose))
+    )
+  }
+
+  function moveFlower(event: PointerEvent<SVGGElement>) {
+    const drag = dragRef.current
+
+    if (!drag) {
+      return
+    }
+
+    const x = clamp((event.clientX - drag.startX) * 0.45, -28, 28)
+    const y = clamp((event.clientY - drag.startY) * 0.3, -18, 18)
+
+    setFlowerPoses((poses) =>
+      poses.map((pose, index) =>
+        index === drag.id ? { ...pose, x, y, sway: pose.sway + 1 } : pose
+      )
+    )
+  }
+
+  function endFlowerDrag(event: PointerEvent<SVGGElement>) {
+    const drag = dragRef.current
+
+    if (!drag) {
+      return
+    }
+
+    event.currentTarget.releasePointerCapture(event.pointerId)
+    dragRef.current = null
+    setFlowerPoses((poses) =>
+      poses.map((pose, index) =>
+        index === drag.id ? { x: 0, y: 0, dragging: false, sway: pose.sway + 1 } : pose
+      )
+    )
+  }
+
   return (
     <div className="relative min-h-svh w-full overflow-hidden">
       <div
@@ -135,6 +192,70 @@ export default function HomeScene() {
       <audio ref={musicRef} preload="auto" />
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <audio ref={doorRef} src="/static/audio/open-door.mp3" preload="auto" />
+
+      <svg
+        className="pointer-events-none absolute inset-0 hidden h-full w-full sm:block"
+        preserveAspectRatio="xMidYMid slice"
+        viewBox="0 0 1672 941"
+        aria-hidden="true"
+      >
+        <defs>
+          <filter id="flower-patch-soften" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur stdDeviation="1.2" />
+          </filter>
+        </defs>
+        <g filter="url(#flower-patch-soften)">
+          <path d="M108 388H310V464C248 466 180 470 108 474Z" fill="#a4d8f6" />
+          <path d="M108 468C164 467 234 462 310 455V506H108Z" fill="#4f861f" />
+        </g>
+        {flowers.map(({ id, x, y, scale }) => {
+          const pose = flowerPoses[id]
+          const wind = Math.sin(pose.sway * 0.75 + id) * 3
+          const rotate = clamp(pose.x * 0.55 + wind, -18, 18)
+
+          return (
+            <g
+              key={id}
+              className="pointer-events-auto cursor-grab touch-none active:cursor-grabbing"
+              style={{
+                transform: `translate(${x + pose.x}px, ${y + pose.y}px) scale(${scale}) rotate(${rotate}deg)`,
+                transformBox: 'fill-box',
+                transformOrigin: '50% 100%',
+                transition: pose.dragging
+                  ? 'transform 90ms ease-out'
+                  : 'transform 900ms cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+              onPointerDown={(event) => startFlowerDrag(id, event)}
+              onPointerMove={moveFlower}
+              onPointerUp={endFlowerDrag}
+              onPointerCancel={endFlowerDrag}
+            >
+              <rect x="-24" y="-88" width="48" height="96" fill="transparent" />
+              <g
+                fill="none"
+                stroke="#e22b2d"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="3"
+              >
+                <path d="M0 0C-3-22 2-43 0-66" />
+                <path d="M0-10C-15-28-20-43-20-55" />
+                <path d="M0-12C14-28 20-43 20-55" />
+                <path d="M-1-1C-14-13-22-22-25-34C-12-31-4-19-1-1Z" />
+                <path d="M2 0C15-14 23-25 26-38C12-34 5-20 2 0Z" />
+                <circle cx="0" cy="-68" r="7" />
+                <circle cx="-11" cy="-72" r="8" />
+                <circle cx="10" cy="-74" r="8" />
+                <circle cx="-7" cy="-84" r="8" />
+                <circle cx="7" cy="-84" r="8" />
+                <circle cx="0" cy="-77" r="4" />
+                <path d="M-3-55C-13-57-20-61-25-68" />
+                <path d="M5-52C14-54 21-60 26-67" />
+              </g>
+            </g>
+          )
+        })}
+      </svg>
 
       <button
         type="button"
