@@ -1,3 +1,5 @@
+'use client'
+
 import HomeScene from '@/components/HomeScene'
 
 export default function Page() {
