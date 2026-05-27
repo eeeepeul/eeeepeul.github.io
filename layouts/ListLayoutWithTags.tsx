@@ -82,20 +82,22 @@ export default function ListLayoutWithTags({
   return (
     <>
       <div>
-        <div className="pt-6 pb-6">
-          <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:hidden sm:text-4xl sm:leading-10 md:text-6xl md:leading-14 dark:text-gray-100">
+        <div className="pt-10 pb-8">
+          <h1 className="text-5xl leading-none font-semibold text-balance text-[#13182a] sm:hidden dark:text-gray-100">
             {title}
           </h1>
         </div>
-        <div className="flex sm:space-x-24">
-          <div className="hidden h-full max-h-screen max-w-[280px] min-w-[280px] flex-wrap overflow-auto rounded-sm bg-gray-50 pt-5 shadow-md sm:flex dark:bg-gray-900/70 dark:shadow-gray-800/40">
-            <div className="px-6 py-4">
+        <div className="flex sm:space-x-16">
+          <div className="hidden h-full max-h-screen max-w-[240px] min-w-[240px] flex-wrap overflow-auto border-t border-[#c8d0e4] pt-5 sm:flex dark:border-gray-800">
+            <div className="py-4 pr-6">
               {pathname.startsWith('/blog') ? (
-                <h3 className="text-primary-500 font-bold uppercase">All Posts</h3>
+                <h3 className="text-sm font-medium text-[#27334f] uppercase dark:text-gray-100">
+                  All Posts
+                </h3>
               ) : (
                 <Link
                   href={`/blog`}
-                  className="hover:text-primary-500 dark:hover:text-primary-500 font-bold text-gray-700 uppercase dark:text-gray-300"
+                  className="text-sm font-medium text-[#65718a] uppercase transition duration-300 hover:text-[#27334f] dark:text-gray-300 dark:hover:text-gray-100"
                 >
                   All Posts
                 </Link>
@@ -105,13 +107,13 @@ export default function ListLayoutWithTags({
                   return (
                     <li key={t} className="my-3">
                       {decodeURI(pathname.split('/tags/')[1]) === slug(t) ? (
-                        <h3 className="text-primary-500 inline px-3 py-2 text-sm font-bold uppercase">
+                        <h3 className="dark:text-primary-300 inline py-2 text-sm font-medium text-[#27334f] uppercase">
                           {`${t} (${tagCounts[t]})`}
                         </h3>
                       ) : (
                         <Link
                           href={`/tags/${slug(t)}`}
-                          className="hover:text-primary-500 dark:hover:text-primary-500 px-3 py-2 text-sm font-medium text-gray-500 uppercase dark:text-gray-300"
+                          className="py-2 text-sm font-medium text-[#7a87a1] uppercase transition duration-300 hover:text-[#27334f] dark:text-gray-300 dark:hover:text-gray-100"
                           aria-label={`View posts tagged ${t}`}
                         >
                           {`${t} (${tagCounts[t]})`}
@@ -124,32 +126,42 @@ export default function ListLayoutWithTags({
             </div>
           </div>
           <div>
-            <ul>
+            <ul className="divide-y divide-[#d9dfed] border-t border-[#c8d0e4] dark:divide-gray-800 dark:border-gray-800">
+              {!displayPosts.length && (
+                <li className="py-8 text-lg leading-8 text-[#65718a] dark:text-gray-400">
+                  The archive is empty.
+                </li>
+              )}
               {displayPosts.map((post) => {
                 const { path, date, title, summary, tags } = post
                 return (
-                  <li key={path} className="py-5">
-                    <article className="flex flex-col space-y-2 xl:space-y-0">
+                  <li key={path} className="py-8">
+                    <article className="grid gap-4 xl:grid-cols-[10rem_minmax(0,1fr)] xl:gap-10">
                       <dl>
                         <dt className="sr-only">Published on</dt>
-                        <dd className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400">
+                        <dd className="text-sm leading-6 font-medium text-[#72809d] dark:text-gray-400">
                           <time dateTime={date} suppressHydrationWarning>
                             {formatDate(date, siteMetadata.locale)}
                           </time>
                         </dd>
                       </dl>
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         <div>
-                          <h2 className="text-2xl leading-8 font-bold tracking-tight">
-                            <Link href={`/${path}`} className="text-gray-900 dark:text-gray-100">
+                          <h2 className="text-3xl leading-tight font-semibold">
+                            <Link
+                              href={`/${path}`}
+                              className="dark:hover:text-primary-300 text-[#13182a] transition duration-300 hover:text-[#526ba1] dark:text-gray-100"
+                            >
                               {title}
                             </Link>
                           </h2>
                           <div className="flex flex-wrap">
-                            {tags?.map((tag) => <Tag key={tag} text={tag} />)}
+                            {tags?.map((tag) => (
+                              <Tag key={tag} text={tag} />
+                            ))}
                           </div>
                         </div>
-                        <div className="prose max-w-none text-gray-500 dark:text-gray-400">
+                        <div className="prose max-w-none text-[#65718a] dark:text-gray-400">
                           {summary}
                         </div>
                       </div>
