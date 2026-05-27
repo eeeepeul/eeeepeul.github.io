@@ -251,7 +251,10 @@ export default function HomeScene() {
       />
       <div
         className="absolute inset-0 hidden bg-cover bg-center bg-no-repeat sm:block"
-        style={{ backgroundImage: "url('/static/images/backgrounds/collage-hill-layout.png?v=no-flowers-final')" }}
+        style={{
+          backgroundImage:
+            "url('/static/images/backgrounds/collage-hill-layout.png?v=no-flowers-final')",
+        }}
       />
       <button
         type="button"
