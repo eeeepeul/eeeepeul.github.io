@@ -1,0 +1,1036 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MIBALHWA HAUS : MOOEEMEE</title>
+    <style>
+      @font-face {
+        font-family: "D2Coding";
+        src: url("public/static/fonts/epeul/D2CodingBold.ttf") format("truetype");
+        font-weight: 700;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        overflow: hidden;
+        background: #fff;
+        color: #000;
+        cursor: none !important;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      html,
+      body,
+      *,
+      button,
+      button:hover,
+      button:disabled {
+        cursor: none !important;
+      }
+
+      .custom-cursor {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 9999;
+        width: 20px;
+        height: 20px;
+        background: #b70000;
+        pointer-events: none;
+      }
+
+      button {
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .stage {
+        position: relative;
+        width: 100vw;
+        height: 100svh;
+        min-height: 640px;
+        overflow: hidden;
+        background: #fff;
+      }
+
+      .nav,
+      .track-list,
+      .dots,
+      .caption {
+        position: absolute;
+        z-index: 5;
+      }
+
+      .nav {
+        top: 20px;
+        left: 20px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-family: "ITC Avant Garde Gothic Pro", "Avant Garde", Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: -0.42px;
+      }
+
+      .nav-item,
+      .track-index,
+      .track-meta span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 4px 3px;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: -0.42px;
+        line-height: 1.2;
+        white-space: nowrap;
+      }
+
+      .nav-item.active {
+        background: #b70000;
+        color: #fff;
+      }
+
+      .player {
+        position: relative;
+        display: none;
+        width: 111px;
+        height: 24px;
+        background: #d8e8ad;
+      }
+
+      .play-toggle {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 2;
+        width: 24px;
+        height: 24px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .pause {
+        position: absolute;
+        top: 8px;
+        left: 9px;
+        display: flex;
+        gap: 1.5px;
+      }
+
+      .pause span {
+        width: 3px;
+        height: 9px;
+        background: #000;
+      }
+
+      .play-icon {
+        position: absolute;
+        top: 7px;
+        left: 10px;
+        width: 0;
+        height: 0;
+        border-top: 5px solid transparent;
+        border-bottom: 5px solid transparent;
+        border-left: 8px solid #000;
+      }
+
+      .bar {
+        position: absolute;
+        top: 0;
+        left: 14px;
+        z-index: 1;
+        width: 98px;
+        height: 24px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        cursor: pointer;
+        padding: 0;
+        touch-action: none;
+      }
+
+      .bar::before {
+        position: absolute;
+        top: 11px;
+        left: 10px;
+        width: 78px;
+        height: 3px;
+        background: rgba(0, 0, 0, 0.2);
+        content: "";
+      }
+
+      .bar-fill {
+        position: absolute;
+        top: 11px;
+        left: 10px;
+        width: 50%;
+        height: 3px;
+        background: #000;
+      }
+
+      .knob {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 8px;
+        height: 8px;
+        background: #000;
+        transform: translate(-50%, -50%);
+      }
+
+      .track-list {
+        top: 62px;
+        left: 20px;
+        display: flex;
+        flex-direction: column;
+        font-family: "ITC Avant Garde Gothic Pro", "Avant Garde", Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: -0.42px;
+      }
+
+      .track-row {
+        display: flex;
+        align-items: center;
+        gap: 40px;
+        min-height: 24px;
+        width: max-content;
+        padding: 0;
+        color: rgba(0, 0, 0, 0.3);
+      }
+
+      .track-row:disabled {
+        cursor: default;
+        opacity: 1;
+      }
+
+      .track-row:hover {
+        color: #000;
+      }
+
+      .track-row:disabled:hover {
+        color: rgba(0, 0, 0, 0.3);
+      }
+
+      .track-index {
+        min-width: 16px;
+      }
+
+      .track-meta {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .music .track-row.selected {
+        background: #b70000;
+        color: #fff;
+      }
+
+      .music .track-row:not(.selected) .track-index {
+        color: #000;
+      }
+
+      .main-figure-frame {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        z-index: 1;
+        width: min(80vw, 900px);
+        height: 550px;
+        transform: translate(-50%, -50%);
+        overflow: hidden;
+        pointer-events: auto;
+      }
+
+      .main-figure-track {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 550px;
+      }
+
+      .main-figure {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 550px;
+        object-fit: contain;
+        opacity: 0;
+        transform: translateX(0);
+        transition: transform 720ms cubic-bezier(0.2, 1.04, 0.34, 1);
+        pointer-events: none;
+        user-select: none;
+        will-change: opacity, transform;
+      }
+
+      .main-figure.active {
+        z-index: 2;
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .main-figure.previous {
+        z-index: 1;
+        opacity: 0;
+      }
+
+      .main-figure.from-right {
+        animation: figure-from-right 720ms cubic-bezier(0.2, 1.04, 0.34, 1);
+      }
+
+      .main-figure.from-left {
+        animation: figure-from-left 720ms cubic-bezier(0.2, 1.04, 0.34, 1);
+      }
+
+      .main-figure.to-left {
+        transform: translateX(-18px);
+      }
+
+      .main-figure.to-right {
+        transform: translateX(18px);
+      }
+
+      @keyframes figure-from-right {
+        from {
+          transform: translateX(18px);
+        }
+        to {
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes figure-from-left {
+        from {
+          transform: translateX(-18px);
+        }
+        to {
+          transform: translateX(0);
+        }
+      }
+
+      .caption {
+        top: 20px;
+        left: 50%;
+        display: none;
+        width: max-content;
+        max-width: calc(100vw - 40px);
+        transform: translateX(-50%);
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        font-family: "D2Coding", "Apple SD Gothic Neo", "Malgun Gothic", monospace;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .home .caption,
+      .about .caption {
+        display: flex;
+      }
+
+      .caption p {
+        margin: 0;
+        position: relative;
+        white-space: nowrap;
+      }
+
+      .caption-box {
+        display: inline-block;
+        padding: 8px;
+        border: 0.5px solid #000;
+        background: #fff;
+      }
+
+      .caption-placeholder {
+        visibility: hidden;
+      }
+
+      .caption-reveal {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+
+      .caption-sizer {
+        display: flex;
+        visibility: hidden;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+
+      .caption-typed {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+
+      .about .caption {
+        gap: 14px;
+      }
+
+      .about .caption-sizer,
+      .about .caption-typed {
+        gap: 14px;
+      }
+
+      .caption-group {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+
+      .music .caption {
+        display: none;
+      }
+
+      .playing .player {
+        display: block;
+      }
+
+      .dots {
+        top: 50%;
+        right: 20px;
+        display: flex;
+        position: absolute;
+        width: 10px;
+        transform: translateY(-50%);
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .dots span {
+        width: 10px;
+        height: 10px;
+        background: rgba(0, 0, 0, 0.1);
+      }
+
+      .dots span.active {
+        opacity: 0;
+      }
+
+      .dot-indicator {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 10px;
+        height: 10px;
+        background: #000;
+        transition: transform 420ms cubic-bezier(0.16, 0.96, 0.24, 1);
+      }
+
+      .lower {
+        position: absolute;
+        top: 85.74%;
+        left: 0;
+        z-index: 2;
+        width: 100%;
+        height: 14.26%;
+        pointer-events: none;
+      }
+
+      .side-object {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        height: 100px;
+      }
+
+      .side-object img {
+        display: block;
+        width: auto;
+        height: 100%;
+        max-width: none;
+      }
+
+      @media (max-width: 900px) {
+        .caption {
+          top: 20px;
+          bottom: auto;
+          left: 50%;
+          transform: translateX(-50%);
+        }
+
+        .caption p {
+          white-space: normal;
+        }
+
+        .main-figure-frame,
+        .main-figure-track,
+        .main-figure {
+          top: 50%;
+          height: 550px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="custom-cursor" aria-hidden="true"></div>
+    <main class="stage">
+      <nav class="nav" aria-label="Primary">
+        <button class="nav-item" data-view="home" type="button">MH:M</button>
+        <button class="nav-item" data-view="about" type="button">About</button>
+        <button class="nav-item" data-view="music" type="button">無sic</button>
+        <div class="player" aria-label="Now playing">
+          <button class="play-toggle" type="button" aria-label="Pause">
+            <span class="pause"><span></span><span></span></span>
+          </button>
+          <button class="bar" type="button" aria-label="Playback position">
+            <span class="bar-fill"></span><span class="knob"></span>
+          </button>
+        </div>
+      </nav>
+
+      <div class="track-list" aria-label="Track list">
+        <button class="track-row" data-track="1" data-view="music" type="button">
+          <span class="track-index">1</span><span class="track-meta"><span>9+1</span><span>02:18</span></span>
+        </button>
+        <button class="track-row" data-track="2" data-view="music" type="button">
+          <span class="track-index">2</span><span class="track-meta"><span>if and only if</span><span>04:24</span></span>
+        </button>
+        <button class="track-row" data-track="3" data-view="music" type="button">
+          <span class="track-index">3</span><span class="track-meta"><span>saffron</span><span>03:15</span></span>
+        </button>
+        <button class="track-row" data-track="4" data-view="music" type="button">
+          <span class="track-index">4</span><span class="track-meta"><span>a&amp;d</span><span>03:17</span></span>
+        </button>
+      </div>
+
+      <div class="main-figure-frame">
+        <div class="main-figure-track">
+          <img class="main-figure active" src="public/static/images/epeul/example-image-01.png" alt="" draggable="false" />
+          <img class="main-figure" src="public/static/images/epeul/example-image-01.png" alt="" draggable="false" />
+          <img class="main-figure" src="public/static/images/epeul/example-image-01.png" alt="" draggable="false" />
+          <img class="main-figure" src="public/static/images/epeul/example-image-01.png" alt="" draggable="false" />
+          <img class="main-figure" src="public/static/images/epeul/example-image-01.png" alt="" draggable="false" />
+          <img class="main-figure" src="public/static/images/epeul/example-image-01.png" alt="" draggable="false" />
+          <img class="main-figure" src="public/static/images/epeul/example-image-01.png" alt="" draggable="false" />
+          <img class="main-figure" src="public/static/images/epeul/example-image-01.png" alt="" draggable="false" />
+          <img class="main-figure" src="public/static/images/epeul/example-image-01.png" alt="" draggable="false" />
+          <img class="main-figure" src="public/static/images/epeul/example-image-01.png" alt="" draggable="false" />
+        </div>
+      </div>
+
+      <div class="caption">
+        <p>MIBALHWA HAUS : MOOEEMEE</p>
+        <p>MH:M은 이플의 첫 앨범 〈mooeemee〉가 하나의 집처럼 열리는 웹 공간이다.</p>
+        <p>말이 되지 못한, 미발화된 감정들이 음악으로 머무는 곳.</p>
+      </div>
+
+      <div class="dots" aria-hidden="true">
+        <span class="active"></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+        <i class="dot-indicator"></i>
+      </div>
+
+      <div class="lower" aria-hidden="true">
+        <div class="side-object"><img src="public/static/images/epeul/door-section.png" alt="" /></div>
+      </div>
+    </main>
+    <audio id="epeul-audio" preload="none"></audio>
+    <script>
+      const body = document.body
+      const buttons = document.querySelectorAll('[data-view]')
+      const navButtons = document.querySelectorAll('.nav-item')
+      const trackButtons = document.querySelectorAll('.track-row')
+      const playToggle = document.querySelector('.play-toggle')
+      const progressBar = document.querySelector('.bar')
+      const progressFill = document.querySelector('.bar-fill')
+      const progressKnob = document.querySelector('.knob')
+      const audio = document.querySelector('#epeul-audio')
+      const customCursor = document.querySelector('.custom-cursor')
+      const figureFrame = document.querySelector('.main-figure-frame')
+      const figureImages = document.querySelectorAll('.main-figure')
+      const dots = document.querySelectorAll('.dots span')
+      const dotIndicator = document.querySelector('.dot-indicator')
+      const labels = ['MH:M', 'About', '無sic']
+      const views = ['home', 'about', 'music']
+      const figureSlides = 10
+      const captions = {
+        home: [
+          'MIBALHWA HAUS : MOOEEMEE',
+          'MH:M은 이플의 첫 앨범 〈mooeemee〉가 하나의 집처럼 열리는 웹 공간이다.',
+          '말이 되지 못한, 미발화된 감정들이 음악으로 머무는 곳.',
+        ],
+        about: [
+          [
+            'EPEUL은 가사 없는 딥하우스 음악을 만드는 VJ 아티스트이다.',
+            '선명한 언어 대신 반복되는 리듬과 겹겹의 사운드로\\n쉽게 설명되지 않는 감정들을 음악에 담아낸다.',
+            'EPEUL은 찬란하게 피어나는 순간보다,\\n그 아래에서 오래 버티고 남아 있는 것들에 더 가까이 선다.',
+          ],
+          [
+            '이플의 첫 앨범 〈mooeemee〉는\\n‘無의미’를 ‘무의 美’로 다시 읽는 이름이다.',
+            '의미 없다고 생각했던 것,\\n혹은 드러나지 않은 것 안에서 발견하는 아름다움을 담고 있다.',
+          ],
+          ['instagram @eeeepeul\\nEPEUL@ 仮想アーティスト  MH :M©\\nSEOUL, KR\\n03:15'],
+        ],
+      }
+      const audioSources = {
+        1: 'public/static/audio/epeul/track01.mp3',
+        2: 'public/static/audio/epeul/track02.mp3',
+        3: 'public/static/audio/epeul/track03.mp3',
+        4: 'public/static/audio/epeul/track04.mp3',
+      }
+      const trackOrder = ['1', '2', '3', '4']
+      let selectedTrack = null
+      let currentView = null
+      let isPlaying = false
+      let progress = 0
+      let pendingSeekProgress = null
+      let isProgressDragging = false
+      let typingTimer = null
+      let figureIndex = 0
+      let previousFigureIndex = null
+      let figureDirection = 1
+      let lastFigureWheel = 0
+      let figureDragStartX = null
+      const progressTrackWidth = 78
+      const progressKnobSize = 8
+      const progressHitSlop = 10
+      const progressTravel = progressTrackWidth - progressKnobSize
+      const typingBaseDelay = 26
+
+      function typingCharacterAt(texts, typedIndex) {
+        let remainingCharacters = typedIndex
+
+        for (const text of texts) {
+          for (const character of text) {
+            if (character === '\n') {
+              continue
+            }
+
+            if (remainingCharacters === 0) {
+              return character
+            }
+
+            remainingCharacters -= 1
+          }
+        }
+
+        return ''
+      }
+
+      function nextTypingDelay(texts, typedIndex) {
+        const character = typingCharacterAt(texts, typedIndex)
+        const jitter = (typedIndex * 37) % 42
+        const pause =
+          character === ' '
+            ? 18
+            : /[.,:;!?〉》)’”]/.test(character)
+              ? 86
+              : /[〈《(‘“]/.test(character)
+                ? 34
+                : 0
+
+        return typingBaseDelay + jitter + pause
+      }
+
+      function renderProgress() {
+        const knobCenter = progressKnobSize / 2 + (progress / 100) * progressTravel
+        progressFill.style.width = `${knobCenter}px`
+        progressKnob.style.left = `${progressHitSlop + knobCenter}px`
+      }
+
+      function renderFigure() {
+        figureImages.forEach((image, index) => {
+          image.classList.toggle('active', index === figureIndex)
+          image.classList.toggle('previous', index === previousFigureIndex)
+          image.classList.toggle('from-right', index === figureIndex && figureDirection === 1)
+          image.classList.toggle('from-left', index === figureIndex && figureDirection === -1)
+          image.classList.toggle('to-left', index === previousFigureIndex && figureDirection === 1)
+          image.classList.toggle('to-right', index === previousFigureIndex && figureDirection === -1)
+        })
+        dots.forEach((dot, index) => {
+          dot.classList.toggle('active', index === figureIndex)
+        })
+        dotIndicator.style.transform = `translateY(${figureIndex * 22}px)`
+      }
+
+      function moveFigure(direction) {
+        figureDirection = direction
+        previousFigureIndex = figureIndex
+        figureIndex = (figureIndex + figureDirection + figureSlides) % figureSlides
+        renderFigure()
+      }
+
+      figureFrame.addEventListener(
+        'wheel',
+        (event) => {
+          event.preventDefault()
+
+          const now = Date.now()
+
+          if (now - lastFigureWheel < 520 || Math.abs(event.deltaY) < 8) {
+            return
+          }
+
+          lastFigureWheel = now
+          moveFigure(event.deltaY > 0 ? 1 : -1)
+        },
+        { passive: false }
+      )
+
+      figureFrame.addEventListener('pointerdown', (event) => {
+        figureDragStartX = event.clientX
+        figureFrame.setPointerCapture(event.pointerId)
+      })
+
+      figureFrame.addEventListener('pointermove', (event) => {
+        if (figureDragStartX === null) {
+          return
+        }
+
+        const deltaX = event.clientX - figureDragStartX
+
+        if (Math.abs(deltaX) < 400) {
+          return
+        }
+
+        moveFigure(deltaX < 0 ? 1 : -1)
+        figureDragStartX = event.clientX
+      })
+
+      function stopFigureDrag() {
+        figureDragStartX = null
+      }
+
+      figureFrame.addEventListener('pointerup', stopFigureDrag)
+      figureFrame.addEventListener('pointercancel', stopFigureDrag)
+
+      function setProgress(nextProgress) {
+        progress = Math.max(0, Math.min(100, nextProgress))
+        renderProgress()
+
+        if (audio.duration && Number.isFinite(audio.duration)) {
+          audio.currentTime = audio.duration * (progress / 100)
+          pendingSeekProgress = null
+          return
+        }
+
+        pendingSeekProgress = progress
+      }
+
+      function updateProgressFromClientX(clientX) {
+        const bounds = progressBar.getBoundingClientRect()
+        const pointerX = clientX - bounds.left - progressHitSlop - progressKnobSize / 2
+        const nextProgress = (pointerX / progressTravel) * 100
+        setProgress(nextProgress)
+      }
+
+      function renderPlayButton() {
+        playToggle.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play')
+        playToggle.innerHTML = isPlaying
+          ? '<span class="pause"><span></span><span></span></span>'
+          : '<span class="play-icon" aria-hidden="true"></span>'
+      }
+
+      function renderCaption(view) {
+        const lines = captions[view] || []
+        const caption = document.querySelector('.caption')
+        const groups = lines.map((group) => (Array.isArray(group) ? group : [group]))
+        const totalCharacters = groups
+          .flat()
+          .reduce((total, text) => total + text.replace(/\\n/g, '').length, 0)
+        let typedCharacters = 0
+
+        window.clearTimeout(typingTimer)
+
+        function visibleTypingText(text, visibleCharacters) {
+          let remainingCharacters = visibleCharacters
+          return text.split('\\n').map((line) => {
+            const visibleLine = line.slice(0, Math.max(0, remainingCharacters))
+            remainingCharacters -= line.length
+            return visibleLine
+          })
+        }
+
+        function paintCaption() {
+          let remainingCharacters = typedCharacters
+          const sizerHtml = groups
+            .map((group) => {
+              return `<div class="caption-group">${group
+                .map((block) => `<p><span class="caption-box">${block.replace(/\\n/g, '<br>')}</span></p>`)
+                .join('')}</div>`
+            })
+            .join('')
+          const typedHtml = groups
+            .map((group) => {
+              return `<div class="caption-group">${group
+                .map((block) => {
+                  const visibleLines = visibleTypingText(block, remainingCharacters)
+                  remainingCharacters -= block.replace(/\\n/g, '').length
+                  const lastVisibleLineIndex = visibleLines.findLastIndex((line) => line.length > 0)
+                  const visibleText =
+                    lastVisibleLineIndex === -1
+                      ? ''
+                      : visibleLines.slice(0, lastVisibleLineIndex + 1).join('<br>')
+                  return `<p><span class="caption-box caption-placeholder">${block.replace(
+                    /\\n/g,
+                    '<br>'
+                  )}</span>${visibleText ? `<span class="caption-box caption-reveal">${visibleText}</span>` : ''}</p>`
+                })
+                .join('')}</div>`
+            })
+            .join('')
+          caption.innerHTML = `<div class="caption-sizer">${sizerHtml}</div><div class="caption-typed">${typedHtml}</div>`
+        }
+
+        paintCaption()
+
+        if (totalCharacters === 0) {
+          return
+        }
+
+        function typeNextCharacter() {
+          typedCharacters += 1
+          paintCaption()
+
+          if (typedCharacters >= totalCharacters) {
+            return
+          }
+
+          typingTimer = window.setTimeout(
+            typeNextCharacter,
+            nextTypingDelay(groups.flat(), typedCharacters)
+          )
+        }
+
+        typingTimer = window.setTimeout(typeNextCharacter, nextTypingDelay(groups.flat(), 0))
+      }
+
+      function clearSelection() {
+        selectedTrack = null
+        currentView = null
+        isPlaying = false
+        body.className = ''
+        progress = 0
+        window.clearTimeout(typingTimer)
+        document.querySelector('.caption').innerHTML = ''
+        renderProgress()
+        audio.pause()
+        audio.removeAttribute('src')
+        navButtons.forEach((button, index) => {
+          button.textContent = labels[index]
+          button.classList.remove('active')
+        })
+        trackButtons.forEach((button) => {
+          button.classList.remove('selected')
+          button.disabled = true
+        })
+        renderPlayButton()
+      }
+
+      function setView(view, track) {
+        if (track && currentView !== 'music') {
+          return
+        }
+
+        if (!track && currentView === view) {
+          clearSelection()
+          return
+        }
+
+        if (track && currentView === 'music' && selectedTrack === track) {
+          selectedTrack = null
+          isPlaying = false
+          progress = 0
+          body.className = 'music'
+          renderProgress()
+          audio.pause()
+          audio.removeAttribute('src')
+          trackButtons.forEach((button) => {
+            button.classList.remove('selected')
+          })
+          renderPlayButton()
+          return
+        }
+
+        currentView = view
+        selectedTrack = view === 'music' ? track || null : null
+        isPlaying = Boolean(selectedTrack)
+        body.className = selectedTrack ? `${view} playing` : view
+        renderCaption(view)
+        progress = 0
+        renderProgress()
+
+        if (selectedTrack) {
+          audio.src = audioSources[selectedTrack]
+          audio.currentTime = 0
+          audio.play().catch(() => {
+            isPlaying = false
+            renderPlayButton()
+          })
+        } else {
+          audio.pause()
+          audio.removeAttribute('src')
+        }
+
+        navButtons.forEach((button, index) => {
+          const isActive = view === views[index]
+          button.textContent = isActive ? `<${labels[index]}>` : labels[index]
+          button.classList.toggle('active', isActive)
+        })
+        trackButtons.forEach((button) => {
+          button.classList.toggle('selected', view === 'music' && button.dataset.track === selectedTrack)
+          button.disabled = view !== 'music'
+        })
+        renderPlayButton()
+      }
+
+      function playNextTrack() {
+        const currentIndex = trackOrder.indexOf(selectedTrack)
+        const nextTrack = trackOrder[(currentIndex + 1) % trackOrder.length] || trackOrder[0]
+        setView('music', nextTrack)
+      }
+
+      function playAdjacentTrack(direction) {
+        if (currentView !== 'music') {
+          return
+        }
+
+        const currentIndex = trackOrder.indexOf(selectedTrack)
+        const startIndex = direction === 1 ? 0 : trackOrder.length - 1
+        const nextIndex =
+          currentIndex === -1
+            ? startIndex
+            : (currentIndex + direction + trackOrder.length) % trackOrder.length
+        setView('music', trackOrder[nextIndex])
+      }
+
+      function skipPlayback(seconds) {
+        if (!audio.duration || !Number.isFinite(audio.duration)) {
+          return
+        }
+
+        const nextTime = Math.max(0, Math.min(audio.duration, audio.currentTime + seconds))
+        audio.currentTime = nextTime
+        progress = (nextTime / audio.duration) * 100
+        renderProgress()
+      }
+
+      trackButtons.forEach((button) => {
+        button.disabled = true
+      })
+
+      buttons.forEach((button) => {
+        button.addEventListener('click', () => setView(button.dataset.view, button.dataset.track))
+      })
+
+      playToggle.addEventListener('click', () => {
+        if (isPlaying) {
+          audio.pause()
+          isPlaying = false
+          renderPlayButton()
+          return
+        }
+
+        audio.play().then(() => {
+          isPlaying = true
+          renderPlayButton()
+        }).catch(() => {
+          isPlaying = false
+          renderPlayButton()
+        })
+      })
+
+      window.addEventListener('keydown', (event) => {
+        if (event.code === 'Space' && selectedTrack) {
+          event.preventDefault()
+          playToggle.click()
+        }
+
+        if (event.code === 'ArrowDown') {
+          event.preventDefault()
+          playAdjacentTrack(1)
+        }
+
+        if (event.code === 'ArrowUp') {
+          event.preventDefault()
+          playAdjacentTrack(-1)
+        }
+
+        if (event.code === 'ArrowRight') {
+          event.preventDefault()
+          skipPlayback(5)
+        }
+
+        if (event.code === 'ArrowLeft') {
+          event.preventDefault()
+          skipPlayback(-5)
+        }
+      })
+
+      progressBar.addEventListener('pointerdown', (event) => {
+        event.preventDefault()
+        isProgressDragging = true
+        updateProgressFromClientX(event.clientX)
+        progressBar.setPointerCapture(event.pointerId)
+      })
+
+      function updateCustomCursor(event) {
+        customCursor.style.transform = `translate(${event.clientX - 10}px, ${event.clientY - 10}px)`
+      }
+
+      window.addEventListener('pointermove', (event) => {
+        updateCustomCursor(event)
+
+        if (isProgressDragging) {
+          updateProgressFromClientX(event.clientX)
+        }
+      })
+
+      window.addEventListener('pointerup', () => {
+        isProgressDragging = false
+      })
+
+      audio.addEventListener('timeupdate', () => {
+        if (audio.duration) {
+          progress = (audio.currentTime / audio.duration) * 100
+          renderProgress()
+        }
+      })
+
+      audio.addEventListener('loadedmetadata', () => {
+        if (pendingSeekProgress !== null && audio.duration && Number.isFinite(audio.duration)) {
+          audio.currentTime = audio.duration * (pendingSeekProgress / 100)
+          pendingSeekProgress = null
+        }
+      })
+
+      audio.addEventListener('ended', () => {
+        playNextTrack()
+      })
+
+      window.addEventListener('mousemove', (event) => {
+        updateCustomCursor(event)
+      })
+      window.addEventListener('mouseleave', () => {
+        customCursor.style.transform = 'translate(-40px, -40px)'
+      })
+
+      renderProgress()
+      renderFigure()
+    </script>
+  </body>
+</html>

@@ -1,0 +1,478 @@
+@font-face {
+  font-family: "D2Coding";
+  src: url("/static/fonts/epeul/D2CodingBold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+.viewport {
+  min-height: 100svh;
+  background: #ffffff;
+  color: #000000;
+  cursor: none !important;
+  overflow: hidden;
+}
+
+.viewport,
+.viewport *,
+.viewport button,
+.viewport button:hover,
+.viewport button:disabled {
+  cursor: none !important;
+}
+
+.customCursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  width: 20px;
+  height: 20px;
+  background: #b70000;
+  pointer-events: none;
+}
+
+.stage {
+  position: relative;
+  width: 100vw;
+  height: 100svh;
+  min-height: 640px;
+  overflow: hidden;
+  background: #ffffff;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.nav {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: "ITC Avant Garde Gothic Pro", "Avant Garde", Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.42px;
+}
+
+.navItem,
+.trackRow {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 4px 3px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.42px;
+  line-height: 1.2;
+}
+
+.activeNav {
+  background: #b70000;
+  color: #ffffff;
+}
+
+.player {
+  position: relative;
+  width: 111px;
+  height: 24px;
+  margin-left: 0;
+  background: #d8e8ad;
+}
+
+.playToggle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.pauseIcon {
+  position: absolute;
+  top: 8px;
+  left: 9px;
+  display: flex;
+  gap: 1.5px;
+}
+
+.pauseIcon span {
+  display: block;
+  width: 3px;
+  height: 9px;
+  background: #000000;
+}
+
+.playIcon {
+  position: absolute;
+  top: 7px;
+  left: 10px;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 8px solid #000000;
+}
+
+.progressTrack {
+  position: absolute;
+  top: 0;
+  left: 14px;
+  z-index: 1;
+  width: 98px;
+  height: 24px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  touch-action: none;
+}
+
+.progressTrack::before {
+  position: absolute;
+  top: 11px;
+  left: 10px;
+  width: 78px;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.2);
+  content: "";
+}
+
+.progressFill {
+  position: absolute;
+  top: 11px;
+  left: 10px;
+  height: 3px;
+  background: #000000;
+}
+
+.progressKnob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: #000000;
+  transform: translate(-50%, -50%);
+}
+
+.trackList {
+  position: absolute;
+  top: 62px;
+  left: 20px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  font-family: "ITC Avant Garde Gothic Pro", "Avant Garde", Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.42px;
+}
+
+.trackRow {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  width: max-content;
+  min-height: 24px;
+  padding: 0;
+  color: rgba(0, 0, 0, 0.3);
+}
+
+.trackRow:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.trackRow:hover {
+  color: #000000;
+}
+
+.trackRow:disabled:hover {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+.trackIndex,
+.trackMeta span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 4px 3px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.42px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.trackIndex {
+  min-width: 16px;
+}
+
+.trackMeta {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.selectedTrack {
+  background: #b70000;
+  color: #ffffff;
+}
+
+.musicInactiveTrack .trackIndex {
+  color: #000000;
+}
+
+.mainFigureFrame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: min(80vw, 900px);
+  height: 550px;
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.mainFigureTrack {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 550px;
+}
+
+.mainFigure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 550px;
+  object-fit: contain;
+  opacity: 0;
+  transform: translateX(0);
+  transition: transform 720ms cubic-bezier(0.2, 1.04, 0.34, 1);
+  user-select: none;
+  will-change: opacity, transform;
+  pointer-events: none;
+}
+
+.activeFigure {
+  z-index: 2;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.previousFigure {
+  z-index: 1;
+  opacity: 0;
+}
+
+.fromRight {
+  animation: figureFromRight 720ms cubic-bezier(0.2, 1.04, 0.34, 1);
+}
+
+.fromLeft {
+  animation: figureFromLeft 720ms cubic-bezier(0.2, 1.04, 0.34, 1);
+}
+
+.toLeft {
+  transform: translateX(-18px);
+}
+
+.toRight {
+  transform: translateX(18px);
+}
+
+@keyframes figureFromRight {
+  from {
+    transform: translateX(18px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes figureFromLeft {
+  from {
+    transform: translateX(-18px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.caption {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  z-index: 6;
+  display: flex;
+  width: max-content;
+  max-width: calc(100vw - 40px);
+  transform: translateX(-50%);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  font-family: "D2Coding", "Apple SD Gothic Neo", "Malgun Gothic", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.caption p {
+  margin: 0;
+  position: relative;
+  white-space: nowrap;
+}
+
+.captionBox {
+  display: inline-block;
+  padding: 8px;
+  border: 0.5px solid #000000;
+  background: #ffffff;
+}
+
+.captionPlaceholder {
+  visibility: hidden;
+}
+
+.captionReveal {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.captionSizer {
+  display: flex;
+  visibility: hidden;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.captionTyped {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.aboutCaption {
+  gap: 14px;
+}
+
+.captionGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.dots {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  z-index: 5;
+  display: flex;
+  width: 10px;
+  transform: translateY(-50%);
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dots span {
+  width: 10px;
+  height: 10px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dots .activeDot {
+  opacity: 0;
+}
+
+.dotIndicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  background: #000000;
+  transition: transform 420ms cubic-bezier(0.16, 0.96, 0.24, 1);
+}
+
+.lowerLayer {
+  position: absolute;
+  top: 85.74%;
+  left: 0;
+  z-index: 2;
+  width: 100%;
+  height: 14.26%;
+  pointer-events: none;
+}
+
+.sideObject {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  height: 100px;
+}
+
+.sideObject img {
+  display: block;
+  width: auto;
+  height: 100%;
+  max-width: none;
+}
+
+@media (max-width: 900px) {
+  .stage {
+    min-height: 620px;
+  }
+
+  .caption {
+    top: 20px;
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .caption p {
+    white-space: normal;
+  }
+
+  .mainFigureFrame,
+  .mainFigureTrack,
+  .mainFigure {
+    top: 50%;
+    height: 550px;
+  }
+
+  .dots {
+    right: 14px;
+  }
+
+}

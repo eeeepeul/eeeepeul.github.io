@@ -1,7 +1,5 @@
-'use client'
-
-import HomeScene from '@/components/HomeScene'
+import EpeulExperience from './EpeulExperience'
 
 export default function Page() {
-  return <HomeScene />
+  return <EpeulExperience />
 }
