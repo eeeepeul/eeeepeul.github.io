@@ -1,6 +1,6 @@
 'use client'
 
-import { PointerEvent, WheelEvent, useEffect, useRef, useState } from 'react'
+import { CSSProperties, PointerEvent, WheelEvent, useEffect, useRef, useState } from 'react'
 import styles from './epeul.module.css'
 
 type View = 'home' | 'music' | 'about'
@@ -13,7 +13,6 @@ type CursorTextClone = {
   width: number
   height: number
 }
-
 const tracks = [
   { index: '1', title: '9+1', duration: '02:18', src: '/static/audio/epeul/track01.mp3' },
   { index: '2', title: 'if and only if', duration: '04:24', src: '/static/audio/epeul/track02.mp3' },
@@ -353,10 +352,12 @@ export default function EpeulExperience() {
 
   function updateCursorPosition(x: number, y: number) {
     const previousCursor = previousCursorRef.current
+    let deltaX = 0
+    let deltaY = 0
 
     if (previousCursor) {
-      const deltaX = x - previousCursor.x
-      const deltaY = y - previousCursor.y
+      deltaX = x - previousCursor.x
+      deltaY = y - previousCursor.y
 
       if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
         setCursorDirection(
@@ -542,6 +543,21 @@ export default function EpeulExperience() {
         setCursor({ x: -40, y: -40 })
       }}
     >
+      <svg aria-hidden="true" width="0" height="0" style={{ position: 'absolute' }}>
+        <filter id="cursor-gooey-outline">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.6" result="blur" />
+          <feColorMatrix
+            in="blur"
+            mode="matrix"
+            values="1 0 0 0 0
+                    0 1 0 0 0
+                    0 0 1 0 0
+                    0 0 0 22 -9"
+            result="goo"
+          />
+          <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+        </filter>
+      </svg>
       <div
         className={styles.cursorBlackBlend}
         style={{ transform: `translate(${cursor.x - 22}px, ${cursor.y - 22}px)` }}
@@ -822,6 +838,13 @@ export default function EpeulExperience() {
             style={{ transform: `translateY(${figureIndex * 28}px)` }}
           />
         </div>
+        <b
+          className={styles.dotLabel}
+          key={figureIndex}
+          style={{ '--dot-label-offset': `${figureIndex * 28}px` } as CSSProperties}
+        >
+          if and only if
+        </b>
       </section>
     </main>
   )

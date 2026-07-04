@@ -33,6 +33,11 @@
         cursor: none !important;
       }
 
+      ::selection {
+        background: #d8e8ad;
+        color: #000;
+      }
+
       .cursor-mark {
         position: fixed;
         top: 0;
@@ -94,9 +99,9 @@
         justify-content: center;
         color: #fff;
         font-family: "ITC Avant Garde Gothic Pro", "Avant Garde", Arial, Helvetica, sans-serif;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 600;
-        letter-spacing: -0.42px;
+        letter-spacing: -0.36px;
         line-height: 1.2;
         white-space: nowrap;
       }
@@ -136,6 +141,8 @@
       }
 
       .stage {
+        --figure-height: min(320px, calc(100vh - 180px));
+        --figure-width: calc(var(--figure-height) * 1250 / 1246);
         position: relative;
         width: 100vw;
         height: 100svh;
@@ -159,9 +166,9 @@
         align-items: center;
         gap: 4px;
         font-family: "ITC Avant Garde Gothic Pro", "Avant Garde", Arial, Helvetica, sans-serif;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 600;
-        letter-spacing: -0.42px;
+        letter-spacing: -0.36px;
       }
 
       .nav-item,
@@ -172,9 +179,9 @@
         align-items: center;
         justify-content: center;
         padding: 4px 4px 3px;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 600;
-        letter-spacing: -0.42px;
+        letter-spacing: -0.36px;
         line-height: 1.2;
         white-space: nowrap;
       }
@@ -307,9 +314,9 @@
         display: flex;
         flex-direction: column;
         font-family: "ITC Avant Garde Gothic Pro", "Avant Garde", Arial, Helvetica, sans-serif;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 600;
-        letter-spacing: -0.42px;
+        letter-spacing: -0.36px;
       }
 
       .track-row {
@@ -360,14 +367,12 @@
       }
 
       .main-figure-frame {
-        --figure-height: min(550px, calc(100vh - 140px));
-        --figure-width: calc(var(--figure-height) * 593 / 600);
         position: absolute;
         top: 50%;
         left: 50%;
         z-index: 1;
         width: var(--figure-width);
-        height: calc(var(--figure-height) + 37px);
+        height: var(--figure-height);
         transform: translate(-50%, -50%);
         overflow: visible;
         pointer-events: auto;
@@ -474,7 +479,6 @@
       .caption-box {
         display: inline-block;
         padding: 8px;
-        border: 0.5px solid #000;
         background: #fff;
       }
 
@@ -532,7 +536,7 @@
 
       .dots {
         top: 50%;
-        right: 20px;
+        right: 28px;
         display: flex;
         position: absolute;
         width: 22px;
@@ -554,7 +558,7 @@
         top: 50%;
         color: #b2b2b2;
         font-family: "D2Coding", "Apple SD Gothic Neo", "Malgun Gothic", monospace;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 700;
         line-height: 1;
         transform: translateY(-50%);
@@ -585,6 +589,64 @@
         transition: transform 420ms cubic-bezier(0.16, 0.96, 0.24, 1);
       }
 
+      .dot-label {
+        position: absolute;
+        top: calc(50% + (var(--figure-height) / 2) + 40px) !important;
+        left: 50%;
+        right: auto;
+        color: #000;
+        font-family: "ITC Avant Garde Gothic Pro", "Avant Garde", Arial, Helvetica, sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: -0.36px;
+        line-height: 12px;
+        text-align: center;
+        white-space: nowrap;
+        transform: translateX(-50%);
+        animation: dot-label-appear 1ms step-end 100ms both;
+      }
+
+      @keyframes dot-label-appear {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @media (orientation: landscape) {
+        .cursor-text-overlay span,
+        .nav,
+        .nav-item,
+        .track-list,
+        .track-index,
+        .track-meta span,
+        .dot-label {
+          font-size: 14px;
+          letter-spacing: -0.42px;
+        }
+
+        .dots span::before,
+        .dots span::after {
+          font-size: 14px;
+        }
+
+        .stage {
+          --figure-height: 400px;
+        }
+      }
+
+      @media (orientation: landscape) and (min-width: 1200px) {
+        .dot-label {
+          top: calc(50% - 113px + var(--dot-label-offset, 0)) !important;
+          left: auto;
+          right: 60px;
+          text-align: right;
+          transform: none;
+        }
+      }
+
       @media (max-width: 900px) {
         .caption {
           top: 20px;
@@ -609,6 +671,21 @@
     </style>
   </head>
   <body>
+    <svg aria-hidden="true" width="0" height="0" style="position:absolute">
+      <filter id="cursor-gooey-outline">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="2.6" result="blur" />
+        <feColorMatrix
+          in="blur"
+          mode="matrix"
+          values="1 0 0 0 0
+                  0 1 0 0 0
+                  0 0 1 0 0
+                  0 0 0 22 -9"
+          result="goo"
+        />
+        <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+      </filter>
+    </svg>
     <div class="cursor-black-blend" aria-hidden="true"></div>
     <div class="cursor-red-overlay" aria-hidden="true"></div>
     <div class="cursor-text-overlay" aria-hidden="true"></div>
@@ -671,6 +748,7 @@
         <span></span><span></span><span></span><span></span><span></span>
         <i class="dot-indicator"></i>
       </div>
+      <b class="dot-label">if and only if</b>
 
     </main>
     <audio id="epeul-audio" preload="none"></audio>
@@ -692,6 +770,7 @@
       const figureImages = document.querySelectorAll('.main-figure')
       const dots = document.querySelectorAll('.dots span')
       const dotIndicator = document.querySelector('.dot-indicator')
+      const dotLabel = document.querySelector('.dot-label')
       const labels = ['MH:M', 'About', '無sic']
       const views = ['home', 'about', 'music']
       const figureSlides = 10
@@ -801,6 +880,10 @@
           dot.classList.toggle('active', index === figureIndex)
         })
         dotIndicator.style.transform = `translateY(${figureIndex * 28}px)`
+        dotLabel.style.setProperty('--dot-label-offset', `${figureIndex * 28}px`)
+        dotLabel.style.animation = 'none'
+        dotLabel.offsetHeight
+        dotLabel.style.animation = ''
       }
 
       function moveFigure(direction) {
@@ -1127,9 +1210,12 @@
       })
 
       function updateCustomCursor(event) {
+        let deltaX = 0
+        let deltaY = 0
+
         if (previousCursor) {
-          const deltaX = event.clientX - previousCursor.x
-          const deltaY = event.clientY - previousCursor.y
+          deltaX = event.clientX - previousCursor.x
+          deltaY = event.clientY - previousCursor.y
 
           if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
             const direction =

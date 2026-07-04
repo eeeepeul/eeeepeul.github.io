@@ -22,6 +22,11 @@
   cursor: none !important;
 }
 
+.viewport ::selection {
+  background: #d8e8ad;
+  color: #000000;
+}
+
 .cursorMark {
   position: fixed;
   top: 0;
@@ -83,9 +88,9 @@
   justify-content: center;
   color: #ffffff;
   font-family: "ITC Avant Garde Gothic Pro", "Avant Garde", Arial, Helvetica, sans-serif;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: -0.42px;
+  letter-spacing: -0.36px;
   line-height: 1.2;
   white-space: nowrap;
 }
@@ -116,6 +121,8 @@
 }
 
 .stage {
+  --figure-height: min(320px, calc(100vh - 180px));
+  --figure-width: calc(var(--figure-height) * 1250 / 1246);
   position: relative;
   width: 100vw;
   height: 100svh;
@@ -134,9 +141,9 @@
   align-items: center;
   gap: 4px;
   font-family: "ITC Avant Garde Gothic Pro", "Avant Garde", Arial, Helvetica, sans-serif;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: -0.42px;
+  letter-spacing: -0.36px;
 }
 
 .navItem,
@@ -156,9 +163,9 @@
   align-items: center;
   justify-content: center;
   padding: 4px 4px 3px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: -0.42px;
+  letter-spacing: -0.36px;
   line-height: 1.2;
 }
 
@@ -292,9 +299,9 @@
   flex-direction: column;
   gap: 0;
   font-family: "ITC Avant Garde Gothic Pro", "Avant Garde", Arial, Helvetica, sans-serif;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: -0.42px;
+  letter-spacing: -0.36px;
 }
 
 .trackRow {
@@ -327,9 +334,9 @@
   align-items: center;
   justify-content: center;
   padding: 4px 4px 3px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: -0.42px;
+  letter-spacing: -0.36px;
   line-height: 1.2;
   white-space: nowrap;
 }
@@ -358,14 +365,12 @@
 }
 
 .mainFigureFrame {
-  --figure-height: min(550px, calc(100vh - 140px));
-  --figure-width: calc(var(--figure-height) * 593 / 600);
   position: absolute;
   top: 50%;
   left: 50%;
   z-index: 1;
   width: var(--figure-width);
-  height: calc(var(--figure-height) + 37px);
+  height: var(--figure-height);
   transform: translate(-50%, -50%);
   overflow: visible;
   pointer-events: auto;
@@ -469,7 +474,6 @@
 .captionBox {
   display: inline-block;
   padding: 8px;
-  border: 0.5px solid #000000;
   background: #ffffff;
 }
 
@@ -515,7 +519,7 @@
 .dots {
   position: absolute;
   top: 50%;
-  right: 20px;
+  right: 28px;
   z-index: 5;
   display: flex;
   width: 22px;
@@ -537,7 +541,7 @@
   top: 50%;
   color: #b2b2b2;
   font-family: "D2Coding", "Apple SD Gothic Neo", "Malgun Gothic", monospace;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1;
   transform: translateY(-50%);
@@ -568,6 +572,68 @@
   transition: transform 420ms cubic-bezier(0.16, 0.96, 0.24, 1);
 }
 
+.dotLabel {
+  position: absolute;
+  top: calc(50% + (var(--figure-height) / 2) + 40px) !important;
+  left: 50%;
+  right: auto;
+  color: #000000;
+  font-family: "ITC Avant Garde Gothic Pro", "Avant Garde", Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.36px;
+  line-height: 12px;
+  text-align: center;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  animation: dotLabelAppear 1ms step-end 100ms both;
+}
+
+@keyframes dotLabelAppear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (orientation: landscape) {
+  .cursorTextClone,
+  .nav,
+  .navItem,
+  .trackList,
+  .trackIndex,
+  .trackMeta span,
+  .dotLabel {
+    font-size: 14px;
+    letter-spacing: -0.42px;
+  }
+
+  .dots span::before,
+  .dots span::after {
+    font-size: 14px;
+  }
+
+  .dotLabel {
+    line-height: 14px;
+  }
+
+  .stage {
+    --figure-height: 400px;
+  }
+}
+
+@media (orientation: landscape) and (min-width: 1200px) {
+  .dotLabel {
+    top: calc(50% - 113px + var(--dot-label-offset, 0)) !important;
+    left: auto;
+    right: 60px;
+    text-align: right;
+    transform: none;
+  }
+}
+
 @media (max-width: 900px) {
   .stage {
     min-height: 620px;
@@ -591,10 +657,6 @@
   .mainFigureTrack,
   .mainFigure {
     height: var(--figure-height);
-  }
-
-  .dots {
-    right: 14px;
   }
 
 }
