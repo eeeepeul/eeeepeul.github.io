@@ -18,7 +18,7 @@
         margin: 0;
         min-height: 100%;
         overflow: hidden;
-        background: #fff;
+        background: #f4f4f4;
         color: #000;
         cursor: none !important;
         font-family: Arial, Helvetica, sans-serif;
@@ -33,15 +33,97 @@
         cursor: none !important;
       }
 
-      .custom-cursor {
+      .cursor-mark {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 10000;
+        width: 88px;
+        height: 88px;
+        pointer-events: none;
+      }
+
+      .cursor-black-blend {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 44px;
+        height: 44px;
+        pointer-events: none;
+      }
+
+      .cursor-black-blend {
+        z-index: 9998;
+        border-radius: 50%;
+        background: #b70000;
+        mix-blend-mode: lighten;
+      }
+
+      .cursor-red-overlay {
         position: fixed;
         top: 0;
         left: 0;
         z-index: 9999;
-        width: 20px;
-        height: 20px;
-        background: #b70000;
+        width: 44px;
+        height: 44px;
         pointer-events: none;
+      }
+
+      .cursor-red-overlay span {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: #d8e8ad;
+        mix-blend-mode: lighten;
+        pointer-events: none;
+      }
+
+      .cursor-text-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        pointer-events: none;
+      }
+
+      .cursor-text-overlay span {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-family: "ITC Avant Garde Gothic Pro", "Avant Garde", Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: -0.42px;
+        line-height: 1.2;
+        white-space: nowrap;
+      }
+
+      .cursor-compass {
+        position: absolute;
+        inset: 0;
+        background: #b70000;
+        mask: var(--cursor-image) center / contain no-repeat;
+        pointer-events: none;
+        -webkit-mask: var(--cursor-image) center / contain no-repeat;
+      }
+
+      .cursor-mark.up {
+        --cursor-image: url("public/static/images/epeul/cursor-mark-up.svg");
+      }
+
+      .cursor-mark.down {
+        --cursor-image: url("public/static/images/epeul/cursor-mark-down.svg");
+      }
+
+      .cursor-mark.left {
+        --cursor-image: url("public/static/images/epeul/cursor-mark-left.svg");
+      }
+
+      .cursor-mark.right {
+        --cursor-image: url("public/static/images/epeul/cursor-mark-right.svg");
       }
 
       button {
@@ -59,7 +141,7 @@
         height: 100svh;
         min-height: 640px;
         overflow: hidden;
-        background: #fff;
+        background: #f4f4f4;
       }
 
       .nav,
@@ -85,6 +167,7 @@
       .nav-item,
       .track-index,
       .track-meta span {
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -96,7 +179,16 @@
         white-space: nowrap;
       }
 
+      .nav-label {
+        position: relative;
+      }
+
       .nav-item.active {
+        background: #b70000;
+        color: #fff;
+      }
+
+      .nav-item:hover {
         background: #b70000;
         color: #fff;
       }
@@ -120,6 +212,15 @@
         border-radius: 0;
         background: transparent;
         cursor: pointer;
+      }
+
+      .play-toggle:hover .pause span,
+      .play-toggle:hover .pause-icon span {
+        background: rgba(0, 0, 0, 0.35);
+      }
+
+      .play-toggle:hover .play-icon {
+        border-left-color: rgba(0, 0, 0, 0.35);
       }
 
       .pause {
@@ -191,6 +292,15 @@
         transform: translate(-50%, -50%);
       }
 
+      .bar:hover::before {
+        background: rgba(0, 0, 0, 0.35);
+      }
+
+      .bar:hover .knob {
+        width: 10px;
+        height: 10px;
+      }
+
       .track-list {
         top: 62px;
         left: 20px;
@@ -217,8 +327,9 @@
         opacity: 1;
       }
 
-      .track-row:hover {
-        color: #000;
+      .track-row:not(:disabled):hover {
+        background: #b70000;
+        color: #fff;
       }
 
       .track-row:disabled:hover {
@@ -244,23 +355,33 @@
         color: #000;
       }
 
+      .music .track-row:not(.selected):hover .track-index {
+        color: #fff;
+      }
+
       .main-figure-frame {
+        --figure-height: min(550px, calc(100vh - 140px));
+        --figure-width: calc(var(--figure-height) * 593 / 600);
         position: absolute;
         top: 50%;
         left: 50%;
         z-index: 1;
-        width: min(80vw, 900px);
-        height: 550px;
+        width: var(--figure-width);
+        height: calc(var(--figure-height) + 37px);
         transform: translate(-50%, -50%);
-        overflow: hidden;
+        overflow: visible;
         pointer-events: auto;
+      }
+
+      .main-figure-frame:hover .main-figure.active {
+        filter: contrast(1.04);
       }
 
       .main-figure-track {
         position: absolute;
         inset: 0;
         width: 100%;
-        height: 550px;
+        height: var(--figure-height);
       }
 
       .main-figure {
@@ -268,7 +389,7 @@
         top: 0;
         left: 0;
         width: 100%;
-        height: 550px;
+        height: var(--figure-height);
         object-fit: contain;
         opacity: 0;
         transform: translateX(0);
@@ -414,54 +535,54 @@
         right: 20px;
         display: flex;
         position: absolute;
-        width: 10px;
+        width: 22px;
         transform: translateY(-50%);
         flex-direction: column;
-        gap: 12px;
+        gap: 14px;
       }
 
       .dots span {
-        width: 10px;
-        height: 10px;
-        background: rgba(0, 0, 0, 0.1);
+        position: relative;
+        width: 30px;
+        height: 14px;
+        background: transparent;
+      }
+
+      .dots span::before,
+      .dots span::after {
+        position: absolute;
+        top: 50%;
+        color: #b2b2b2;
+        font-family: "D2Coding", "Apple SD Gothic Neo", "Malgun Gothic", monospace;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1;
+        transform: translateY(-50%);
+      }
+
+      .dots span::before {
+        left: 0;
+        content: "[";
+      }
+
+      .dots span::after {
+        right: 0;
+        content: "]";
       }
 
       .dots span.active {
-        opacity: 0;
+        opacity: 1;
       }
 
       .dot-indicator {
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 10px;
-        height: 10px;
+        top: 3px;
+        left: 11px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
         background: #000;
         transition: transform 420ms cubic-bezier(0.16, 0.96, 0.24, 1);
-      }
-
-      .lower {
-        position: absolute;
-        top: 85.74%;
-        left: 0;
-        z-index: 2;
-        width: 100%;
-        height: 14.26%;
-        pointer-events: none;
-      }
-
-      .side-object {
-        position: fixed;
-        right: 20px;
-        bottom: 20px;
-        height: 100px;
-      }
-
-      .side-object img {
-        display: block;
-        width: auto;
-        height: 100%;
-        max-width: none;
       }
 
       @media (max-width: 900px) {
@@ -476,22 +597,29 @@
           white-space: normal;
         }
 
-        .main-figure-frame,
+        .main-figure-frame {
+          top: 50%;
+        }
+
         .main-figure-track,
         .main-figure {
-          top: 50%;
-          height: 550px;
+          height: var(--figure-height);
         }
       }
     </style>
   </head>
   <body>
-    <div class="custom-cursor" aria-hidden="true"></div>
+    <div class="cursor-black-blend" aria-hidden="true"></div>
+    <div class="cursor-red-overlay" aria-hidden="true"></div>
+    <div class="cursor-text-overlay" aria-hidden="true"></div>
+    <div class="cursor-mark up" aria-hidden="true">
+      <span class="cursor-compass"></span>
+    </div>
     <main class="stage">
       <nav class="nav" aria-label="Primary">
-        <button class="nav-item" data-view="home" type="button">MH:M</button>
-        <button class="nav-item" data-view="about" type="button">About</button>
-        <button class="nav-item" data-view="music" type="button">無sic</button>
+        <button class="nav-item" data-view="home" type="button"><span class="nav-label">MH:M</span></button>
+        <button class="nav-item" data-view="about" type="button"><span class="nav-label">About</span></button>
+        <button class="nav-item" data-view="music" type="button"><span class="nav-label">無sic</span></button>
         <div class="player" aria-label="Now playing">
           <button class="play-toggle" type="button" aria-label="Pause">
             <span class="pause"><span></span><span></span></span>
@@ -517,7 +645,7 @@
         </button>
       </div>
 
-      <div class="main-figure-frame">
+      <div class="main-figure-frame" data-cursor-image>
         <div class="main-figure-track">
           <img class="main-figure active" src="public/static/images/epeul/example-image-01.png" alt="" draggable="false" />
           <img class="main-figure" src="public/static/images/epeul/example-image-01.png" alt="" draggable="false" />
@@ -544,9 +672,6 @@
         <i class="dot-indicator"></i>
       </div>
 
-      <div class="lower" aria-hidden="true">
-        <div class="side-object"><img src="public/static/images/epeul/door-section.png" alt="" /></div>
-      </div>
     </main>
     <audio id="epeul-audio" preload="none"></audio>
     <script>
@@ -559,7 +684,10 @@
       const progressFill = document.querySelector('.bar-fill')
       const progressKnob = document.querySelector('.knob')
       const audio = document.querySelector('#epeul-audio')
-      const customCursor = document.querySelector('.custom-cursor')
+      const cursorBlackBlend = document.querySelector('.cursor-black-blend')
+      const cursorRedOverlay = document.querySelector('.cursor-red-overlay')
+      const cursorTextOverlay = document.querySelector('.cursor-text-overlay')
+      const cursorMark = document.querySelector('.cursor-mark')
       const figureFrame = document.querySelector('.main-figure-frame')
       const figureImages = document.querySelectorAll('.main-figure')
       const dots = document.querySelectorAll('.dots span')
@@ -604,6 +732,7 @@
       let previousFigureIndex = null
       let figureDirection = 1
       let lastFigureWheel = 0
+      let previousCursor = null
       let figureDragStartX = null
       const progressTrackWidth = 78
       const progressKnobSize = 8
@@ -652,6 +781,13 @@
         progressKnob.style.left = `${progressHitSlop + knobCenter}px`
       }
 
+      function setNavLabel(button, label) {
+        const labelNode = button.querySelector('.nav-label')
+        if (labelNode) {
+          labelNode.textContent = label
+        }
+      }
+
       function renderFigure() {
         figureImages.forEach((image, index) => {
           image.classList.toggle('active', index === figureIndex)
@@ -664,7 +800,7 @@
         dots.forEach((dot, index) => {
           dot.classList.toggle('active', index === figureIndex)
         })
-        dotIndicator.style.transform = `translateY(${figureIndex * 22}px)`
+        dotIndicator.style.transform = `translateY(${figureIndex * 28}px)`
       }
 
       function moveFigure(direction) {
@@ -831,7 +967,7 @@
         audio.pause()
         audio.removeAttribute('src')
         navButtons.forEach((button, index) => {
-          button.textContent = labels[index]
+          setNavLabel(button, labels[index])
           button.classList.remove('active')
         })
         trackButtons.forEach((button) => {
@@ -888,7 +1024,7 @@
 
         navButtons.forEach((button, index) => {
           const isActive = view === views[index]
-          button.textContent = isActive ? `<${labels[index]}>` : labels[index]
+          setNavLabel(button, isActive ? `<${labels[index]}>` : labels[index])
           button.classList.toggle('active', isActive)
         })
         trackButtons.forEach((button) => {
@@ -954,32 +1090,34 @@
         })
       })
 
-      window.addEventListener('keydown', (event) => {
-        if (event.code === 'Space' && selectedTrack) {
+      document.addEventListener('keydown', (event) => {
+        const key = event.key || event.code
+
+        if ((event.code === 'Space' || key === ' ') && selectedTrack) {
           event.preventDefault()
           playToggle.click()
         }
 
-        if (event.code === 'ArrowDown') {
+        if (event.code === 'ArrowDown' || key === 'ArrowDown') {
           event.preventDefault()
-          playAdjacentTrack(1)
+          moveFigure(1)
         }
 
-        if (event.code === 'ArrowUp') {
+        if (event.code === 'ArrowUp' || key === 'ArrowUp') {
           event.preventDefault()
-          playAdjacentTrack(-1)
+          moveFigure(-1)
         }
 
-        if (event.code === 'ArrowRight') {
+        if (event.code === 'ArrowRight' || key === 'ArrowRight') {
           event.preventDefault()
           skipPlayback(5)
         }
 
-        if (event.code === 'ArrowLeft') {
+        if (event.code === 'ArrowLeft' || key === 'ArrowLeft') {
           event.preventDefault()
           skipPlayback(-5)
         }
-      })
+      }, { capture: true })
 
       progressBar.addEventListener('pointerdown', (event) => {
         event.preventDefault()
@@ -989,7 +1127,88 @@
       })
 
       function updateCustomCursor(event) {
-        customCursor.style.transform = `translate(${event.clientX - 10}px, ${event.clientY - 10}px)`
+        if (previousCursor) {
+          const deltaX = event.clientX - previousCursor.x
+          const deltaY = event.clientY - previousCursor.y
+
+          if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+            const direction =
+              Math.abs(deltaX) > Math.abs(deltaY)
+                ? deltaX > 0
+                  ? 'right'
+                  : 'left'
+                : deltaY > 0
+                  ? 'down'
+                  : 'up'
+
+            cursorMark.classList.remove('up', 'down', 'left', 'right')
+            cursorMark.classList.add(direction)
+          }
+        }
+
+        previousCursor = { x: event.clientX, y: event.clientY }
+        const cursorSize = 44
+        const cursorLeft = event.clientX - cursorSize / 2
+        const cursorTop = event.clientY - cursorSize / 2
+        const cursorRight = cursorLeft + cursorSize
+        const cursorBottom = cursorTop + cursorSize
+        const textClones = []
+        cursorRedOverlay.replaceChildren(
+          ...Array.from(document.body.querySelectorAll('*')).flatMap((target) => {
+            if (target.closest('[aria-hidden="true"]')) {
+              return []
+            }
+
+            const background = getComputedStyle(target).backgroundColor
+
+            if (background !== 'rgb(183, 0, 0)' && background !== '#b70000') {
+              return []
+            }
+
+            const rect = target.getBoundingClientRect()
+            const intersects =
+              cursorRight > rect.left &&
+              cursorLeft < rect.right &&
+              cursorBottom > rect.top &&
+              cursorTop < rect.bottom
+
+            if (!intersects) {
+              return []
+            }
+
+            const edgeBleed = 0.2
+            const top = Math.max(0, rect.top - cursorTop - edgeBleed)
+            const right = Math.max(0, cursorRight - rect.right - edgeBleed)
+            const bottom = Math.max(0, cursorBottom - rect.bottom - edgeBleed)
+            const left = Math.max(0, rect.left - cursorLeft - edgeBleed)
+            target
+              .querySelectorAll('.nav-label, .track-index, .track-meta span')
+              .forEach((textNode) => {
+                const textRect = textNode.getBoundingClientRect()
+                const textIntersects =
+                  cursorRight > textRect.left &&
+                  cursorLeft < textRect.right &&
+                  cursorBottom > textRect.top &&
+                  cursorTop < textRect.bottom
+
+                if (textIntersects) {
+                  const clone = document.createElement('span')
+                  clone.textContent = textNode.textContent || ''
+                  clone.style.transform = `translate(${textRect.left}px, ${textRect.top}px)`
+                  clone.style.width = `${textRect.width}px`
+                  clone.style.height = `${textRect.height}px`
+                  textClones.push(clone)
+                }
+              })
+            const segment = document.createElement('span')
+            segment.style.clipPath = `inset(${top}px ${right}px ${bottom}px ${left}px)`
+            return [segment]
+          }),
+        )
+        cursorTextOverlay.replaceChildren(...textClones)
+        cursorMark.style.transform = `translate(${event.clientX - 44}px, ${event.clientY - 44}px)`
+        cursorBlackBlend.style.transform = `translate(${event.clientX - 22}px, ${event.clientY - 22}px)`
+        cursorRedOverlay.style.transform = `translate(${event.clientX - 22}px, ${event.clientY - 22}px)`
       }
 
       window.addEventListener('pointermove', (event) => {
@@ -1026,7 +1245,12 @@
         updateCustomCursor(event)
       })
       window.addEventListener('mouseleave', () => {
-        customCursor.style.transform = 'translate(-40px, -40px)'
+        previousCursor = null
+        cursorMark.style.transform = 'translate(-40px, -40px)'
+        cursorBlackBlend.style.transform = 'translate(-40px, -40px)'
+        cursorRedOverlay.style.transform = 'translate(-40px, -40px)'
+        cursorRedOverlay.replaceChildren()
+        cursorTextOverlay.replaceChildren()
       })
 
       renderProgress()

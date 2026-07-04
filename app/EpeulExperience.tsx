@@ -5,6 +5,14 @@ import styles from './epeul.module.css'
 
 type View = 'home' | 'music' | 'about'
 type ActiveView = View | null
+type CursorDirection = 'up' | 'down' | 'left' | 'right'
+type CursorTextClone = {
+  text: string
+  left: number
+  top: number
+  width: number
+  height: number
+}
 
 const tracks = [
   { index: '1', title: '9+1', duration: '02:18', src: '/static/audio/epeul/track01.mp3' },
@@ -142,12 +150,16 @@ export default function EpeulExperience() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
   const [cursor, setCursor] = useState({ x: -40, y: -40 })
+  const [cursorDirection, setCursorDirection] = useState<CursorDirection>('up')
+  const [cursorRedClips, setCursorRedClips] = useState<string[]>([])
+  const [cursorTextClones, setCursorTextClones] = useState<CursorTextClone[]>([])
   const [typedCharacters, setTypedCharacters] = useState(0)
   const [figureIndex, setFigureIndex] = useState(0)
   const [previousFigureIndex, setPreviousFigureIndex] = useState<number | null>(null)
   const [figureDirection, setFigureDirection] = useState<1 | -1>(1)
   const lastFigureWheelRef = useRef(0)
   const figureDragStartXRef = useRef<number | null>(null)
+  const previousCursorRef = useRef<{ x: number; y: number } | null>(null)
 
   const activeCaption =
     view === 'home' ? homeCaption : view === 'about' ? aboutCaptionGroups.flat() : []
@@ -339,9 +351,97 @@ export default function EpeulExperience() {
     event.currentTarget.setPointerCapture(event.pointerId)
   }
 
+  function updateCursorPosition(x: number, y: number) {
+    const previousCursor = previousCursorRef.current
+
+    if (previousCursor) {
+      const deltaX = x - previousCursor.x
+      const deltaY = y - previousCursor.y
+
+      if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+        setCursorDirection(
+          Math.abs(deltaX) > Math.abs(deltaY)
+            ? deltaX > 0
+              ? 'right'
+              : 'left'
+            : deltaY > 0
+              ? 'down'
+              : 'up',
+        )
+      }
+    }
+
+    previousCursorRef.current = { x, y }
+    setCursor({ x, y })
+
+    const cursorSize = 44
+    const cursorLeft = x - cursorSize / 2
+    const cursorTop = y - cursorSize / 2
+    const cursorRight = cursorLeft + cursorSize
+    const cursorBottom = cursorTop + cursorSize
+
+    const nextTextClones: CursorTextClone[] = []
+
+    setCursorRedClips(
+      Array.from(document.body.querySelectorAll('*')).flatMap((target) => {
+        if (target.closest('[aria-hidden="true"]')) {
+          return []
+        }
+
+        const background = getComputedStyle(target).backgroundColor
+
+        if (background !== 'rgb(183, 0, 0)' && background !== '#b70000') {
+          return []
+        }
+
+        const rect = target.getBoundingClientRect()
+        const intersects =
+          cursorRight > rect.left &&
+          cursorLeft < rect.right &&
+          cursorBottom > rect.top &&
+          cursorTop < rect.bottom
+
+        if (!intersects) {
+          return []
+        }
+
+        const edgeBleed = 0.2
+        const top = Math.max(0, rect.top - cursorTop - edgeBleed)
+        const right = Math.max(0, cursorRight - rect.right - edgeBleed)
+        const bottom = Math.max(0, cursorBottom - rect.bottom - edgeBleed)
+        const left = Math.max(0, rect.left - cursorLeft - edgeBleed)
+        const textTarget = target as HTMLElement
+
+        textTarget
+          .querySelectorAll(`.${styles.navLabel}, .${styles.trackIndex}, .${styles.trackMeta} span`)
+          .forEach((textNode) => {
+            const textRect = textNode.getBoundingClientRect()
+            const textIntersects =
+              cursorRight > textRect.left &&
+              cursorLeft < textRect.right &&
+              cursorBottom > textRect.top &&
+              cursorTop < textRect.bottom
+
+            if (textIntersects) {
+              nextTextClones.push({
+                text: textNode.textContent || '',
+                left: textRect.left,
+                top: textRect.top,
+                width: textRect.width,
+                height: textRect.height,
+              })
+            }
+          })
+
+        return [`inset(${top}px ${right}px ${bottom}px ${left}px)`]
+      }),
+    )
+    setCursorTextClones(nextTextClones)
+  }
+
   useEffect(() => {
     function handlePointerMove(event: globalThis.PointerEvent) {
-      setCursor({ x: event.clientX, y: event.clientY })
+      updateCursorPosition(event.clientX, event.clientY)
 
       if (isProgressDraggingRef.current) {
         updateProgressFromClientX(event.clientX)
@@ -394,36 +494,38 @@ export default function EpeulExperience() {
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.code === 'Space' && selectedTrack) {
+      const key = event.key || event.code
+
+      if ((event.code === 'Space' || key === ' ') && selectedTrack) {
         event.preventDefault()
         togglePlayback()
       }
 
-      if (event.code === 'ArrowDown') {
+      if (event.code === 'ArrowDown' || key === 'ArrowDown') {
         event.preventDefault()
-        playAdjacentTrack(1)
+        moveFigure(1)
       }
 
-      if (event.code === 'ArrowUp') {
+      if (event.code === 'ArrowUp' || key === 'ArrowUp') {
         event.preventDefault()
-        playAdjacentTrack(-1)
+        moveFigure(-1)
       }
 
-      if (event.code === 'ArrowRight') {
+      if (event.code === 'ArrowRight' || key === 'ArrowRight') {
         event.preventDefault()
         skipPlayback(5)
       }
 
-      if (event.code === 'ArrowLeft') {
+      if (event.code === 'ArrowLeft' || key === 'ArrowLeft') {
         event.preventDefault()
         skipPlayback(-5)
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('keydown', handleKeyDown, { capture: true })
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('keydown', handleKeyDown, { capture: true })
     }
   })
 
@@ -431,16 +533,60 @@ export default function EpeulExperience() {
     <main
       className={styles.viewport}
       onMouseMove={(event) => {
-        setCursor({ x: event.clientX, y: event.clientY })
+        updateCursorPosition(event.clientX, event.clientY)
       }}
       onMouseLeave={() => {
+        previousCursorRef.current = null
+        setCursorRedClips([])
+        setCursorTextClones([])
         setCursor({ x: -40, y: -40 })
       }}
     >
       <div
-        className={styles.customCursor}
-        style={{ transform: `translate(${cursor.x - 10}px, ${cursor.y - 10}px)` }}
+        className={styles.cursorBlackBlend}
+        style={{ transform: `translate(${cursor.x - 22}px, ${cursor.y - 22}px)` }}
       />
+      <div
+        className={styles.cursorRedOverlay}
+        style={{ transform: `translate(${cursor.x - 22}px, ${cursor.y - 22}px)` }}
+      >
+        {cursorRedClips.map((clipPath, index) => (
+          <span
+            className={styles.cursorRedOverlaySegment}
+            key={`${clipPath}-${index}`}
+            style={{ clipPath }}
+          />
+        ))}
+      </div>
+      <div className={styles.cursorTextOverlay} aria-hidden="true">
+        {cursorTextClones.map((clone, index) => (
+          <span
+            className={styles.cursorTextClone}
+            key={`${clone.text}-${clone.left}-${clone.top}-${index}`}
+            style={{
+              transform: `translate(${clone.left}px, ${clone.top}px)`,
+              width: `${clone.width}px`,
+              height: `${clone.height}px`,
+            }}
+          >
+            {clone.text}
+          </span>
+        ))}
+      </div>
+      <div
+        className={`${styles.cursorMark} ${
+          cursorDirection === 'up'
+            ? styles.cursorUp
+            : cursorDirection === 'down'
+              ? styles.cursorDown
+              : cursorDirection === 'left'
+                ? styles.cursorLeft
+                : styles.cursorRight
+        }`}
+        style={{ transform: `translate(${cursor.x - 44}px, ${cursor.y - 44}px)` }}
+      >
+        <span className={styles.cursorCompass} />
+      </div>
       <section className={styles.stage} aria-label="MIBALHWA HAUS : MOOEEMEE">
         <nav className={styles.nav} aria-label="Primary">
           {categories.map((category) => {
@@ -453,7 +599,9 @@ export default function EpeulExperience() {
                 type="button"
                 onClick={() => selectView(category.view)}
               >
-                {isActive ? `<${category.label}>` : category.label}
+                <span className={styles.navLabel}>
+                  {isActive ? `<${category.label}>` : category.label}
+                </span>
               </button>
             )
           })}
@@ -546,6 +694,7 @@ export default function EpeulExperience() {
 
         <div
           className={styles.mainFigureFrame}
+          data-cursor-image
           onPointerDown={startFigureDrag}
           onPointerMove={dragFigure}
           onPointerUp={stopFigureDrag}
@@ -670,18 +819,8 @@ export default function EpeulExperience() {
           ))}
           <i
             className={styles.dotIndicator}
-            style={{ transform: `translateY(${figureIndex * 22}px)` }}
+            style={{ transform: `translateY(${figureIndex * 28}px)` }}
           />
-        </div>
-
-        <div className={styles.lowerLayer} aria-hidden="true">
-          <div className={styles.sideObject}>
-            <img
-              src="/static/images/epeul/door-section.png"
-              alt=""
-              draggable={false}
-            />
-          </div>
         </div>
       </section>
     </main>

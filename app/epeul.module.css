@@ -8,7 +8,7 @@
 
 .viewport {
   min-height: 100svh;
-  background: #ffffff;
+  background: #f4f4f4;
   color: #000000;
   cursor: none !important;
   overflow: hidden;
@@ -22,15 +22,97 @@
   cursor: none !important;
 }
 
-.customCursor {
+.cursorMark {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  width: 88px;
+  height: 88px;
+  pointer-events: none;
+}
+
+.cursorBlackBlend {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 44px;
+  height: 44px;
+  pointer-events: none;
+}
+
+.cursorBlackBlend {
+  z-index: 9998;
+  border-radius: 50%;
+  background: #b70000;
+  mix-blend-mode: lighten;
+}
+
+.cursorRedOverlay {
   position: fixed;
   top: 0;
   left: 0;
   z-index: 9999;
-  width: 20px;
-  height: 20px;
-  background: #b70000;
+  width: 44px;
+  height: 44px;
   pointer-events: none;
+}
+
+.cursorRedOverlaySegment {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #d8e8ad;
+  mix-blend-mode: lighten;
+  pointer-events: none;
+}
+
+.cursorTextOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.cursorTextClone {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-family: "ITC Avant Garde Gothic Pro", "Avant Garde", Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.42px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.cursorCompass {
+  position: absolute;
+  inset: 0;
+  background: #b70000;
+  mask: var(--cursor-image) center / contain no-repeat;
+  pointer-events: none;
+  -webkit-mask: var(--cursor-image) center / contain no-repeat;
+}
+
+.cursorUp {
+  --cursor-image: url("/static/images/epeul/cursor-mark-up.svg");
+}
+
+.cursorDown {
+  --cursor-image: url("/static/images/epeul/cursor-mark-down.svg");
+}
+
+.cursorLeft {
+  --cursor-image: url("/static/images/epeul/cursor-mark-left.svg");
+}
+
+.cursorRight {
+  --cursor-image: url("/static/images/epeul/cursor-mark-right.svg");
 }
 
 .stage {
@@ -39,7 +121,7 @@
   height: 100svh;
   min-height: 640px;
   overflow: hidden;
-  background: #ffffff;
+  background: #f4f4f4;
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -69,6 +151,7 @@
 }
 
 .navItem {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -79,7 +162,16 @@
   line-height: 1.2;
 }
 
+.navLabel {
+  position: relative;
+}
+
 .activeNav {
+  background: #b70000;
+  color: #ffffff;
+}
+
+.navItem:hover {
   background: #b70000;
   color: #ffffff;
 }
@@ -103,6 +195,14 @@
   border-radius: 0;
   background: transparent;
   cursor: pointer;
+}
+
+.playToggle:hover .pauseIcon span {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.playToggle:hover .playIcon {
+  border-left-color: rgba(0, 0, 0, 0.35);
 }
 
 .pauseIcon {
@@ -174,6 +274,15 @@
   transform: translate(-50%, -50%);
 }
 
+.progressTrack:hover::before {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.progressTrack:hover .progressKnob {
+  width: 10px;
+  height: 10px;
+}
+
 .trackList {
   position: absolute;
   top: 62px;
@@ -203,8 +312,9 @@
   opacity: 1;
 }
 
-.trackRow:hover {
-  color: #000000;
+.trackRow:not(:disabled):hover {
+  background: #b70000;
+  color: #ffffff;
 }
 
 .trackRow:disabled:hover {
@@ -243,23 +353,33 @@
   color: #000000;
 }
 
+.musicInactiveTrack:hover .trackIndex {
+  color: #ffffff;
+}
+
 .mainFigureFrame {
+  --figure-height: min(550px, calc(100vh - 140px));
+  --figure-width: calc(var(--figure-height) * 593 / 600);
   position: absolute;
   top: 50%;
   left: 50%;
   z-index: 1;
-  width: min(80vw, 900px);
-  height: 550px;
+  width: var(--figure-width);
+  height: calc(var(--figure-height) + 37px);
   transform: translate(-50%, -50%);
-  overflow: hidden;
+  overflow: visible;
   pointer-events: auto;
+}
+
+.mainFigureFrame:hover .activeFigure {
+  filter: contrast(1.04);
 }
 
 .mainFigureTrack {
   position: absolute;
   inset: 0;
   width: 100%;
-  height: 550px;
+  height: var(--figure-height);
 }
 
 .mainFigure {
@@ -267,7 +387,7 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: 550px;
+  height: var(--figure-height);
   object-fit: contain;
   opacity: 0;
   transform: translateX(0);
@@ -398,54 +518,54 @@
   right: 20px;
   z-index: 5;
   display: flex;
-  width: 10px;
+  width: 22px;
   transform: translateY(-50%);
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .dots span {
-  width: 10px;
-  height: 10px;
-  background: rgba(0, 0, 0, 0.1);
+  position: relative;
+  width: 30px;
+  height: 14px;
+  background: transparent;
+}
+
+.dots span::before,
+.dots span::after {
+  position: absolute;
+  top: 50%;
+  color: #b2b2b2;
+  font-family: "D2Coding", "Apple SD Gothic Neo", "Malgun Gothic", monospace;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.dots span::before {
+  left: 0;
+  content: "[";
+}
+
+.dots span::after {
+  right: 0;
+  content: "]";
 }
 
 .dots .activeDot {
-  opacity: 0;
+  opacity: 1;
 }
 
 .dotIndicator {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 10px;
-  height: 10px;
+  top: 3px;
+  left: 11px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
   background: #000000;
   transition: transform 420ms cubic-bezier(0.16, 0.96, 0.24, 1);
-}
-
-.lowerLayer {
-  position: absolute;
-  top: 85.74%;
-  left: 0;
-  z-index: 2;
-  width: 100%;
-  height: 14.26%;
-  pointer-events: none;
-}
-
-.sideObject {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  height: 100px;
-}
-
-.sideObject img {
-  display: block;
-  width: auto;
-  height: 100%;
-  max-width: none;
 }
 
 @media (max-width: 900px) {
@@ -464,11 +584,13 @@
     white-space: normal;
   }
 
-  .mainFigureFrame,
+  .mainFigureFrame {
+    top: 50%;
+  }
+
   .mainFigureTrack,
   .mainFigure {
-    top: 50%;
-    height: 550px;
+    height: var(--figure-height);
   }
 
   .dots {
