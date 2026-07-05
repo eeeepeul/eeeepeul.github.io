@@ -835,13 +835,13 @@ export default function EpeulExperience() {
           ))}
           <i
             className={styles.dotIndicator}
-            style={{ transform: `translateY(${figureIndex * 28}px)` }}
+            style={{ '--dot-index': figureIndex } as CSSProperties}
           />
         </div>
         <b
           className={styles.dotLabel}
           key={figureIndex}
-          style={{ '--dot-label-offset': `${figureIndex * 28}px` } as CSSProperties}
+          style={{ '--dot-label-offset': `calc(${figureIndex} * var(--dot-step))` } as CSSProperties}
         >
           if and only if
         </b>

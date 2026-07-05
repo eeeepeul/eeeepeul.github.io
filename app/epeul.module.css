@@ -123,6 +123,10 @@
 .stage {
   --figure-height: min(320px, calc(100vh - 180px));
   --figure-width: calc(var(--figure-height) * 1250 / 1246);
+  --dot-item-height: 12px;
+  --dot-gap: 12px;
+  --dot-step: 24px;
+  --dot-stack-offset: calc(((var(--dot-item-height) * 10) + (var(--dot-gap) * 9)) / -2);
   position: relative;
   width: 100vw;
   height: 100svh;
@@ -525,13 +529,13 @@
   width: 22px;
   transform: translateY(-50%);
   flex-direction: column;
-  gap: 14px;
+  gap: var(--dot-gap);
 }
 
 .dots span {
   position: relative;
   width: 30px;
-  height: 14px;
+  height: var(--dot-item-height);
   background: transparent;
 }
 
@@ -563,12 +567,13 @@
 
 .dotIndicator {
   position: absolute;
-  top: 3px;
+  top: calc((var(--dot-item-height) - 8px) / 2);
   left: 11px;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: #000000;
+  transform: translateY(calc(var(--dot-index, 0) * var(--dot-step)));
   transition: transform 420ms cubic-bezier(0.16, 0.96, 0.24, 1);
 }
 
@@ -620,13 +625,16 @@
   }
 
   .stage {
+    --dot-item-height: 14px;
+    --dot-gap: 14px;
+    --dot-step: 28px;
     --figure-height: 400px;
   }
 }
 
 @media (orientation: landscape) and (min-width: 1200px) {
   .dotLabel {
-    top: calc(50% - 113px + var(--dot-label-offset, 0)) !important;
+    top: calc(50% + var(--dot-stack-offset) + var(--dot-label-offset, 0)) !important;
     left: auto;
     right: 60px;
     text-align: right;
