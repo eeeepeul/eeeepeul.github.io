@@ -122,7 +122,7 @@
 
 .stage {
   --figure-height: min(320px, calc(100vh - 180px));
-  --figure-width: calc(var(--figure-height) * 1250 / 1246);
+  --figure-width: min(90vw, 720px);
   --dot-item-height: 12px;
   --dot-gap: 12px;
   --dot-step: 24px;
@@ -394,12 +394,13 @@
 .mainFigure {
   position: absolute;
   top: 0;
-  left: 0;
-  width: 100%;
+  left: 50%;
+  width: auto;
+  max-width: 90vw;
   height: var(--figure-height);
   object-fit: contain;
   opacity: 0;
-  transform: translateX(0);
+  transform: translateX(-50%);
   transition: transform 720ms cubic-bezier(0.2, 1.04, 0.34, 1);
   user-select: none;
   will-change: opacity, transform;
@@ -409,7 +410,7 @@
 .activeFigure {
   z-index: 2;
   opacity: 1;
-  transform: translateX(0);
+  transform: translateX(-50%);
 }
 
 .previousFigure {
@@ -426,28 +427,28 @@
 }
 
 .toLeft {
-  transform: translateX(-18px);
+  transform: translateX(calc(-50% - 18px));
 }
 
 .toRight {
-  transform: translateX(18px);
+  transform: translateX(calc(-50% + 18px));
 }
 
 @keyframes figureFromRight {
   from {
-    transform: translateX(18px);
+    transform: translateX(calc(-50% + 18px));
   }
   to {
-    transform: translateX(0);
+    transform: translateX(-50%);
   }
 }
 
 @keyframes figureFromLeft {
   from {
-    transform: translateX(-18px);
+    transform: translateX(calc(-50% - 18px));
   }
   to {
-    transform: translateX(0);
+    transform: translateX(-50%);
   }
 }
 
@@ -674,7 +675,7 @@
     --dot-item-height: 14px;
     --dot-gap: 14px;
     --dot-step: 28px;
-    --figure-height: 400px;
+    --figure-height: 450px;
   }
 }
 
@@ -683,6 +684,7 @@
     top: calc(50% + var(--dot-stack-offset) + var(--dot-label-offset, 0)) !important;
     left: auto;
     right: 60px;
+    line-height: var(--dot-item-height);
     text-align: right;
     transform: none;
   }

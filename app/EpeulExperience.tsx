@@ -30,10 +30,15 @@ const categories: Array<{ label: string; view: View }> = [
   { label: '無sic', view: 'music' },
 ]
 
-const figureSlides = Array.from(
-  { length: 10 },
-  () => '/static/images/epeul/example-image-01.png'
-)
+const figureSlides = [
+  '/static/images/epeul/example-image-01.png',
+  '/static/images/epeul/example-image-02.png',
+  '/static/images/epeul/example-image-03.png',
+  '/static/images/epeul/example-image-04.png',
+  ...Array.from({ length: 6 }, () => '/static/images/epeul/example-image-01.png'),
+]
+
+const figureLabels = ['歡迎', ...Array.from({ length: 9 }, () => 'if and only if')]
 
 const homeCaption: CaptionBlock[] = [
   {
@@ -927,7 +932,7 @@ export default function EpeulExperience() {
           key={figureIndex}
           style={{ '--dot-label-offset': `calc(${figureIndex} * var(--dot-step))` } as CSSProperties}
         >
-          if and only if
+          {figureLabels[figureIndex]}
         </b>
       </section>
     </main>
