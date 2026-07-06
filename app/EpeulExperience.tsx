@@ -1,6 +1,6 @@
 'use client'
 
-import { CSSProperties, PointerEvent, WheelEvent, useEffect, useRef, useState } from 'react'
+import { CSSProperties, PointerEvent, WheelEvent, useEffect, useMemo, useRef, useState } from 'react'
 import styles from './epeul.module.css'
 
 type View = 'home' | 'music' | 'about'
@@ -12,6 +12,10 @@ type CursorTextClone = {
   top: number
   width: number
   height: number
+}
+type CaptionBlock = {
+  en: string
+  ko: string
 }
 const tracks = [
   { index: '1', title: '9+1', duration: '02:18', src: '/static/audio/epeul/track01.mp3' },
@@ -31,23 +35,52 @@ const figureSlides = Array.from(
   () => '/static/images/epeul/example-image-01.png'
 )
 
-const homeCaption = [
-  'MIBALHWA HAUS : MOOEEMEE',
-  'MH:M은 이플의 첫 앨범 〈mooeemee〉가 하나의 집처럼 열리는 웹 공간이다.',
-  '말이 되지 못한, 미발화된 감정들이 음악으로 머무는 곳.',
+const homeCaption: CaptionBlock[] = [
+  {
+    en: 'MIBALHWA HAUS : MOOEEMEE',
+    ko: 'MIBALHWA HAUS : MOOEEMEE',
+  },
+  {
+    en: "MH:M is a web space where EPEUL's first album 〈mooeemee〉 opens like a house.",
+    ko: 'MH:M은 이플의 첫 앨범 〈mooeemee〉가 하나의 집처럼 열리는 웹 공간이다.',
+  },
+  {
+    en: 'A place where emotions that could not become words remain as music.',
+    ko: '말이 되지 못한, 미발화된 감정들이 음악으로 머무는 곳.',
+  },
 ]
 
-const aboutCaptionGroups = [
+const aboutCaptionGroups: CaptionBlock[][] = [
   [
-    'EPEUL은 가사 없는 딥하우스 음악을 만드는 VJ 아티스트이다.',
-    '선명한 언어 대신 반복되는 리듬과 겹겹의 사운드로\n쉽게 설명되지 않는 감정들을 음악에 담아낸다.',
-    'EPEUL은 찬란하게 피어나는 순간보다,\n그 아래에서 오래 버티고 남아 있는 것들에 더 가까이 선다.',
+    {
+      en: 'EPEUL is a VJ artist who makes lyricless deep house music.',
+      ko: 'EPEUL은 가사 없는 딥하우스 음악을 만드는 VJ 아티스트이다.',
+    },
+    {
+      en: 'Instead of clear language, repeating rhythms and layered sounds\nhold emotions that are not easily explained.',
+      ko: '선명한 언어 대신 반복되는 리듬과 겹겹의 사운드로\n쉽게 설명되지 않는 감정들을 음악에 담아낸다.',
+    },
+    {
+      en: 'EPEUL stands closer not to moments that bloom brilliantly,\nbut to what endures and remains beneath them.',
+      ko: 'EPEUL은 찬란하게 피어나는 순간보다,\n그 아래에서 오래 버티고 남아 있는 것들에 더 가까이 선다.',
+    },
   ],
   [
-    '이플의 첫 앨범 〈mooeemee〉는\n‘無의미’를 ‘무의 美’로 다시 읽는 이름이다.',
-    '의미 없다고 생각했던 것,\n혹은 드러나지 않은 것 안에서 발견하는 아름다움을 담고 있다.',
+    {
+      en: "EPEUL's first album 〈mooeemee〉\nreads 'meaninglessness' as 'the beauty of nothingness.'",
+      ko: '이플의 첫 앨범 〈mooeemee〉는\n‘無의미’를 ‘무의 美’로 다시 읽는 이름이다.',
+    },
+    {
+      en: 'It holds the beauty found inside what seemed meaningless,\nor inside what has not yet been revealed.',
+      ko: '의미 없다고 생각했던 것,\n혹은 드러나지 않은 것 안에서 발견하는 아름다움을 담고 있다.',
+    },
   ],
-  ['instagram @eeeepeul\nEPEUL@ 仮想アーティスト  MH :M©\nSEOUL, KR\n03:15'],
+  [
+    {
+      en: 'instagram @eeeepeul\nEPEUL@ VIRTUAL ARTIST  MH :M©\nSEOUL, KR\n03:15',
+      ko: 'instagram @eeeepeul\nEPEUL@ 仮想アーティスト  MH :M©\nSEOUL, KR\n03:15',
+    },
+  ],
 ]
 
 const progressTrackWidth = 78
@@ -139,6 +172,49 @@ function renderStaticBlock(text: string, className: string) {
   )
 }
 
+function renderSelectionBlock(text: string) {
+  const hasKorean = /[가-힣]/.test(text)
+
+  if (!hasKorean) {
+    return renderStaticBlock(
+      text,
+      `${styles.captionBox} ${styles.captionKorean} ${styles.captionSelectionEnglish}`
+    )
+  }
+
+  return (
+    <span className={`${styles.captionBox} ${styles.captionKorean}`}>
+      {text.split('\n').map((line, lineIndex, lines) => {
+        const parts = line.split(/([A-Za-z0-9@©:.'’+\-]+(?:\s+[A-Za-z0-9@©:.'’+\-]+)*)/g)
+
+        return (
+          <span key={`${text}-${lineIndex}`}>
+            {parts.map((part, partIndex) => {
+              if (!part) {
+                return null
+              }
+
+              const isEnglishPart = /[A-Za-z0-9@©]/.test(part)
+
+              return (
+                <span
+                  className={
+                    isEnglishPart ? styles.captionSelectionEnglish : styles.captionKoreanSmall
+                  }
+                  key={`${text}-${lineIndex}-${partIndex}`}
+                >
+                  {part}
+                </span>
+              )
+            })}
+            {lineIndex < lines.length - 1 && <br />}
+          </span>
+        )
+      })}
+    </span>
+  )
+}
+
 export default function EpeulExperience() {
   const audioRef = useRef<HTMLAudioElement>(null)
   const pendingSeekRef = useRef<number | null>(null)
@@ -160,9 +236,15 @@ export default function EpeulExperience() {
   const figureDragStartXRef = useRef<number | null>(null)
   const previousCursorRef = useRef<{ x: number; y: number } | null>(null)
 
-  const activeCaption =
-    view === 'home' ? homeCaption : view === 'about' ? aboutCaptionGroups.flat() : []
-  const activeCaptionLength = activeCaption.reduce((total, text) => total + typingTextLength(text), 0)
+  const activeCaption = useMemo(
+    () => (view === 'home' ? homeCaption : view === 'about' ? aboutCaptionGroups.flat() : []),
+    [view]
+  )
+  const activeCaptionText = useMemo(() => activeCaption.map((block) => block.en), [activeCaption])
+  const activeCaptionLength = useMemo(
+    () => activeCaptionText.reduce((total, text) => total + typingTextLength(text), 0),
+    [activeCaptionText]
+  )
 
   function clearSelection() {
     audioRef.current?.pause()
@@ -479,19 +561,19 @@ export default function EpeulExperience() {
 
         timer = window.setTimeout(
           typeNextCharacter,
-          nextTypingDelay(activeCaption, current + 1)
+          nextTypingDelay(activeCaptionText, current + 1)
         )
 
         return current + 1
       })
     }
 
-    timer = window.setTimeout(typeNextCharacter, nextTypingDelay(activeCaption, 0))
+    timer = window.setTimeout(typeNextCharacter, nextTypingDelay(activeCaptionText, 0))
 
     return () => {
       window.clearTimeout(timer)
     }
-  }, [view, activeCaptionLength])
+  }, [view, activeCaptionLength, activeCaptionText])
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -744,8 +826,8 @@ export default function EpeulExperience() {
           <div className={styles.caption}>
             <div className={styles.captionSizer} aria-hidden="true">
               {homeCaption.map((line) => (
-                <p key={line}>
-                  <span className={styles.captionBox}>{line}</span>
+                <p key={line.en}>
+                  <span className={styles.captionBox}>{line.en}</span>
                 </p>
               ))}
             </div>
@@ -756,19 +838,20 @@ export default function EpeulExperience() {
                 return homeCaption.map((line) => {
                   const visibleCharacters = remainingCharacters
                   const typedBlock = renderTypingBlock(
-                    line,
+                    line.en,
                     visibleCharacters,
                     `${styles.captionBox} ${styles.captionReveal}`
                   )
-                  remainingCharacters -= typingTextLength(line)
+                  remainingCharacters -= typingTextLength(line.en)
 
                   return (
-                    <p key={line}>
+                    <p key={line.en}>
                       {renderStaticBlock(
-                        line,
+                        line.en,
                         `${styles.captionBox} ${styles.captionPlaceholder}`
                       )}
                       {typedBlock}
+                      {renderSelectionBlock(line.ko)}
                     </p>
                   )
                 })
@@ -781,12 +864,12 @@ export default function EpeulExperience() {
           <div className={`${styles.caption} ${styles.aboutCaption}`}>
             <div className={`${styles.captionSizer} ${styles.aboutCaption}`} aria-hidden="true">
               {aboutCaptionGroups.map((group) => (
-                <div className={styles.captionGroup} key={group.join('')}>
+                <div className={styles.captionGroup} key={group.map((block) => block.en).join('')}>
                   {group.map((block) => (
-                    <p key={block}>
+                    <p key={block.en}>
                       <span className={styles.captionBox}>
-                        {block.split('\n').map((line, index, lines) => (
-                          <span key={`${block}-${index}`}>
+                        {block.en.split('\n').map((line, index, lines) => (
+                          <span key={`${block.en}-${index}`}>
                             {line}
                             {index < lines.length - 1 && <br />}
                           </span>
@@ -802,23 +885,24 @@ export default function EpeulExperience() {
                 let remainingCharacters = typedCharacters
 
                 return aboutCaptionGroups.map((group) => (
-                  <div className={styles.captionGroup} key={group.join('')}>
+                  <div className={styles.captionGroup} key={group.map((block) => block.en).join('')}>
                     {group.map((block) => {
                       const visibleCharacters = remainingCharacters
                       const typedBlock = renderTypingBlock(
-                        block,
+                        block.en,
                         visibleCharacters,
                         `${styles.captionBox} ${styles.captionReveal}`
                       )
-                      remainingCharacters -= typingTextLength(block)
+                      remainingCharacters -= typingTextLength(block.en)
 
                       return (
-                        <p key={block}>
+                        <p key={block.en}>
                           {renderStaticBlock(
-                            block,
+                            block.en,
                             `${styles.captionBox} ${styles.captionPlaceholder}`
                           )}
                           {typedBlock}
+                          {renderSelectionBlock(block.ko)}
                         </p>
                       )
                     })}

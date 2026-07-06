@@ -34,8 +34,8 @@
       }
 
       ::selection {
-        background: #d8e8ad;
-        color: #000;
+        background: #fff;
+        color: #b70000;
       }
 
       .cursor-mark {
@@ -467,6 +467,9 @@
         font-size: 12px;
         font-weight: 700;
         line-height: 1.2;
+        pointer-events: auto;
+        user-select: text;
+        -webkit-user-select: text;
       }
 
       .home .caption,
@@ -478,6 +481,8 @@
         margin: 0;
         position: relative;
         white-space: nowrap;
+        user-select: text;
+        -webkit-user-select: text;
       }
 
       .caption-box {
@@ -488,12 +493,51 @@
 
       .caption-placeholder {
         visibility: hidden;
+        user-select: none;
+        -webkit-user-select: none;
       }
 
       .caption-reveal {
         position: absolute;
         top: 0;
         left: 0;
+        z-index: 1;
+        pointer-events: none;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      .caption-korean {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 2;
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: transparent;
+        color: transparent;
+        user-select: text;
+        -webkit-user-select: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .caption-korean-small {
+        display: inline-block;
+        font-size: calc(1em - 2px);
+      }
+
+      .caption-selection-english {
+        display: inline-block;
+      }
+
+      .caption-korean::selection,
+      .caption-korean *::selection {
+        background: #fff;
+        color: #b70000;
+        -webkit-text-fill-color: #b70000;
       }
 
       .caption-sizer {
@@ -502,6 +546,8 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 4px;
+        user-select: none;
+        -webkit-user-select: none;
       }
 
       .caption-typed {
@@ -784,21 +830,50 @@
       const figureSlides = 10
       const captions = {
         home: [
-          'MIBALHWA HAUS : MOOEEMEE',
-          'MH:M은 이플의 첫 앨범 〈mooeemee〉가 하나의 집처럼 열리는 웹 공간이다.',
-          '말이 되지 못한, 미발화된 감정들이 음악으로 머무는 곳.',
+          {
+            en: 'MIBALHWA HAUS : MOOEEMEE',
+            ko: 'MIBALHWA HAUS : MOOEEMEE',
+          },
+          {
+            en: "MH:M is a web space where EPEUL's first album 〈mooeemee〉 opens like a house.",
+            ko: 'MH:M은 이플의 첫 앨범 〈mooeemee〉가 하나의 집처럼 열리는 웹 공간이다.',
+          },
+          {
+            en: 'A place where emotions that could not become words remain as music.',
+            ko: '말이 되지 못한, 미발화된 감정들이 음악으로 머무는 곳.',
+          },
         ],
         about: [
           [
-            'EPEUL은 가사 없는 딥하우스 음악을 만드는 VJ 아티스트이다.',
-            '선명한 언어 대신 반복되는 리듬과 겹겹의 사운드로\\n쉽게 설명되지 않는 감정들을 음악에 담아낸다.',
-            'EPEUL은 찬란하게 피어나는 순간보다,\\n그 아래에서 오래 버티고 남아 있는 것들에 더 가까이 선다.',
+            {
+              en: 'EPEUL is a VJ artist who makes lyricless deep house music.',
+              ko: 'EPEUL은 가사 없는 딥하우스 음악을 만드는 VJ 아티스트이다.',
+            },
+            {
+              en: 'Instead of clear language, repeating rhythms and layered sounds\\nhold emotions that are not easily explained.',
+              ko: '선명한 언어 대신 반복되는 리듬과 겹겹의 사운드로\\n쉽게 설명되지 않는 감정들을 음악에 담아낸다.',
+            },
+            {
+              en: 'EPEUL stands closer not to moments that bloom brilliantly,\\nbut to what endures and remains beneath them.',
+              ko: 'EPEUL은 찬란하게 피어나는 순간보다,\\n그 아래에서 오래 버티고 남아 있는 것들에 더 가까이 선다.',
+            },
           ],
           [
-            '이플의 첫 앨범 〈mooeemee〉는\\n‘無의미’를 ‘무의 美’로 다시 읽는 이름이다.',
-            '의미 없다고 생각했던 것,\\n혹은 드러나지 않은 것 안에서 발견하는 아름다움을 담고 있다.',
+            {
+              en: "EPEUL's first album 〈mooeemee〉\\nreads 'meaninglessness' as 'the beauty of nothingness.'",
+              ko: '이플의 첫 앨범 〈mooeemee〉는\\n‘無의미’를 ‘무의 美’로 다시 읽는 이름이다.',
+            },
+            {
+              en: 'It holds the beauty found inside what seemed meaningless,\\nor inside what has not yet been revealed.',
+              ko: '의미 없다고 생각했던 것,\\n혹은 드러나지 않은 것 안에서 발견하는 아름다움을 담고 있다.',
+            },
           ],
-          ['instagram @eeeepeul\\nEPEUL@ 仮想アーティスト  MH :M©\\nSEOUL, KR\\n03:15'],
+          [
+            {
+              en: 'instagram @eeeepeul\\nEPEUL@ VIRTUAL ARTIST  MH :M©\\nSEOUL, KR\\n03:15',
+              ko: 'instagram @eeeepeul\\nEPEUL@ 仮想アーティスト  MH :M©\\nSEOUL, KR\\n03:15',
+            },
+          ],
         ],
       }
       const audioSources = {
@@ -978,7 +1053,7 @@
         const groups = lines.map((group) => (Array.isArray(group) ? group : [group]))
         const totalCharacters = groups
           .flat()
-          .reduce((total, text) => total + text.replace(/\\n/g, '').length, 0)
+          .reduce((total, block) => total + block.en.replace(/\\n/g, '').length, 0)
         let typedCharacters = 0
 
         window.clearTimeout(typingTimer)
@@ -992,12 +1067,37 @@
           })
         }
 
+        function renderSelectionText(text) {
+          if (!/[가-힣]/.test(text)) {
+            return `<span class="caption-box caption-korean caption-selection-english">${text.replace(/\\n/g, '<br>')}</span>`
+          }
+
+          return `<span class="caption-box caption-korean">${text
+            .split('\\n')
+            .map((line) => {
+              return line
+                .split(/([A-Za-z0-9@©:.'’+\\-]+(?:\\s+[A-Za-z0-9@©:.'’+\\-]+)*)/g)
+                .map((part) => {
+                  if (!part) {
+                    return ''
+                  }
+
+                  const className = /[A-Za-z0-9@©]/.test(part)
+                    ? 'caption-selection-english'
+                    : 'caption-korean-small'
+                  return `<span class="${className}">${part}</span>`
+                })
+                .join('')
+            })
+            .join('<br>')}</span>`
+        }
+
         function paintCaption() {
           let remainingCharacters = typedCharacters
           const sizerHtml = groups
             .map((group) => {
               return `<div class="caption-group">${group
-                .map((block) => `<p><span class="caption-box">${block.replace(/\\n/g, '<br>')}</span></p>`)
+                .map((block) => `<p><span class="caption-box">${block.en.replace(/\\n/g, '<br>')}</span></p>`)
                 .join('')}</div>`
             })
             .join('')
@@ -1005,17 +1105,19 @@
             .map((group) => {
               return `<div class="caption-group">${group
                 .map((block) => {
-                  const visibleLines = visibleTypingText(block, remainingCharacters)
-                  remainingCharacters -= block.replace(/\\n/g, '').length
+                  const visibleLines = visibleTypingText(block.en, remainingCharacters)
+                  remainingCharacters -= block.en.replace(/\\n/g, '').length
                   const lastVisibleLineIndex = visibleLines.findLastIndex((line) => line.length > 0)
                   const visibleText =
                     lastVisibleLineIndex === -1
                       ? ''
                       : visibleLines.slice(0, lastVisibleLineIndex + 1).join('<br>')
-                  return `<p><span class="caption-box caption-placeholder">${block.replace(
+                  return `<p><span class="caption-box caption-placeholder">${block.en.replace(
                     /\\n/g,
                     '<br>'
-                  )}</span>${visibleText ? `<span class="caption-box caption-reveal">${visibleText}</span>` : ''}</p>`
+                  )}</span>${
+                    visibleText ? `<span class="caption-box caption-reveal">${visibleText}</span>` : ''
+                  }${renderSelectionText(block.ko)}</p>`
                 })
                 .join('')}</div>`
             })
@@ -1039,11 +1141,20 @@
 
           typingTimer = window.setTimeout(
             typeNextCharacter,
-            nextTypingDelay(groups.flat(), typedCharacters)
+            nextTypingDelay(
+              groups.flat().map((block) => block.en),
+              typedCharacters
+            )
           )
         }
 
-        typingTimer = window.setTimeout(typeNextCharacter, nextTypingDelay(groups.flat(), 0))
+        typingTimer = window.setTimeout(
+          typeNextCharacter,
+          nextTypingDelay(
+            groups.flat().map((block) => block.en),
+            0
+          )
+        )
       }
 
       function clearSelection() {
