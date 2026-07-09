@@ -35,10 +35,15 @@ const figureSlides = [
   '/static/images/epeul/example-image-02.png',
   '/static/images/epeul/example-image-03.png',
   '/static/images/epeul/example-image-04.png',
-  ...Array.from({ length: 6 }, () => '/static/images/epeul/example-image-01.png'),
+  '/static/images/epeul/example-image-05.png',
+  '/static/images/epeul/example-image-06.png',
+  ...Array.from({ length: 4 }, () => '/static/images/epeul/example-image-01.png'),
 ]
 
-const figureLabels = ['歡迎', ...Array.from({ length: 9 }, () => 'if and only if')]
+const figureLabels = [
+  '歡迎',
+  ...Array.from({ length: 9 }, () => 'mooeemee'),
+]
 
 const homeCaption: CaptionBlock[] = [
   {
