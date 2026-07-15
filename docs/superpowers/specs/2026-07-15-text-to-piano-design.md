@@ -3,8 +3,8 @@
 ## Purpose
 
 Create a new Text to Piano page reached from the black square button in the
-existing EPEUL experience. This first phase validates the visual composition
-and interaction before adding TTS, Python spectrum analysis, or piano audio.
+existing EPEUL experience. This interface-only prototype validates the visual
+composition and interaction without generating or playing audio.
 
 ## Approved Scope
 
@@ -88,9 +88,8 @@ Each event contains:
 - An energy value used for radius and opacity.
 - A duration used for the circle entrance and settling motion.
 
-This event shape is deliberately compatible with later spectrum-analysis data.
-When the audio phase begins, the placeholder generator can be replaced without
-changing the renderer or page layout.
+The event shape is isolated from rendering so the visual pattern generator can
+be refined later without changing the page layout or animation component.
 
 ## Components
 
@@ -125,10 +124,3 @@ while preserving these boundaries in its functions and DOM elements.
 - Desktop and mobile screenshots show the visualization centered and the input
   fully visible.
 - Reduced-motion mode removes nonessential movement.
-
-## Future Audio Phase
-
-The next phase will replace `createPlaceholderEvents` with events derived from a
-TTS audio spectrum. A Python analysis service can emit the same normalized event
-shape, while the browser maps frequency peaks to piano notes and schedules audio
-alongside the existing visualization.
