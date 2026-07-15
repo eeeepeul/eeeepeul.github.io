@@ -123,6 +123,7 @@
 .stage {
   --figure-height: min(320px, calc(100vh - 180px));
   --figure-width: min(90vw, 720px);
+  --track-panel-left: 168px;
   --dot-item-height: 12px;
   --dot-gap: 12px;
   --dot-step: 24px;
@@ -148,6 +149,7 @@
   font-size: 12px;
   font-weight: 600;
   letter-spacing: -0.36px;
+  color: #000000;
 }
 
 .navItem,
@@ -296,8 +298,8 @@
 
 .trackList {
   position: absolute;
-  top: 62px;
-  left: 20px;
+  top: 20px;
+  left: var(--track-panel-left);
   z-index: 5;
   display: flex;
   flex-direction: column;
@@ -641,6 +643,36 @@
   animation: dotLabelAppear 1ms step-end 100ms both;
 }
 
+.coordinateReadout {
+  position: absolute;
+  left: var(--track-panel-left);
+  bottom: 20px;
+  z-index: 5;
+  display: block;
+  color: rgba(0, 0, 0, 0.3);
+  font-family: "D2Coding", "Courier New", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.3px;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.cornerButton {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  z-index: 5;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 0;
+  background: #000000;
+  padding: 0;
+}
+
 @keyframes dotLabelAppear {
   from {
     opacity: 0;
@@ -657,9 +689,9 @@
   .trackList,
   .trackIndex,
   .trackMeta span,
-  .dotLabel {
+  .dotLabel,
+  .coordinateReadout {
     font-size: 14px;
-    letter-spacing: -0.42px;
   }
 
   .dots span::before,

@@ -13,6 +13,10 @@ type CursorTextClone = {
   width: number
   height: number
 }
+type CursorCoordinates = {
+  lat: string
+  lng: string
+}
 type CaptionBlock = {
   en: string
   ko: string
@@ -98,6 +102,39 @@ const progressKnobSize = 8
 const progressHitSlop = 10
 const progressTravel = progressTrackWidth - progressKnobSize
 const typingBaseDelay = 26
+const initialCursorCoordinates = {
+  lat: `N 48°39'05"`,
+  lng: `E 6°10'21"`,
+}
+const baseLatitudeSeconds = 48 * 3600 + 39 * 60 + 5
+const baseLongitudeSeconds = 6 * 3600 + 10 * 60 + 21
+
+function formatCoordinate(totalSeconds: number, hemisphere: 'N' | 'S' | 'E' | 'W') {
+  const normalizedSeconds = Math.max(0, Math.round(totalSeconds))
+  const degrees = Math.floor(normalizedSeconds / 3600)
+  const minutes = Math.floor((normalizedSeconds % 3600) / 60)
+  const seconds = normalizedSeconds % 60
+
+  return `${hemisphere} ${degrees}°${String(minutes).padStart(2, '0')}'${String(seconds).padStart(2, '0')}"`
+}
+
+function cursorToCoordinates(x: number, y: number): CursorCoordinates {
+  if (typeof window === 'undefined') {
+    return initialCursorCoordinates
+  }
+
+  const xRatio = Math.max(0, Math.min(1, x / window.innerWidth))
+  const yRatio = Math.max(0, Math.min(1, y / window.innerHeight))
+  const latitudeSeconds = baseLatitudeSeconds + Math.round((0.5 - yRatio) * 240)
+  const longitudeSeconds = baseLongitudeSeconds + Math.round((xRatio - 0.5) * 240)
+  const latitudeHemisphere = yRatio <= 0.5 ? 'N' : 'S'
+  const longitudeHemisphere = xRatio >= 0.5 ? 'E' : 'W'
+
+  return {
+    lat: formatCoordinate(latitudeSeconds, latitudeHemisphere),
+    lng: formatCoordinate(longitudeSeconds, longitudeHemisphere),
+  }
+}
 
 function visibleTypingText(text: string, visibleCharacters: number) {
   let remainingCharacters = visibleCharacters
@@ -238,6 +275,8 @@ export default function EpeulExperience() {
   const [cursorDirection, setCursorDirection] = useState<CursorDirection>('up')
   const [cursorRedClips, setCursorRedClips] = useState<string[]>([])
   const [cursorTextClones, setCursorTextClones] = useState<CursorTextClone[]>([])
+  const [cursorCoordinates, setCursorCoordinates] =
+    useState<CursorCoordinates>(initialCursorCoordinates)
   const [typedCharacters, setTypedCharacters] = useState(0)
   const [figureIndex, setFigureIndex] = useState(0)
   const [previousFigureIndex, setPreviousFigureIndex] = useState<number | null>(null)
@@ -466,6 +505,7 @@ export default function EpeulExperience() {
 
     previousCursorRef.current = { x, y }
     setCursor({ x, y })
+    setCursorCoordinates(cursorToCoordinates(x, y))
 
     const cursorSize = 44
     const cursorLeft = x - cursorSize / 2
@@ -939,6 +979,19 @@ export default function EpeulExperience() {
         >
           {figureLabels[figureIndex]}
         </b>
+        <div className={styles.coordinateReadout} aria-hidden="true">
+          <span>
+            {cursorCoordinates.lat} {cursorCoordinates.lng}
+          </span>
+        </div>
+        <button
+          className={styles.cornerButton}
+          type="button"
+          aria-label="Enter new space"
+          onClick={() => {
+            window.location.href = '/space'
+          }}
+        />
       </section>
     </main>
   )

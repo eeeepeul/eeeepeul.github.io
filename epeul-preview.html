@@ -143,6 +143,7 @@
       .stage {
         --figure-height: min(320px, calc(100vh - 180px));
         --figure-width: min(90vw, 720px);
+        --track-panel-left: 168px;
         --dot-item-height: 12px;
         --dot-gap: 12px;
         --dot-step: 24px;
@@ -173,6 +174,7 @@
         font-size: 12px;
         font-weight: 600;
         letter-spacing: -0.36px;
+        color: #000;
       }
 
       .nav-item,
@@ -313,8 +315,8 @@
       }
 
       .track-list {
-        top: 62px;
-        left: 20px;
+        top: 20px;
+        left: var(--track-panel-left);
         display: flex;
         flex-direction: column;
         font-family: "ITC Avant Garde Gothic Pro", "Avant Garde", Arial, Helvetica, sans-serif;
@@ -363,7 +365,7 @@
       }
 
       .music .track-row:not(.selected) .track-index {
-        color: #000;
+        color: rgba(0, 0, 0, 0.3);
       }
 
       .music .track-row:not(.selected):hover .track-index {
@@ -658,6 +660,36 @@
         animation: dot-label-appear 1ms step-end 100ms both;
       }
 
+      .coordinate-readout {
+        position: absolute;
+        left: var(--track-panel-left);
+        bottom: 20px;
+        z-index: 5;
+        display: block;
+        color: rgba(0, 0, 0, 0.3);
+        font-family: "D2Coding", "Courier New", monospace;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.12;
+        letter-spacing: -0.3px;
+        pointer-events: none;
+        user-select: none;
+        white-space: nowrap;
+      }
+
+      .corner-button {
+        position: absolute;
+        right: 20px;
+        bottom: 20px;
+        z-index: 5;
+        width: 44px;
+        height: 44px;
+        border: 0;
+        border-radius: 0;
+        background: #000;
+        padding: 0;
+      }
+
       @keyframes dot-label-appear {
         from {
           opacity: 0;
@@ -674,9 +706,9 @@
         .track-list,
         .track-index,
         .track-meta span,
-        .dot-label {
+        .dot-label,
+        .coordinate-readout {
           font-size: 14px;
-          letter-spacing: -0.42px;
         }
 
         .dots span::before,
@@ -805,6 +837,10 @@
         <i class="dot-indicator"></i>
       </div>
       <b class="dot-label">歡迎</b>
+      <div class="coordinate-readout" aria-hidden="true">
+        <span>N 48°39'05" E 6°10'21"</span>
+      </div>
+      <button class="corner-button" type="button" aria-label="Enter new space"></button>
 
     </main>
     <audio id="epeul-audio" preload="none"></audio>
@@ -818,6 +854,7 @@
       const progressFill = document.querySelector('.bar-fill')
       const progressKnob = document.querySelector('.knob')
       const audio = document.querySelector('#epeul-audio')
+      const cornerButton = document.querySelector('.corner-button')
       const cursorBlackBlend = document.querySelector('.cursor-black-blend')
       const cursorRedOverlay = document.querySelector('.cursor-red-overlay')
       const cursorTextOverlay = document.querySelector('.cursor-text-overlay')
@@ -827,6 +864,8 @@
       const dots = document.querySelectorAll('.dots span')
       const dotIndicator = document.querySelector('.dot-indicator')
       const dotLabel = document.querySelector('.dot-label')
+      const coordinateReadout = document.querySelector('.coordinate-readout')
+      const coordinateLine = coordinateReadout.querySelector('span')
       const labels = ['MH:M', 'About', '無sic']
       const figureLabels = [
         '歡迎',
@@ -915,6 +954,28 @@
       const progressHitSlop = 10
       const progressTravel = progressTrackWidth - progressKnobSize
       const typingBaseDelay = 26
+      const baseLatitudeSeconds = 48 * 3600 + 39 * 60 + 5
+      const baseLongitudeSeconds = 6 * 3600 + 10 * 60 + 21
+
+      function formatCoordinate(totalSeconds, hemisphere) {
+        const normalizedSeconds = Math.max(0, Math.round(totalSeconds))
+        const degrees = Math.floor(normalizedSeconds / 3600)
+        const minutes = Math.floor((normalizedSeconds % 3600) / 60)
+        const seconds = normalizedSeconds % 60
+
+        return `${hemisphere} ${degrees}°${String(minutes).padStart(2, '0')}'${String(seconds).padStart(2, '0')}"`
+      }
+
+      function updateCoordinateReadout(x, y) {
+        const xRatio = Math.max(0, Math.min(1, x / window.innerWidth))
+        const yRatio = Math.max(0, Math.min(1, y / window.innerHeight))
+        const latitudeSeconds = baseLatitudeSeconds + Math.round((0.5 - yRatio) * 240)
+        const longitudeSeconds = baseLongitudeSeconds + Math.round((xRatio - 0.5) * 240)
+        const latitudeHemisphere = yRatio <= 0.5 ? 'N' : 'S'
+        const longitudeHemisphere = xRatio >= 0.5 ? 'E' : 'W'
+
+        coordinateLine.textContent = `${formatCoordinate(latitudeSeconds, latitudeHemisphere)} ${formatCoordinate(longitudeSeconds, longitudeHemisphere)}`
+      }
 
       function typingCharacterAt(texts, typedIndex) {
         let remainingCharacters = typedIndex
@@ -1343,6 +1404,10 @@
         progressBar.setPointerCapture(event.pointerId)
       })
 
+      cornerButton.addEventListener('click', () => {
+        window.location.href = 'epeul-space-preview.html'
+      })
+
       function updateCustomCursor(event) {
         let deltaX = 0
         let deltaY = 0
@@ -1367,6 +1432,7 @@
         }
 
         previousCursor = { x: event.clientX, y: event.clientY }
+        updateCoordinateReadout(event.clientX, event.clientY)
         const cursorSize = 44
         const cursorLeft = event.clientX - cursorSize / 2
         const cursorTop = event.clientY - cursorSize / 2
