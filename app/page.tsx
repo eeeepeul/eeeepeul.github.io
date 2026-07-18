@@ -1,5 +1,5 @@
-import EpeulExperience from './EpeulExperience'
+import { PixelExperience } from '../components/pixel-experience/PixelExperience'
 
-export default function Page() {
-  return <EpeulExperience />
+export default function Home() {
+  return <PixelExperience />
 }
