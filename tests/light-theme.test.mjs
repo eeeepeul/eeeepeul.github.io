@@ -18,7 +18,6 @@ test('document declares the approved light interface palette', () => {
 test('stage and canvas fallback use the light background', () => {
   assert.match(css, /\.visual-stage\s*\{[^}]*background:\s*var\(--paper\)/s)
   assert.match(css, /\.pixel-canvas\s*\{[^}]*background:\s*var\(--paper\)/s)
-  assert.match(css, /\.start-layer\s*\{[^}]*rgba\(237,\s*236,\s*241/s)
 })
 
 test('browser viewport uses the light theme color', () => {

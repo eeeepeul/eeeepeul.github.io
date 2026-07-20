@@ -58,7 +58,7 @@ export function PixelExperience() {
         <PixelCanvas
           video={playback.videoRef.current}
           tiles={tiles}
-          playing={playback.status === 'playing'}
+          playing={true}
           recording={recorder.recording}
           canvasRef={canvasRef}
           onError={handleWebglError}
@@ -68,6 +68,8 @@ export function PixelExperience() {
           ref={playback.videoRef}
           className="source-media"
           src={assetPath('media/cctv-1080p.mp4')}
+          autoPlay
+          loop
           muted
           playsInline
           preload="auto"
@@ -89,24 +91,6 @@ export function PixelExperience() {
           <span>KICK {Math.round(playback.kick * 100).toString().padStart(3, '0')}</span>
         </div>
 
-        {!hasStarted && (
-          <div className="start-layer">
-            <div className="start-copy">
-              <span className="start-index">01 — LISTEN / DRAG</span>
-              <h2>영상은 반복되고,<br />픽셀은 음악과 손에 반응합니다.</h2>
-              <p>Start를 누르면 첨부한 곡 전체가 재생됩니다. 마이크와 무대 연결은 사용하지 않습니다.</p>
-              <button
-                className="start-button"
-                type="button"
-                onClick={() => void playback.start()}
-                disabled={playback.status === 'loading'}
-              >
-                <span>{playback.status === 'loading' ? 'LOADING' : 'START EXPERIENCE'}</span>
-                <span aria-hidden="true">↗</span>
-              </button>
-            </div>
-          </div>
-        )}
       </section>
 
       <section className="control-deck" aria-label="픽셀 컨트롤">
@@ -134,10 +118,10 @@ export function PixelExperience() {
             <button
               className="action-button"
               type="button"
-              onClick={() => void playback.restart()}
-              disabled={!hasStarted || recorder.recording}
+              onClick={() => void (hasStarted ? playback.restart() : playback.start())}
+              disabled={playback.status === 'loading' || recorder.recording}
             >
-              처음부터
+              {playback.status === 'loading' ? '시작 중' : hasStarted ? '처음부터' : '음악 시작'}
             </button>
             <ExportButton
               supported={recorder.supported}
