@@ -6,7 +6,6 @@ import { EXPORT_HEIGHT, EXPORT_WIDTH, FRAGMENT_SHADER, VERTEX_SHADER } from '../
 type PixelCanvasProps = {
   video: HTMLVideoElement | null
   tiles: number
-  kick: number
   playing: boolean
   recording: boolean
   canvasRef: React.RefObject<HTMLCanvasElement | null>
@@ -47,19 +46,18 @@ function createProgram(gl: WebGLRenderingContext) {
 export function PixelCanvas({
   video,
   tiles,
-  kick,
   playing,
   recording,
   canvasRef,
   onError,
 }: PixelCanvasProps) {
-  const valuesRef = useRef({ video, tiles, kick, playing, recording })
+  const valuesRef = useRef({ video, tiles, playing, recording })
   const wakeRendererRef = useRef<() => void>(() => {})
 
   useEffect(() => {
-    valuesRef.current = { video, tiles, kick, playing, recording }
+    valuesRef.current = { video, tiles, playing, recording }
     wakeRendererRef.current()
-  }, [video, tiles, kick, playing, recording])
+  }, [video, tiles, playing, recording])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -148,7 +146,6 @@ export function PixelCanvas({
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, current.video)
         gl.uniform2f(gl.getUniformLocation(program, 'uResolution'), canvas.width, canvas.height)
         gl.uniform1f(gl.getUniformLocation(program, 'uColumns'), current.tiles)
-        gl.uniform1f(gl.getUniformLocation(program, 'uKick'), current.kick)
         gl.drawArrays(gl.TRIANGLES, 0, 6)
       } catch (error) {
         onError(error instanceof Error ? error.message : '영상 프레임을 그리지 못했습니다.')

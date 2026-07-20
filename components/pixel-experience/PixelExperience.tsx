@@ -58,7 +58,6 @@ export function PixelExperience() {
         <PixelCanvas
           video={playback.videoRef.current}
           tiles={tiles}
-          kick={playback.kick}
           playing={playback.status === 'playing'}
           recording={recorder.recording}
           canvasRef={canvasRef}
