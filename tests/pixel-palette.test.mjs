@@ -4,13 +4,15 @@ import { readFileSync } from 'node:fs'
 
 const shaderSource = readFileSync(new URL('../lib/pixel-shaders.ts', import.meta.url), 'utf8')
 
-test('shader maps the four luminance bands to the approved palette', () => {
-  assert.match(shaderSource, /vec3 backgroundColor = vec3\(0\.929412, 0\.925490, 0\.945098\)/)
-  assert.match(shaderSource, /vec3 blue = vec3\(0\.603922, 0\.760784, 0\.941176\)/)
-  assert.match(shaderSource, /vec3 red = vec3\(0\.717647, 0\.000000, 0\.000000\)/)
-  assert.match(shaderSource, /mix\(backgroundColor, blue, diagonal \* border\)/)
-  assert.match(shaderSource, /mix\(backgroundColor, red, ring \* border\)/)
-  assert.match(shaderSource, /mix\(backgroundColor, blue, border\)/)
+test('shader maps four luminance bands to independent palette uniforms', () => {
+  assert.match(shaderSource, /uniform vec3 uBackgroundColor/)
+  assert.match(shaderSource, /uniform vec3 uDiagonalColor/)
+  assert.match(shaderSource, /uniform vec3 uCircleColor/)
+  assert.match(shaderSource, /uniform vec3 uSolidColor/)
+  assert.match(shaderSource, /mix\(uBackgroundColor, uDiagonalColor, diagonal \* border\)/)
+  assert.match(shaderSource, /mix\(uBackgroundColor, uCircleColor, ring \* border\)/)
+  assert.match(shaderSource, /mix\(uBackgroundColor, uSolidColor, border\)/)
+  assert.doesNotMatch(shaderSource, /vec3 backgroundColor =/)
 })
 
 test('kick does not tint the shader output color', () => {

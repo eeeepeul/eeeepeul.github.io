@@ -13,6 +13,10 @@ precision mediump float;
 uniform sampler2D uVideo;
 uniform vec2 uResolution;
 uniform float uColumns;
+uniform vec3 uBackgroundColor;
+uniform vec3 uDiagonalColor;
+uniform vec3 uCircleColor;
+uniform vec3 uSolidColor;
 varying vec2 vUv;
 
 float luminance(vec3 color) {
@@ -27,19 +31,22 @@ void main() {
   vec2 sampleUv = (cell + 0.5) / grid;
   float luma = luminance(texture2D(uVideo, sampleUv).rgb);
 
-  vec3 backgroundColor = vec3(0.929412, 0.925490, 0.945098);
-  vec3 blue = vec3(0.603922, 0.760784, 0.941176);
-  vec3 red = vec3(0.717647, 0.000000, 0.000000);
   float border = step(0.045, local.x) * step(0.045, local.y)
     * step(local.x, 0.955) * step(local.y, 0.955);
   float diagonal = step(0.50, fract((local.x + local.y) * 3.0));
   float radius = distance(local, vec2(0.5));
   float ring = step(0.22, radius) * (1.0 - step(0.38, radius));
 
-  vec3 outputColor = backgroundColor;
-  if (luma >= 0.22 && luma < 0.46) outputColor = mix(backgroundColor, blue, diagonal * border);
-  if (luma >= 0.46 && luma < 0.72) outputColor = mix(backgroundColor, red, ring * border);
-  if (luma >= 0.72) outputColor = mix(backgroundColor, blue, border);
+  vec3 outputColor = uBackgroundColor;
+  if (luma >= 0.22 && luma < 0.46) {
+    outputColor = mix(uBackgroundColor, uDiagonalColor, diagonal * border);
+  }
+  if (luma >= 0.46 && luma < 0.72) {
+    outputColor = mix(uBackgroundColor, uCircleColor, ring * border);
+  }
+  if (luma >= 0.72) {
+    outputColor = mix(uBackgroundColor, uSolidColor, border);
+  }
   gl_FragColor = vec4(outputColor, 1.0);
 }
 `
