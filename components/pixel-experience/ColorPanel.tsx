@@ -1,44 +1,46 @@
 'use client'
 
 import type { CSSProperties } from 'react'
-import { DEFAULT_PIXEL_PALETTE } from '../../lib/pixel-palette.mjs'
+import { PIXEL_PALETTE_PRESETS } from '../../lib/pixel-palette.mjs'
 
-type PixelPalette = typeof DEFAULT_PIXEL_PALETTE
-type PaletteKey = keyof PixelPalette
+type PalettePresetId = (typeof PIXEL_PALETTE_PRESETS)[number]['id']
 
 type ColorPanelProps = {
-  palette: PixelPalette
-  onChange: (key: PaletteKey, value: string) => void
+  selectedId: PalettePresetId
+  onSelect: (id: PalettePresetId) => void
 }
 
-const COLOR_FIELDS: Array<{ key: PaletteKey; label: string }> = [
-  { key: 'background', label: '배경' },
-  { key: 'diagonal', label: '사선' },
-  { key: 'circle', label: '동그라미' },
-  { key: 'solid', label: '네모' },
-]
-
-export function ColorPanel({ palette, onChange }: ColorPanelProps) {
+export function ColorPanel({ selectedId, onSelect }: ColorPanelProps) {
   return (
-    <aside className="color-panel" aria-label="색상 변경">
-      <p className="panel-label">COLOURS &amp; PATTERNS</p>
-      <div className="palette-grid">
-        {COLOR_FIELDS.map(({ key, label }) => (
-          <label className="palette-control" key={key}>
+    <aside className="color-panel" aria-label="색 조합 변경">
+      <p className="panel-label">COLOR COMBINATIONS</p>
+      <div className="palette-presets">
+        {PIXEL_PALETTE_PRESETS.map((preset) => (
+          <button
+            className="palette-preset"
+            type="button"
+            key={preset.id}
+            aria-label={`${preset.label} 색 조합`}
+            aria-pressed={selectedId === preset.id}
+            title={preset.label}
+            onClick={() => onSelect(preset.id)}
+          >
             <span
-              className={`palette-preview palette-preview--${key}`}
-              style={{ '--swatch-color': palette[key] } as CSSProperties}
+              className="palette-preset-preview"
+              aria-hidden="true"
+              style={{
+                '--preset-background': preset.palette.background,
+                '--preset-diagonal': preset.palette.diagonal,
+                '--preset-circle': preset.palette.circle,
+                '--preset-solid': preset.palette.solid,
+              } as CSSProperties}
             >
-              <input
-                type="color"
-                value={palette[key]}
-                aria-label={`${label} 색상`}
-                onChange={(event) => onChange(key, event.currentTarget.value)}
-              />
+              <i className="preset-tile preset-tile--background" />
+              <i className="preset-tile preset-tile--diagonal" />
+              <i className="preset-tile preset-tile--circle" />
+              <i className="preset-tile preset-tile--solid" />
             </span>
-            <span className="palette-name">{label}</span>
-            <output>{palette[key]}</output>
-          </label>
+          </button>
         ))}
       </div>
     </aside>

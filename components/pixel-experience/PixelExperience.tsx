@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
 import { effectiveTiles, manualTilesFromPosition } from '../../lib/pixel-controls.mjs'
-import { DEFAULT_PIXEL_PALETTE, normalizeHexColor } from '../../lib/pixel-palette.mjs'
+import {
+  DEFAULT_PIXEL_PALETTE_ID,
+  getPixelPalettePreset,
+} from '../../lib/pixel-palette.mjs'
 import { useH264Recorder } from '../../hooks/useH264Recorder'
 import { usePlaybackEngine } from '../../hooks/usePlaybackEngine'
 import { ColorPanel } from './ColorPanel'
@@ -21,25 +24,17 @@ function formatTime(value: number) {
 export function PixelExperience() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [manualPosition, setManualPosition] = useState(0.54)
-  const [palette, setPalette] = useState({ ...DEFAULT_PIXEL_PALETTE })
+  const [paletteId, setPaletteId] = useState(DEFAULT_PIXEL_PALETTE_ID)
   const [webglError, setWebglError] = useState<string | null>(null)
   const playback = usePlaybackEngine()
   const recorder = useH264Recorder()
   const baseTiles = useMemo(() => manualTilesFromPosition(manualPosition), [manualPosition])
   const tiles = useMemo(() => effectiveTiles(baseTiles, playback.kick), [baseTiles, playback.kick])
+  const palette = useMemo(() => getPixelPalettePreset(paletteId), [paletteId])
   const hasStarted = playback.status === 'playing' || playback.status === 'ended'
   const isReady = playback.status === 'ready' || hasStarted
 
   const handleWebglError = useCallback((message: string) => setWebglError(message), [])
-  const handlePaletteChange = useCallback(
-    (key: keyof typeof DEFAULT_PIXEL_PALETTE, value: string) => {
-      setPalette((current) => ({
-        ...current,
-        [key]: normalizeHexColor(value, DEFAULT_PIXEL_PALETTE[key]),
-      }))
-    },
-    []
-  )
   const handleExport = useCallback(async () => {
     const started = await recorder.startRecording(canvasRef.current, playback.recordingAudioStream)
     if (started) await playback.restart()
@@ -54,7 +49,7 @@ export function PixelExperience() {
 
   return (
     <main className="experience-shell">
-      <ColorPanel palette={palette} onChange={handlePaletteChange} />
+      <ColorPanel selectedId={paletteId} onSelect={setPaletteId} />
 
       <div className="stage-workspace">
         <section className="visual-stage" aria-label="픽셀 CCTV 재생 영역">
