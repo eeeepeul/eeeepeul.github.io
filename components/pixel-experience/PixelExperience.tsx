@@ -54,85 +54,87 @@ export function PixelExperience() {
 
   return (
     <main className="experience-shell">
-      <section className="visual-stage" aria-label="픽셀 CCTV 재생 영역">
-        <PixelCanvas
-          video={playback.videoRef.current}
-          tiles={tiles}
-          palette={palette}
-          playing={true}
-          recording={recorder.recording}
-          canvasRef={canvasRef}
-          onError={handleWebglError}
-        />
-
-        <video
-          ref={playback.videoRef}
-          className="source-media"
-          src={assetPath('media/cctv-1080p.mp4')}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          aria-hidden="true"
-        />
-        <audio
-          ref={playback.audioRef}
-          className="source-media"
-          src={assetPath('media/if-and-only-if.mp3')}
-          preload="auto"
-        />
-      </section>
-
       <ColorPanel palette={palette} onChange={handlePaletteChange} />
 
-      <section className="control-deck" aria-label="픽셀 컨트롤">
-        <div className="timeline-row">
-          <span className="timecode">{formatTime(playback.currentTime)}</span>
-          <div className="timeline" aria-hidden="true">
-            <span style={{ transform: `scaleX(${Math.min(1, Math.max(0, progress))})` }} />
-          </div>
-          <span className="timecode">{formatTime(playback.duration)}</span>
-        </div>
+      <div className="stage-workspace">
+        <section className="visual-stage" aria-label="픽셀 CCTV 재생 영역">
+          <PixelCanvas
+            video={playback.videoRef.current}
+            tiles={tiles}
+            palette={palette}
+            playing={true}
+            recording={recorder.recording}
+            canvasRef={canvasRef}
+            onError={handleWebglError}
+          />
 
-        <DragControl
-          value={manualPosition}
-          tiles={tiles}
-          onChange={setManualPosition}
-          disabled={!isReady && playback.status === 'loading'}
-        />
+          <video
+            ref={playback.videoRef}
+            className="source-media"
+            src={assetPath('media/cctv-1080p.mp4')}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            aria-hidden="true"
+          />
+          <audio
+            ref={playback.audioRef}
+            className="source-media"
+            src={assetPath('media/if-and-only-if.mp3')}
+            preload="auto"
+          />
+        </section>
 
-        <div className="action-row">
-          <div className="kick-monitor">
-            <span>KICK INPUT</span>
-            <i aria-hidden="true"><b style={{ transform: `scaleX(${playback.kick})` }} /></i>
+        <section className="control-deck" aria-label="픽셀 컨트롤">
+          <div className="timeline-row">
+            <span className="timecode">{formatTime(playback.currentTime)}</span>
+            <div className="timeline" aria-hidden="true">
+              <span style={{ transform: `scaleX(${Math.min(1, Math.max(0, progress))})` }} />
+            </div>
+            <span className="timecode">{formatTime(playback.duration)}</span>
           </div>
-          <div className="button-group">
-            <button
-              className="action-button"
-              type="button"
-              onClick={() => void (hasStarted ? playback.restart() : playback.start())}
-              disabled={playback.status === 'loading' || recorder.recording}
-            >
-              {playback.status === 'loading' ? '시작 중' : hasStarted ? '처음부터' : '음악 시작'}
-            </button>
-            <ExportButton
-              supported={recorder.supported}
-              recording={recorder.recording}
-              disabled={!hasStarted || !playback.recordingAudioStream}
-              onStart={() => void handleExport()}
-              onStop={recorder.stopRecording}
-            />
-          </div>
-        </div>
 
-        {!recorder.supported && (
-          <p className="support-note">
-            H.264 MP4 저장은 지원 브라우저에서만 활성화됩니다. 화면 조작과 자동 Kick 반응은 그대로 사용할 수 있습니다.
-          </p>
-        )}
-        {activeError && <p className="error-note" role="alert">{activeError}</p>}
-      </section>
+          <DragControl
+            value={manualPosition}
+            tiles={tiles}
+            onChange={setManualPosition}
+            disabled={!isReady && playback.status === 'loading'}
+          />
+
+          <div className="action-row">
+            <div className="kick-monitor">
+              <span>KICK INPUT</span>
+              <i aria-hidden="true"><b style={{ transform: `scaleX(${playback.kick})` }} /></i>
+            </div>
+            <div className="button-group">
+              <button
+                className="action-button"
+                type="button"
+                onClick={() => void (hasStarted ? playback.restart() : playback.start())}
+                disabled={playback.status === 'loading' || recorder.recording}
+              >
+                {playback.status === 'loading' ? '시작 중' : hasStarted ? '처음부터' : '음악 시작'}
+              </button>
+              <ExportButton
+                supported={recorder.supported}
+                recording={recorder.recording}
+                disabled={!hasStarted || !playback.recordingAudioStream}
+                onStart={() => void handleExport()}
+                onStop={recorder.stopRecording}
+              />
+            </div>
+          </div>
+
+          {!recorder.supported && (
+            <p className="support-note">
+              H.264 MP4 저장은 지원 브라우저에서만 활성화됩니다. 화면 조작과 자동 Kick 반응은 그대로 사용할 수 있습니다.
+            </p>
+          )}
+          {activeError && <p className="error-note" role="alert">{activeError}</p>}
+        </section>
+      </div>
     </main>
   )
 }
