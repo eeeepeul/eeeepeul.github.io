@@ -155,46 +155,26 @@ button:focus-visible,
 
 .palette-preset-preview {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  place-items: center;
   aspect-ratio: 1;
   height: 100%;
   overflow: hidden;
   border: 1px solid var(--line);
-}
-
-.preset-tile {
-  position: relative;
-  display: block;
-}
-
-.preset-tile--background {
   background: var(--preset-background);
 }
 
-.preset-tile--diagonal {
-  background: repeating-linear-gradient(
-    45deg,
-    var(--preset-diagonal) 0 6px,
-    #fff 6px 9px
-  );
+.preset-letter {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: clamp(10px, 1.1vw, 18px);
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1;
 }
 
-.preset-tile--circle {
-  background: #fff;
-}
-
-.preset-tile--circle::after {
-  content: "";
-  position: absolute;
-  inset: 19%;
-  border: clamp(2px, 0.32vw, 5px) solid var(--preset-circle);
-  border-radius: 50%;
-}
-
-.preset-tile--solid {
-  background: var(--preset-solid);
-}
+.preset-letter--e { color: var(--preset-diagonal); }
+.preset-letter--o { color: var(--preset-circle); }
+.preset-letter--m { color: var(--preset-solid); }
 
 .stage-workspace {
   min-width: 0;

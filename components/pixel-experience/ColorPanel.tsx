@@ -35,10 +35,9 @@ export function ColorPanel({ selectedId, onSelect }: ColorPanelProps) {
                 '--preset-solid': preset.palette.solid,
               } as CSSProperties}
             >
-              <i className="preset-tile preset-tile--background" />
-              <i className="preset-tile preset-tile--diagonal" />
-              <i className="preset-tile preset-tile--circle" />
-              <i className="preset-tile preset-tile--solid" />
+              <i className="preset-letter preset-letter--e">E</i>
+              <i className="preset-letter preset-letter--o">O</i>
+              <i className="preset-letter preset-letter--m">M</i>
             </span>
           </button>
         ))}
