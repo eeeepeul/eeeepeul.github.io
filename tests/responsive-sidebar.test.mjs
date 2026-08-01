@@ -45,6 +45,13 @@ test('the collapsed sidebar matches the compact reference control', () => {
   )
 })
 
+test('the desktop sidebar keeps a fixed width when the viewport grows', () => {
+  assert.match(
+    css,
+    /\.experience-shell\s*\{[^}]*grid-template-columns:\s*64px\s+minmax\(0,\s*1fr\)\s+334px;/s
+  )
+})
+
 test('the sidebar panel clips into the compact control without resizing its layout box', () => {
   assert.match(
     css,

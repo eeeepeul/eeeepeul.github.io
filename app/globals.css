@@ -47,7 +47,7 @@ button:focus-visible,
   width: 100%;
   min-height: 100dvh;
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) clamp(300px, 25vw, 500px);
+  grid-template-columns: 64px minmax(0, 1fr) 334px;
   gap: clamp(24px, 2vw, 38px);
   padding: clamp(24px, 2.2vw, 42px);
   overflow: auto;
