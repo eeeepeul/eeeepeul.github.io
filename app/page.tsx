@@ -1,5 +1,5 @@
-import { PixelExperience } from '../components/pixel-experience/PixelExperience'
+import { MainLanding } from '../components/site/MainLanding.mjs'
 
 export default function Home() {
-  return <PixelExperience />
+  return <MainLanding />
 }

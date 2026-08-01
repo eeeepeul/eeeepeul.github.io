@@ -2,17 +2,27 @@
 
 import type { CSSProperties } from 'react'
 import { PIXEL_PALETTE_PRESETS } from '../../lib/pixel-palette.mjs'
+import { SettingsPanel, type MosaicSettings } from './SettingsPanel'
 
 type PalettePresetId = (typeof PIXEL_PALETTE_PRESETS)[number]['id']
 
 type ColorPanelProps = {
   selectedId: PalettePresetId
   onSelect: (id: PalettePresetId) => void
+  settings: MosaicSettings
+  onSettingsChange: (patch: Partial<MosaicSettings>) => void
+  onResetSettings: () => void
 }
 
-export function ColorPanel({ selectedId, onSelect }: ColorPanelProps) {
+export function ColorPanel({
+  selectedId,
+  onSelect,
+  settings,
+  onSettingsChange,
+  onResetSettings,
+}: ColorPanelProps) {
   return (
-    <aside className="color-panel" aria-label="색 조합 변경">
+    <div className="color-panel-content">
       <p className="panel-label">COLOR COMBINATIONS</p>
       <div className="palette-presets">
         {PIXEL_PALETTE_PRESETS.map((preset) => (
@@ -33,6 +43,7 @@ export function ColorPanel({ selectedId, onSelect }: ColorPanelProps) {
                 '--preset-diagonal': preset.palette.diagonal,
                 '--preset-circle': preset.palette.circle,
                 '--preset-solid': preset.palette.solid,
+                '--preset-glyph': preset.palette.glyph,
               } as CSSProperties}
             >
               <i className="preset-letter preset-letter--e">E</i>
@@ -42,6 +53,11 @@ export function ColorPanel({ selectedId, onSelect }: ColorPanelProps) {
           </button>
         ))}
       </div>
-    </aside>
+      <SettingsPanel
+        settings={settings}
+        onChange={onSettingsChange}
+        onReset={onResetSettings}
+      />
+    </div>
   )
 }

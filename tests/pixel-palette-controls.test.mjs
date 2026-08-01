@@ -8,12 +8,13 @@ import {
   normalizeHexColor,
 } from '../lib/pixel-palette.mjs'
 
-test('defines four independent default palette roles', () => {
+test('defines the reference image blue paper and dark-to-light E O M ink', () => {
   assert.deepEqual(DEFAULT_PIXEL_PALETTE, {
-    background: '#EDECF1',
-    diagonal: '#9AC2F0',
-    circle: '#B70000',
-    solid: '#9AC2F0',
+    background: '#8AC3ED',
+    diagonal: '#111820',
+    circle: '#7895AA',
+    solid: '#FFFFFF',
+    glyph: '#FFFFFF',
   })
 })
 
@@ -33,11 +34,39 @@ test('converts a hex color into WebGL unit RGB values', () => {
 test('resolves each palette button to its full color combination', () => {
   assert.equal(PIXEL_PALETTE_PRESETS.length, 4)
   assert.deepEqual(getPixelPalettePreset('peach-cobalt'), {
-    background: '#FFF1E6',
-    diagonal: '#FF9F68',
+    background: '#8AC3ED',
+    diagonal: '#8C5739',
     circle: '#1746D1',
     solid: '#FF9F68',
+    glyph: '#FFFFFF',
   })
+})
+
+test('assigns distinct fixed colors to E, O, and M in every palette', () => {
+  for (const { palette } of PIXEL_PALETTE_PRESETS) {
+    assert.equal(new Set([palette.diagonal, palette.circle, palette.solid]).size, 3)
+  }
+})
+
+test('uses the reference sky blue background for the default combination', () => {
+  assert.equal(DEFAULT_PIXEL_PALETTE.background, '#8AC3ED')
+  assert.equal(DEFAULT_PIXEL_PALETTE.diagonal, '#111820')
+  assert.equal(DEFAULT_PIXEL_PALETTE.circle, '#7895AA')
+  assert.equal(DEFAULT_PIXEL_PALETTE.solid, '#FFFFFF')
+})
+
+test('keeps the reference blue paper while switching E O M ink combinations', () => {
+  assert.deepEqual(
+    PIXEL_PALETTE_PRESETS.map(({ palette }) => palette.background),
+    ['#8AC3ED', '#8AC3ED', '#8AC3ED', '#8AC3ED']
+  )
+})
+
+test('uses a white atlas mask for every text combination', () => {
+  assert.deepEqual(
+    PIXEL_PALETTE_PRESETS.map(({ palette }) => palette.glyph),
+    ['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF']
+  )
 })
 
 test('falls back to the original sky-red palette for an unknown preset', () => {

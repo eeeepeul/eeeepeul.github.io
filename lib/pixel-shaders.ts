@@ -1,7 +1,7 @@
 import { LETTER_THRESHOLDS } from './letter-mosaic.mjs'
 
-const DARK_TO_MIDDLE = LETTER_THRESHOLDS[0].toFixed(2)
-const MIDDLE_TO_BRIGHT = LETTER_THRESHOLDS[1].toFixed(2)
+const E_TO_O = LETTER_THRESHOLDS[0].toFixed(2)
+const O_TO_M = LETTER_THRESHOLDS[1].toFixed(2)
 
 export const VERTEX_SHADER = `
 attribute vec2 aPosition;
@@ -16,16 +16,68 @@ void main() {
 export const FRAGMENT_SHADER = `
 precision mediump float;
 uniform sampler2D uVideo;
+uniform sampler2D uGlyphAtlas;
 uniform vec2 uResolution;
 uniform float uColumns;
+uniform float uGlitch;
+uniform float uTime;
+uniform float uSpacing;
+uniform float uBrightness;
+uniform float uContrast;
+uniform float uSaturation;
+uniform float uHue;
+uniform float uSharpness;
+uniform float uGamma;
+uniform float uColorMode;
+uniform float uIntensity;
+uniform float uUseGlyphAtlas;
+uniform float uGlyphCount;
 uniform vec3 uBackgroundColor;
 uniform vec3 uDiagonalColor;
 uniform vec3 uCircleColor;
 uniform vec3 uSolidColor;
+uniform vec3 uGlyphColor;
 varying vec2 vUv;
 
 float luminance(vec3 color) {
   return dot(color, vec3(0.2126, 0.7152, 0.0722));
+}
+
+float noise(vec2 point) {
+  return fract(sin(dot(point, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+vec3 rotateHue(vec3 color, float angle) {
+  float y = dot(color, vec3(0.299, 0.587, 0.114));
+  float i = dot(color, vec3(0.596, -0.274, -0.322));
+  float q = dot(color, vec3(0.211, -0.523, 0.312));
+  float chroma = sqrt(i * i + q * q);
+  float hue = atan(q, i) + angle;
+  i = chroma * cos(hue);
+  q = chroma * sin(hue);
+  return vec3(
+    y + 0.956 * i + 0.621 * q,
+    y - 0.272 * i - 0.647 * q,
+    y - 1.106 * i + 1.703 * q
+  );
+}
+
+vec3 adjustedVideoColor(vec2 sampleUv, vec2 grid) {
+  vec3 center = texture2D(uVideo, sampleUv).rgb;
+  vec2 cellStep = 1.0 / grid;
+  vec3 neighbors = (
+    texture2D(uVideo, clamp(sampleUv + vec2(cellStep.x, 0.0), vec2(0.0), vec2(1.0))).rgb
+    + texture2D(uVideo, clamp(sampleUv - vec2(cellStep.x, 0.0), vec2(0.0), vec2(1.0))).rgb
+    + texture2D(uVideo, clamp(sampleUv + vec2(0.0, cellStep.y), vec2(0.0), vec2(1.0))).rgb
+    + texture2D(uVideo, clamp(sampleUv - vec2(0.0, cellStep.y), vec2(0.0), vec2(1.0))).rgb
+  ) * 0.25;
+  vec3 color = center + (center - neighbors) * uSharpness * 2.0;
+  color += vec3(uBrightness);
+  color = (color - 0.5) * (1.0 + uContrast) + 0.5;
+  float gray = luminance(color);
+  color = mix(vec3(gray), color, 1.0 + uSaturation);
+  color = rotateHue(color, uHue);
+  return pow(clamp(color, 0.0, 1.0), vec3(1.0 / max(0.1, uGamma)));
 }
 
 float equalCell(float value, float target) {
@@ -67,29 +119,57 @@ float letterE(vec2 local) {
   return cell.z * max(vertical, max(topBottom, middle));
 }
 
+float atlasLetter(vec2 local, float luma) {
+  float inside = step(0.0, local.x) * step(local.x, 1.0)
+    * step(0.0, local.y) * step(local.y, 1.0);
+  float glyphCount = max(1.0, uGlyphCount);
+  float normalizedLuma = clamp(luma, 0.0, 0.9999);
+  float glyphIndex = floor(normalizedLuma * glyphCount);
+  vec2 atlasUv = vec2((glyphIndex + clamp(local.x, 0.0, 0.999)) / glyphCount, clamp(local.y, 0.0, 1.0));
+  return texture2D(uGlyphAtlas, atlasUv).r * inside;
+}
+
 void main() {
-  float rows = max(1.0, floor(uColumns * uResolution.y / uResolution.x));
+  float rows = max(1.0, floor(uColumns * uResolution.y / uResolution.x * 0.62));
   vec2 grid = vec2(uColumns, rows);
-  vec2 cell = floor(vUv * grid);
-  vec2 local = fract(vUv * grid);
+  float timeStep = floor(uTime * 18.0);
+  float rowBand = floor(vUv.y * 24.0);
+  float activeBand = step(0.72, noise(vec2(rowBand, timeStep)));
+  float horizontalShift = (noise(vec2(rowBand, timeStep + 17.0)) - 0.5)
+    * 0.11 * uGlitch * activeBand;
+  vec2 shiftedUv = vec2(clamp(vUv.x + horizontalShift, 0.0, 1.0), vUv.y);
+  vec2 cell = floor(shiftedUv * grid);
+  vec2 local = fract(shiftedUv * grid);
   vec2 sampleUv = (cell + 0.5) / grid;
-  vec3 sampledColor = texture2D(uVideo, sampleUv).rgb;
+  vec3 sampledColor = adjustedVideoColor(sampleUv, grid);
   float luma = luminance(sampledColor);
-  float glyph = letterE(local);
+  float inkLuma = clamp(luma + (noise(cell + vec2(19.0, 43.0)) - 0.5) * 0.12, 0.0, 1.0);
+  float tileInset = clamp(uSpacing, 0.0, 1.0) * 0.45;
+  float tileSize = max(0.1, 1.0 - tileInset * 2.0);
+  vec2 tileLocal = (local - tileInset) / tileSize;
+  float insideTile = step(tileInset, local.x) * step(local.x, 1.0 - tileInset)
+    * step(tileInset, local.y) * step(local.y, 1.0 - tileInset);
+  float glyph = 0.0;
   vec3 roleColor = uDiagonalColor;
 
-  if (luma >= ${DARK_TO_MIDDLE}) {
-    glyph = letterO(local);
+  glyph = letterE(tileLocal);
+  if (inkLuma >= ${E_TO_O}) {
+    glyph = letterO(tileLocal);
     roleColor = uCircleColor;
   }
-  if (luma >= ${MIDDLE_TO_BRIGHT}) {
-    glyph = letterM(local);
+  if (inkLuma >= ${O_TO_M}) {
+    glyph = letterM(tileLocal);
     roleColor = uSolidColor;
   }
 
-  float colorVariation = 0.76 + luma * 0.32;
-  vec3 glyphColor = clamp(roleColor * colorVariation, 0.0, 1.0);
-  vec3 outputColor = mix(uBackgroundColor, glyphColor, glyph);
+  float atlasGlyph = atlasLetter(tileLocal, inkLuma);
+  glyph = mix(glyph, atlasGlyph, uUseGlyphAtlas) * insideTile;
+  if (uColorMode > 0.5) roleColor = vec3(luminance(roleColor));
+  roleColor = clamp(uBackgroundColor + (roleColor - uBackgroundColor) * uIntensity, 0.0, 1.0);
+  float paperLuma = luminance(texture2D(uVideo, shiftedUv).rgb);
+  float fineGrain = (noise(gl_FragCoord.xy + vec2(timeStep, timeStep * 0.37)) - 0.5) * 0.035;
+  vec3 paperColor = clamp(uBackgroundColor + vec3((paperLuma - 0.5) * 0.18 + fineGrain), 0.0, 1.0);
+  vec3 outputColor = mix(paperColor, roleColor, glyph);
   gl_FragColor = vec4(outputColor, 1.0);
 }
 `

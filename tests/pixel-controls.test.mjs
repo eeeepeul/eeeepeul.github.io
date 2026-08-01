@@ -8,13 +8,14 @@ import {
 } from '../lib/pixel-controls.mjs'
 
 test('drag position maps from small to large pixels', () => {
-  assert.equal(manualTilesFromPosition(0), 180)
-  assert.equal(manualTilesFromPosition(1), 12)
+  assert.equal(manualTilesFromPosition(0), 300)
+  assert.equal(manualTilesFromPosition(0.18), 249)
+  assert.equal(manualTilesFromPosition(1), 18)
 })
 
-test('kick enlarges pixels by reducing tile count', () => {
+test('a sparse glitch pulse makes the pixel-size jump clearly visible', () => {
   assert.equal(effectiveTiles(100, 0), 100)
-  assert.equal(effectiveTiles(100, 1, 0.45), 55)
+  assert.equal(effectiveTiles(100, 1), 42)
 })
 
 test('luminance maps into four stable bands', () => {

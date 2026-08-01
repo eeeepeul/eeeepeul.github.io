@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { bandEnergy, nextKickEnvelope } from '../lib/kick-envelope.mjs'
-import { loopedVideoTime, shouldCorrectVideo } from '../lib/media-sync.mjs'
+import { nextKickGlitch } from '../lib/kick-glitch.mjs'
 import { withTimeout } from '../lib/promise-timeout.mjs'
 
 export type PlaybackStatus = 'idle' | 'loading' | 'ready' | 'playing' | 'ended' | 'error'
@@ -21,10 +21,11 @@ export function usePlaybackEngine() {
   const graphRef = useRef<AudioGraph | null>(null)
   const animationRef = useRef(0)
   const lastFrameRef = useRef(0)
-  const lastCorrectionRef = useRef(0)
   const kickStateRef = useRef({ floor: 0.05, envelope: 0 })
+  const glitchStateRef = useRef({ previousKick: 0, pulse: 0, elapsedSinceTrigger: 520 })
   const [status, setStatus] = useState<PlaybackStatus>('idle')
   const [kick, setKick] = useState(0)
+  const [glitch, setGlitch] = useState(0)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(264.072)
   const [error, setError] = useState<string | null>(null)
@@ -58,28 +59,6 @@ export function usePlaybackEngine() {
     return graph
   }, [])
 
-  const syncVideo = useCallback((force = false) => {
-    const audio = audioRef.current
-    const video = videoRef.current
-    if (!audio || !video || !Number.isFinite(video.duration) || video.duration <= 0) return
-    const expected = loopedVideoTime(audio.currentTime, video.duration)
-    const now = performance.now()
-    if (
-      force ||
-      shouldCorrectVideo(
-        video.currentTime,
-        expected,
-        video.duration,
-        video.seeking,
-        now,
-        lastCorrectionRef.current
-      )
-    ) {
-      video.currentTime = expected
-      lastCorrectionRef.current = now
-    }
-  }, [])
-
   const runAnalysis = useCallback(
     (now: number) => {
       const graph = graphRef.current
@@ -97,12 +76,14 @@ export function usePlaybackEngine() {
         160
       )
       kickStateRef.current = nextKickEnvelope(kickStateRef.current, energy, delta)
-      setKick(kickStateRef.current.envelope)
+      const nextKick = kickStateRef.current.envelope
+      glitchStateRef.current = nextKickGlitch(glitchStateRef.current, nextKick, delta)
+      setKick(nextKick)
+      setGlitch(glitchStateRef.current.pulse)
       setCurrentTime(audio.currentTime)
-      syncVideo()
       animationRef.current = window.requestAnimationFrame(runAnalysis)
     },
-    [syncVideo]
+    []
   )
 
   const begin = useCallback(
@@ -125,12 +106,12 @@ export function usePlaybackEngine() {
           video.currentTime = 0
           setCurrentTime(0)
           kickStateRef.current = { floor: 0.05, envelope: 0 }
-        } else {
-          video.currentTime = loopedVideoTime(audio.currentTime, video.duration || 1)
+          glitchStateRef.current = { previousKick: 0, pulse: 0, elapsedSinceTrigger: 520 }
+          setKick(0)
+          setGlitch(0)
         }
-        video.loop = true
+        video.loop = false
         video.muted = true
-        lastCorrectionRef.current = performance.now()
         await withTimeout(
           Promise.all([video.play(), audio.play()]),
           5000,
@@ -176,10 +157,8 @@ export function usePlaybackEngine() {
       video.pause()
       setCurrentTime(audio.duration || 264.072)
       setKick(0)
+      setGlitch(0)
       setStatus('ended')
-    }
-    const visible = () => {
-      if (!document.hidden) syncVideo(true)
     }
 
     audio.addEventListener('loadedmetadata', markReady)
@@ -187,7 +166,6 @@ export function usePlaybackEngine() {
     audio.addEventListener('ended', end)
     audio.addEventListener('error', fail)
     video.addEventListener('error', fail)
-    document.addEventListener('visibilitychange', visible)
     markReady()
 
     return () => {
@@ -196,9 +174,8 @@ export function usePlaybackEngine() {
       audio.removeEventListener('ended', end)
       audio.removeEventListener('error', fail)
       video.removeEventListener('error', fail)
-      document.removeEventListener('visibilitychange', visible)
     }
-  }, [syncVideo])
+  }, [])
 
   useEffect(
     () => () => {
@@ -216,6 +193,7 @@ export function usePlaybackEngine() {
   return {
     status,
     kick,
+    glitch,
     currentTime,
     duration,
     error,

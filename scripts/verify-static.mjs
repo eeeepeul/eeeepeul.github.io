@@ -3,7 +3,9 @@ import path from 'node:path'
 
 const required = [
   'out/index.html',
-  'out/media/cctv-1080p.mp4',
+  'out/media/mosaic-01.mp4',
+  'out/media/mosaic-02.mp4',
+  'out/media/mosaic-03.mp4',
   'out/media/if-and-only-if.mp3',
 ]
 const forbidden = ['EPEUL', 'MH:M', '/api/newsletter']

@@ -8,10 +8,11 @@ const experience = readFileSync(
 )
 const css = readFileSync(new URL('../app/globals.css', import.meta.url), 'utf8')
 
-test('shows the looping muted pixel preview without a start overlay', () => {
+test('shows the muted random-playlist preview without a start overlay', () => {
   assert.doesNotMatch(experience, /START EXPERIENCE|className="start-layer"/)
   assert.match(experience, /<PixelCanvas[\s\S]*?playing=\{true\}/)
-  assert.match(experience, /<video[\s\S]*?autoPlay[\s\S]*?loop[\s\S]*?muted[\s\S]*?playsInline/)
+  assert.match(experience, /<video[\s\S]*?autoPlay[\s\S]*?muted[\s\S]*?playsInline/)
+  assert.match(experience, /onEnded=\{playRandomNextVideo\}/)
   assert.doesNotMatch(css, /\.start-layer|\.start-copy|\.start-button|\.start-index/)
 })
 

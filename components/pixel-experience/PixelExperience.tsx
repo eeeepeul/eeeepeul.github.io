@@ -2,17 +2,27 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
+import { brandMarkSvg } from '../../lib/brand-mark.mjs'
 import { effectiveTiles, manualTilesFromPosition } from '../../lib/pixel-controls.mjs'
 import {
   DEFAULT_PIXEL_PALETTE_ID,
   getPixelPalettePreset,
 } from '../../lib/pixel-palette.mjs'
+import {
+  DEFAULT_MOSAIC_SETTINGS,
+  getCharacterSetPreset,
+  normalizeMosaicSettings,
+  resolveMosaicColumns,
+} from '../../lib/mosaic-settings.mjs'
+import { MOSAIC_VIDEO_FILES, pickNextVideoIndex } from '../../lib/video-playlist.mjs'
 import { useH264Recorder } from '../../hooks/useH264Recorder'
 import { usePlaybackEngine } from '../../hooks/usePlaybackEngine'
 import { ColorPanel } from './ColorPanel'
 import { DragControl } from './DragControl'
+import { ExperienceFrame } from './ExperienceFrame.mjs'
 import { ExportButton } from './ExportButton'
 import { PixelCanvas } from './PixelCanvas'
+import type { MosaicSettings } from './SettingsPanel'
 
 function formatTime(value: number) {
   const safeValue = Number.isFinite(value) ? Math.max(0, value) : 0
@@ -23,18 +33,43 @@ function formatTime(value: number) {
 
 export function PixelExperience() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [manualPosition, setManualPosition] = useState(0.54)
+  const [manualPosition, setManualPosition] = useState(0.18)
   const [paletteId, setPaletteId] = useState(DEFAULT_PIXEL_PALETTE_ID)
+  const [settings, setSettings] = useState<MosaicSettings>(() => ({ ...DEFAULT_MOSAIC_SETTINGS }))
+  const [videoIndex, setVideoIndex] = useState(0)
   const [webglError, setWebglError] = useState<string | null>(null)
   const playback = usePlaybackEngine()
   const recorder = useH264Recorder()
   const baseTiles = useMemo(() => manualTilesFromPosition(manualPosition), [manualPosition])
-  const tiles = useMemo(() => effectiveTiles(baseTiles, playback.kick), [baseTiles, playback.kick])
-  const palette = useMemo(() => getPixelPalettePreset(paletteId), [paletteId])
+  const settingsTiles = useMemo(
+    () => resolveMosaicColumns(baseTiles, settings),
+    [baseTiles, settings]
+  )
+  const tiles = useMemo(
+    () => effectiveTiles(settingsTiles, playback.glitch),
+    [settingsTiles, playback.glitch]
+  )
+  const palette = useMemo(
+    () => ({ ...getPixelPalettePreset(paletteId), background: settings.background }),
+    [paletteId, settings.background]
+  )
+  const characterSet = useMemo(
+    () => getCharacterSetPreset(settings.characterSet),
+    [settings.characterSet]
+  )
   const hasStarted = playback.status === 'playing' || playback.status === 'ended'
   const isReady = playback.status === 'ready' || hasStarted
 
   const handleWebglError = useCallback((message: string) => setWebglError(message), [])
+  const handleSettingsChange = useCallback((patch: Partial<MosaicSettings>) => {
+    setSettings((current) => (
+      normalizeMosaicSettings({ ...current, ...patch }) as MosaicSettings
+    ))
+  }, [])
+  const resetSettings = useCallback(() => setSettings({ ...DEFAULT_MOSAIC_SETTINGS }), [])
+  const playRandomNextVideo = useCallback(() => {
+    setVideoIndex((current) => pickNextVideoIndex(current, MOSAIC_VIDEO_FILES.length))
+  }, [])
   const handleExport = useCallback(async () => {
     const started = await recorder.startRecording(canvasRef.current, playback.recordingAudioStream)
     if (started) await playback.restart()
@@ -44,19 +79,49 @@ export function PixelExperience() {
     if (playback.status === 'ended' && recorder.recording) recorder.stopRecording()
   }, [playback.status, recorder])
 
+  useEffect(() => {
+    setVideoIndex(pickNextVideoIndex(-1, MOSAIC_VIDEO_FILES.length))
+  }, [])
+
+  useEffect(() => {
+    const video = playback.videoRef.current
+    if (!video || playback.status === 'ended') return
+    video.load()
+    void video.play().catch(() => {})
+  }, [videoIndex, playback.videoRef])
+
   const progress = playback.duration > 0 ? playback.currentTime / playback.duration : 0
   const activeError = webglError || playback.error || recorder.error
 
   return (
-    <main className="experience-shell">
-      <ColorPanel selectedId={paletteId} onSelect={setPaletteId} />
-
+    <ExperienceFrame
+      homeHref={assetPath('')}
+      mark={(
+        <div
+          className="brand-mark"
+          aria-hidden="true"
+          dangerouslySetInnerHTML={{ __html: brandMarkSvg() }}
+        />
+      )}
+      panel={(
+        <ColorPanel
+          selectedId={paletteId}
+          onSelect={setPaletteId}
+          settings={settings}
+          onSettingsChange={handleSettingsChange}
+          onResetSettings={resetSettings}
+        />
+      )}
+    >
       <div className="stage-workspace">
         <section className="visual-stage" aria-label="픽셀 CCTV 재생 영역">
           <PixelCanvas
             video={playback.videoRef.current}
             tiles={tiles}
+            glitch={playback.glitch}
             palette={palette}
+            settings={settings}
+            characterSet={characterSet}
             playing={true}
             recording={recorder.recording}
             canvasRef={canvasRef}
@@ -66,12 +131,12 @@ export function PixelExperience() {
           <video
             ref={playback.videoRef}
             className="source-media"
-            src={assetPath('media/cctv-1080p.mp4')}
+            src={assetPath(MOSAIC_VIDEO_FILES[videoIndex])}
             autoPlay
-            loop
             muted
             playsInline
             preload="auto"
+            onEnded={playRandomNextVideo}
             aria-hidden="true"
           />
           <audio
@@ -130,6 +195,6 @@ export function PixelExperience() {
           {activeError && <p className="error-note" role="alert">{activeError}</p>}
         </section>
       </div>
-    </main>
+    </ExperienceFrame>
   )
 }
