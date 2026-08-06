@@ -1,7 +1,11 @@
 import { LETTER_THRESHOLDS } from './letter-mosaic.mjs'
+import { resolveGlyphUvRange } from './glyph-atlas.mjs'
 
 const E_TO_O = LETTER_THRESHOLDS[0].toFixed(2)
 const O_TO_M = LETTER_THRESHOLDS[1].toFixed(2)
+const GLYPH_UV_RANGE = resolveGlyphUvRange()
+const GLYPH_UV_MINIMUM = GLYPH_UV_RANGE.minimum.toFixed(5)
+const GLYPH_UV_MAXIMUM = GLYPH_UV_RANGE.maximum.toFixed(5)
 
 export const VERTEX_SHADER = `
 attribute vec2 aPosition;
@@ -19,6 +23,7 @@ uniform sampler2D uVideo;
 uniform sampler2D uGlyphAtlas;
 uniform vec2 uResolution;
 uniform float uColumns;
+uniform float uRows;
 uniform float uGlitch;
 uniform float uTime;
 uniform float uSpacing;
@@ -32,6 +37,9 @@ uniform float uColorMode;
 uniform float uIntensity;
 uniform float uUseGlyphAtlas;
 uniform float uGlyphCount;
+uniform float uGlyphAtlasColumns;
+uniform float uShapeMode;
+uniform float uShapeYScale;
 uniform vec3 uBackgroundColor;
 uniform vec3 uDiagonalColor;
 uniform vec3 uCircleColor;
@@ -123,14 +131,36 @@ float atlasLetter(vec2 local, float luma) {
   float inside = step(0.0, local.x) * step(local.x, 1.0)
     * step(0.0, local.y) * step(local.y, 1.0);
   float glyphCount = max(1.0, uGlyphCount);
+  float atlasColumns = max(glyphCount, uGlyphAtlasColumns);
   float normalizedLuma = clamp(luma, 0.0, 0.9999);
   float glyphIndex = floor(normalizedLuma * glyphCount);
-  vec2 atlasUv = vec2((glyphIndex + clamp(local.x, 0.0, 0.999)) / glyphCount, clamp(local.y, 0.0, 1.0));
+  vec2 atlasLocal = mix(
+    vec2(${GLYPH_UV_MINIMUM}),
+    vec2(${GLYPH_UV_MAXIMUM}),
+    clamp(local, vec2(0.0), vec2(1.0))
+  );
+  vec2 atlasUv = vec2((glyphIndex + atlasLocal.x) / atlasColumns, atlasLocal.y);
   return texture2D(uGlyphAtlas, atlasUv).r * inside;
 }
 
+float circleMask(vec2 local, float luma) {
+  float amount = smoothstep(0.06, 0.92, luma);
+  float radius = mix(0.20, 0.46, amount);
+  vec2 centered = (local - vec2(0.5)) * vec2(1.0, uShapeYScale);
+  float distanceFromCenter = length(centered);
+  return 1.0 - smoothstep(radius - 0.025, radius, distanceFromCenter);
+}
+
+float squareMask(vec2 local, float luma) {
+  float amount = smoothstep(0.06, 0.92, luma);
+  float halfSize = mix(0.20, 0.46, amount);
+  vec2 centered = abs((local - vec2(0.5)) * vec2(1.0, uShapeYScale));
+  float distanceFromCenter = max(centered.x, centered.y);
+  return 1.0 - smoothstep(halfSize - 0.025, halfSize, distanceFromCenter);
+}
+
 void main() {
-  float rows = max(1.0, floor(uColumns * uResolution.y / uResolution.x * 0.62));
+  float rows = max(1.0, uRows);
   vec2 grid = vec2(uColumns, rows);
   float timeStep = floor(uTime * 18.0);
   float rowBand = floor(vUv.y * 24.0);
@@ -164,12 +194,15 @@ void main() {
 
   float atlasGlyph = atlasLetter(tileLocal, inkLuma);
   glyph = mix(glyph, atlasGlyph, uUseGlyphAtlas) * insideTile;
+  if (uShapeMode > 0.5 && uShapeMode < 1.5) {
+    glyph = circleMask(tileLocal, inkLuma) * insideTile;
+  }
+  if (uShapeMode >= 1.5) {
+    glyph = squareMask(tileLocal, inkLuma) * insideTile;
+  }
   if (uColorMode > 0.5) roleColor = vec3(luminance(roleColor));
   roleColor = clamp(uBackgroundColor + (roleColor - uBackgroundColor) * uIntensity, 0.0, 1.0);
-  float paperLuma = luminance(texture2D(uVideo, shiftedUv).rgb);
-  float fineGrain = (noise(gl_FragCoord.xy + vec2(timeStep, timeStep * 0.37)) - 0.5) * 0.035;
-  vec3 paperColor = clamp(uBackgroundColor + vec3((paperLuma - 0.5) * 0.18 + fineGrain), 0.0, 1.0);
-  vec3 outputColor = mix(paperColor, roleColor, glyph);
+  vec3 outputColor = mix(uBackgroundColor, roleColor, glyph);
   gl_FragColor = vec4(outputColor, 1.0);
 }
 `

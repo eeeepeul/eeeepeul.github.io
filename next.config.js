@@ -6,6 +6,7 @@ module.exports = {
   outputFileTracingRoot: __dirname,
   trailingSlash: true,
   reactStrictMode: true,
+  devIndicators: false,
   basePath,
   assetPrefix: basePath || undefined,
   images: { unoptimized: true },

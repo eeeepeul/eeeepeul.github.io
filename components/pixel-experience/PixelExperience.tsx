@@ -66,7 +66,6 @@ export function PixelExperience() {
       normalizeMosaicSettings({ ...current, ...patch }) as MosaicSettings
     ))
   }, [])
-  const resetSettings = useCallback(() => setSettings({ ...DEFAULT_MOSAIC_SETTINGS }), [])
   const playRandomNextVideo = useCallback(() => {
     setVideoIndex((current) => pickNextVideoIndex(current, MOSAIC_VIDEO_FILES.length))
   }, [])
@@ -109,7 +108,6 @@ export function PixelExperience() {
           onSelect={setPaletteId}
           settings={settings}
           onSettingsChange={handleSettingsChange}
-          onResetSettings={resetSettings}
         />
       )}
     >

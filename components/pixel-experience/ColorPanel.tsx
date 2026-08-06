@@ -11,7 +11,6 @@ type ColorPanelProps = {
   onSelect: (id: PalettePresetId) => void
   settings: MosaicSettings
   onSettingsChange: (patch: Partial<MosaicSettings>) => void
-  onResetSettings: () => void
 }
 
 export function ColorPanel({
@@ -19,11 +18,10 @@ export function ColorPanel({
   onSelect,
   settings,
   onSettingsChange,
-  onResetSettings,
 }: ColorPanelProps) {
   return (
     <div className="color-panel-content">
-      <p className="panel-label">COLOR COMBINATIONS</p>
+      <p className="panel-label">color combination</p>
       <div className="palette-presets">
         {PIXEL_PALETTE_PRESETS.map((preset) => (
           <button
@@ -40,23 +38,18 @@ export function ColorPanel({
               aria-hidden="true"
               style={{
                 '--preset-background': preset.palette.background,
-                '--preset-diagonal': preset.palette.diagonal,
-                '--preset-circle': preset.palette.circle,
-                '--preset-solid': preset.palette.solid,
-                '--preset-glyph': preset.palette.glyph,
+                '--preset-main': preset.palette.circle,
               } as CSSProperties}
             >
-              <i className="preset-letter preset-letter--e">E</i>
-              <i className="preset-letter preset-letter--o">O</i>
-              <i className="preset-letter preset-letter--m">M</i>
+              <i className="palette-main-swatch" />
             </span>
+            <span className="palette-preset-name">SKY BLUE</span>
           </button>
         ))}
       </div>
       <SettingsPanel
         settings={settings}
         onChange={onSettingsChange}
-        onReset={onResetSettings}
       />
     </div>
   )

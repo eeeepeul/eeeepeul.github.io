@@ -52,6 +52,13 @@ test('the desktop sidebar keeps a fixed width when the viewport grows', () => {
   )
 })
 
+test('the sidebar uses the approved subtle drop shadow', () => {
+  assert.match(
+    css,
+    /\.color-panel\s*\{[^}]*box-shadow:\s*0\s+3px\s+30px\s+0\s+rgba\(0,\s*0,\s*0,\s*0\.05\);/s
+  )
+})
+
 test('the sidebar panel clips into the compact control without resizing its layout box', () => {
   assert.match(
     css,
@@ -122,6 +129,17 @@ test('the compact panel stays anchored and keeps only the centered icon', () => 
   )
 })
 
+test('the collapsed sidebar uses one shadow layer without an afterimage', () => {
+  assert.match(
+    css,
+    /\.color-panel\.sidebar-panel\.is-dismissed\s*\{[^}]*box-shadow:\s*none;/s
+  )
+  assert.match(
+    css,
+    /\.sidebar-menu-trigger\.is-visible\s*\{[^}]*box-shadow:\s*0\s+3px\s+30px\s+0\s+rgba\(0,\s*0,\s*0,\s*0\.05\);/s
+  )
+})
+
 test('the mobile compact click target stays directly over the shrunken panel', () => {
   assert.match(
     css,
@@ -132,7 +150,7 @@ test('the mobile compact click target stays directly over the shrunken panel', (
 test('mobile expansion reveals a fixed full-size panel from its top-right corner', () => {
   assert.match(
     css,
-    /@media \(max-width:\s*800px\)[\s\S]*\.color-panel\.sidebar-panel\s*\{[^}]*top:\s*max\(18px,\s*env\(safe-area-inset-top\)\);[^}]*right:\s*max\(18px,\s*env\(safe-area-inset-right\)\);[^}]*clip-path:\s*inset\(0 round 8px\);[^}]*transition:\s*clip-path\s+360ms/s
+    /@media \(max-width:\s*800px\)[\s\S]*\.color-panel\.sidebar-panel\s*\{[^}]*top:\s*max\(18px,\s*env\(safe-area-inset-top\)\);[^}]*right:\s*max\(18px,\s*env\(safe-area-inset-right\)\);[^}]*clip-path:\s*inset\(-55px round 8px\);[^}]*transition:\s*clip-path\s+360ms/s
   )
   assert.match(
     css,
@@ -143,7 +161,7 @@ test('mobile expansion reveals a fixed full-size panel from its top-right corner
 test('desktop expansion keeps one full-size box and uses a non-overshooting ease curve', () => {
   assert.match(
     css,
-    /\.color-panel\s*\{[^}]*width:\s*100%;[^}]*height:\s*calc\(100dvh\s*-\s*clamp\(48px,\s*4\.4vw,\s*84px\)\);[^}]*padding:\s*16px;[^}]*clip-path:\s*inset\(0 round 8px\);[^}]*transition:\s*clip-path\s+360ms\s+cubic-bezier\(0\.4,\s*0,\s*0\.2,\s*1\)/s
+    /\.color-panel\s*\{[^}]*width:\s*100%;[^}]*height:\s*calc\(100dvh\s*-\s*clamp\(48px,\s*4\.4vw,\s*84px\)\);[^}]*padding:\s*16px;[^}]*clip-path:\s*inset\(-55px round 8px\);[^}]*transition:\s*clip-path\s+360ms\s+cubic-bezier\(0\.4,\s*0,\s*0\.2,\s*1\)/s
   )
   assert.match(
     css,

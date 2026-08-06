@@ -2,6 +2,19 @@
 
 import { useEffect, useRef } from 'react'
 import { DEFAULT_PIXEL_PALETTE, hexToUnitRgb } from '../../lib/pixel-palette.mjs'
+import {
+  GLYPH_ATLAS_CELL_HEIGHT,
+  GLYPH_ATLAS_CELL_WIDTH,
+  GLYPH_ATLAS_FONT_FAMILY,
+  GLYPH_ATLAS_FONT_SIZE,
+  fitGlyphFontSize,
+  resolveGlyphAtlasLayout,
+  resolveGlyphBaseline,
+  resolveGlyphHorizontalOffset,
+  resolveGlyphHorizontalScale,
+  resolveGlyphTextureFilter,
+} from '../../lib/glyph-atlas.mjs'
+import { getMosaicShapePreset, resolveMosaicGrid } from '../../lib/mosaic-settings.mjs'
 import { EXPORT_HEIGHT, EXPORT_WIDTH, FRAGMENT_SHADER, VERTEX_SHADER } from '../../lib/pixel-shaders'
 import type { MosaicSettings } from './SettingsPanel'
 
@@ -64,25 +77,50 @@ function createProgram(gl: WebGLRenderingContext) {
 
 function createGlyphAtlas(characters: string) {
   const glyphs = Array.from(characters).slice(0, 32)
-  const cellWidth = 42
-  const cellHeight = 64
+  const layout = resolveGlyphAtlasLayout(glyphs.length)
+  const cellWidth = GLYPH_ATLAS_CELL_WIDTH
+  const cellHeight = GLYPH_ATLAS_CELL_HEIGHT
   const atlas = document.createElement('canvas')
-  atlas.width = Math.max(1, glyphs.length) * cellWidth
-  atlas.height = cellHeight
+  atlas.width = layout.width
+  atlas.height = layout.height
   const context = atlas.getContext('2d', { alpha: false })
   if (!context) throw new Error('문자 세트 텍스처를 만들 수 없습니다.')
 
   context.fillStyle = '#000000'
   context.fillRect(0, 0, atlas.width, atlas.height)
   context.fillStyle = '#FFFFFF'
-  context.font = '700 56px "Courier New", Menlo, Monaco, monospace'
+  context.font = `700 ${GLYPH_ATLAS_FONT_SIZE}px ${GLYPH_ATLAS_FONT_FAMILY}`
+  const widestGlyph = glyphs.reduce(
+    (width, glyph) => Math.max(width, context.measureText(glyph).width),
+    0
+  )
+  context.font = `700 ${fitGlyphFontSize(widestGlyph)}px ${GLYPH_ATLAS_FONT_FAMILY}`
   context.textAlign = 'center'
-  context.textBaseline = 'middle'
+  context.textBaseline = 'alphabetic'
+  const normalizeIdentityWidths = glyphs.join('') === 'EOM'
   glyphs.forEach((glyph, index) => {
-    context.fillText(glyph, index * cellWidth + cellWidth / 2, cellHeight / 2 + 2)
+    const metrics = context.measureText(glyph)
+    const visibleWidth = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight || metrics.width
+    const horizontalScale = normalizeIdentityWidths
+      ? resolveGlyphHorizontalScale(visibleWidth)
+      : 1
+    const horizontalOffset = resolveGlyphHorizontalOffset(
+      metrics.actualBoundingBoxLeft,
+      metrics.actualBoundingBoxRight
+    )
+    const baseline = resolveGlyphBaseline(
+      metrics.actualBoundingBoxAscent,
+      metrics.actualBoundingBoxDescent,
+      cellHeight
+    )
+    context.save()
+    context.translate(index * cellWidth + cellWidth / 2, baseline)
+    context.scale(horizontalScale, 1)
+    context.fillText(glyph, horizontalOffset, 0)
+    context.restore()
   })
 
-  return { atlas, count: Math.max(1, glyphs.length) }
+  return { atlas, count: layout.glyphCount, columns: layout.columns }
 }
 
 export function PixelCanvas({
@@ -144,6 +182,8 @@ export function PixelCanvas({
     let glyphTexture: WebGLTexture | null = null
     let glyphAtlasKey = ''
     let glyphCount = 1
+    let glyphAtlasColumns = 1
+    let glyphTextureFilter: 'linear' | 'mipmap' | null = null
     let frame = 0
     let lastFrame = 0
 
@@ -245,18 +285,40 @@ export function PixelCanvas({
             gl.UNSIGNED_BYTE,
             generated.atlas
           )
+          gl.generateMipmap(gl.TEXTURE_2D)
           glyphAtlasKey = current.characterSet.id
           glyphCount = generated.count
+          glyphAtlasColumns = generated.columns
+          glyphTextureFilter = null
         }
         gl.activeTexture(gl.TEXTURE0)
         gl.bindTexture(gl.TEXTURE_2D, videoTexture)
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1)
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, current.video)
+        const grid = resolveMosaicGrid(current.tiles, canvas.width, canvas.height)
+        const nextGlyphTextureFilter = resolveGlyphTextureFilter(current.tiles, canvas.width)
+        if (current.characterSet.useAtlas && glyphTextureFilter !== nextGlyphTextureFilter) {
+          gl.activeTexture(gl.TEXTURE1)
+          gl.bindTexture(gl.TEXTURE_2D, glyphTexture)
+          gl.texParameteri(
+            gl.TEXTURE_2D,
+            gl.TEXTURE_MIN_FILTER,
+            nextGlyphTextureFilter === 'linear' ? gl.LINEAR : gl.LINEAR_MIPMAP_LINEAR
+          )
+          glyphTextureFilter = nextGlyphTextureFilter
+          gl.activeTexture(gl.TEXTURE0)
+        }
         gl.uniform2f(gl.getUniformLocation(program, 'uResolution'), canvas.width, canvas.height)
         gl.uniform1f(gl.getUniformLocation(program, 'uColumns'), current.tiles)
+        gl.uniform1f(gl.getUniformLocation(program, 'uRows'), grid.rows)
         gl.uniform1f(gl.getUniformLocation(program, 'uGlitch'), current.glitch)
         gl.uniform1f(gl.getUniformLocation(program, 'uTime'), now / 1000)
         gl.uniform1f(gl.getUniformLocation(program, 'uSpacing'), current.settings.spacing)
+        gl.uniform1f(
+          gl.getUniformLocation(program, 'uShapeMode'),
+          getMosaicShapePreset(current.settings.shape).shaderMode
+        )
+        gl.uniform1f(gl.getUniformLocation(program, 'uShapeYScale'), grid.shapeYScale)
         gl.uniform1f(gl.getUniformLocation(program, 'uBrightness'), current.settings.brightness / 100)
         gl.uniform1f(gl.getUniformLocation(program, 'uContrast'), current.settings.contrast / 100)
         gl.uniform1f(gl.getUniformLocation(program, 'uSaturation'), current.settings.saturation / 100)
@@ -273,6 +335,7 @@ export function PixelCanvas({
           current.characterSet.useAtlas ? 1 : 0
         )
         gl.uniform1f(gl.getUniformLocation(program, 'uGlyphCount'), glyphCount)
+        gl.uniform1f(gl.getUniformLocation(program, 'uGlyphAtlasColumns'), glyphAtlasColumns)
         gl.uniform3fv(
           gl.getUniformLocation(program, 'uBackgroundColor'),
           hexToUnitRgb(current.palette.background, DEFAULT_PIXEL_PALETTE.background)
