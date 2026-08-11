@@ -4,6 +4,7 @@ import { ResponsiveSidebar } from './ResponsiveSidebar.mjs'
 
 export function LandingFrame({
   children,
+  houseAssetSrc,
   houseHref,
   houseLabel,
   panel,
@@ -19,7 +20,11 @@ export function LandingFrame({
       playfield
     ),
     children,
-    createElement(HouseLink, { href: houseHref, label: houseLabel }),
+    createElement(HouseLink, {
+      assetSrc: houseAssetSrc,
+      href: houseHref,
+      label: houseLabel,
+    }),
     createElement(
       ResponsiveSidebar,
       {

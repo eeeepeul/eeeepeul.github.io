@@ -23,7 +23,7 @@ test('turns the lower-left mark into a link back to the main page', () => {
   )
 })
 
-test('renders a silent square link to the CCTV page beside the empty right panel', async () => {
+test('renders a silent square link to the CCTV page beside the Figma home panel', async () => {
   const landingModule = await import('../components/site/MainLanding.mjs').catch(() => ({}))
 
   assert.equal(typeof landingModule.MainLanding, 'function')
@@ -40,7 +40,14 @@ test('renders a silent square link to the CCTV page beside the empty right panel
   )
   assert.match(html, /<aside[^>]*class="color-panel sidebar-panel landing-panel"[^>]*>/)
   assert.match(html, /<img class="sidebar-wordmark"[^>]*alt="M:MH"/)
-  assert.match(html, /<div class="sidebar-content"><\/div>/)
+  assert.match(html, /<div class="sidebar-content"><div class="figma-home-sidebar-content"[^>]*>/)
+  assert.match(html, /class="figma-sidebar-card figma-sidebar-intro"/)
+  assert.match(html, /class="figma-sidebar-card figma-sidebar-activity"/)
+  assert.match(html, /class="figma-sidebar-card figma-sidebar-distance"/)
+  assert.match(html, /class="figma-sidebar-card figma-sidebar-network figma-house-map"/)
+  assert.doesNotMatch(html, /figma-home-sidebar-artwork|figma-home-sidebar\.png/)
+  assert.match(html, /class="house-mark house-mark--figma"/)
+  assert.match(html, /src="\/media\/figma-home-house\.svg"/)
   assert.match(html, /<img class="sidebar-footer-mark"[^>]*alt=""/)
   assert.doesNotMatch(html, /character-spawn-button|palette-presets|settings-panel/)
 })

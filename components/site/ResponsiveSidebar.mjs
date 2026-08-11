@@ -1,13 +1,11 @@
 'use client'
 
 import { createElement, Fragment, useEffect, useId, useState } from 'react'
+import { assetPath } from '../../lib/asset-path.mjs'
 
-const SIDEBAR_WORDMARK_URL =
-  'https://roman-grace-53629873.figma.site/_assets/v11/d9b8c63aac76f638bf8691a056ed2fb6ae3f62cd.svg'
-const SIDEBAR_TOGGLE_URL =
-  'https://roman-grace-53629873.figma.site/_assets/v11/bc284c4d5aba5c5ff0c267e810ee1f631720da12.svg'
-const SIDEBAR_FOOTER_MARK_URL =
-  'https://roman-grace-53629873.figma.site/_assets/v11/ba25c24dc25092eec09b7d7aa2b65fb4fa60f04e.svg'
+const SIDEBAR_WORDMARK_URL = assetPath('media/figma-sidebar-wordmark.svg')
+const SIDEBAR_TOGGLE_URL = assetPath('media/figma-sidebar-toggle.svg')
+const SIDEBAR_FOOTER_MARK_URL = assetPath('media/figma-sidebar-footer.svg')
 
 export function nextSidebarOpenState(currentState, action) {
   if (action === 'open') return true

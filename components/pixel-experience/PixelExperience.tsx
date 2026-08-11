@@ -4,10 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
 import { brandMarkSvg } from '../../lib/brand-mark.mjs'
 import { effectiveTiles, manualTilesFromPosition } from '../../lib/pixel-controls.mjs'
-import {
-  DEFAULT_PIXEL_PALETTE_ID,
-  getPixelPalettePreset,
-} from '../../lib/pixel-palette.mjs'
+import { DEFAULT_PIXEL_PALETTE_ID, getPixelPalettePreset } from '../../lib/pixel-palette.mjs'
 import {
   DEFAULT_MOSAIC_SETTINGS,
   getCharacterSetPreset,
@@ -21,6 +18,7 @@ import { ColorPanel } from './ColorPanel'
 import { DragControl } from './DragControl'
 import { ExperienceFrame } from './ExperienceFrame.mjs'
 import { ExportButton } from './ExportButton'
+import { HouseVisitRecorder } from './HouseVisitRecorder'
 import { PixelCanvas } from './PixelCanvas'
 import type { MosaicSettings } from './SettingsPanel'
 
@@ -62,9 +60,7 @@ export function PixelExperience() {
 
   const handleWebglError = useCallback((message: string) => setWebglError(message), [])
   const handleSettingsChange = useCallback((patch: Partial<MosaicSettings>) => {
-    setSettings((current) => (
-      normalizeMosaicSettings({ ...current, ...patch }) as MosaicSettings
-    ))
+    setSettings((current) => normalizeMosaicSettings({ ...current, ...patch }) as MosaicSettings)
   }, [])
   const playRandomNextVideo = useCallback(() => {
     setVideoIndex((current) => pickNextVideoIndex(current, MOSAIC_VIDEO_FILES.length))
@@ -95,22 +91,23 @@ export function PixelExperience() {
   return (
     <ExperienceFrame
       homeHref={assetPath('')}
-      mark={(
+      mark={
         <div
           className="brand-mark"
           aria-hidden="true"
           dangerouslySetInnerHTML={{ __html: brandMarkSvg() }}
         />
-      )}
-      panel={(
+      }
+      panel={
         <ColorPanel
           selectedId={paletteId}
           onSelect={setPaletteId}
           settings={settings}
           onSettingsChange={handleSettingsChange}
         />
-      )}
+      }
     >
+      <HouseVisitRecorder />
       <div className="stage-workspace">
         <section className="visual-stage" aria-label="픽셀 CCTV 재생 영역">
           <PixelCanvas
@@ -164,7 +161,9 @@ export function PixelExperience() {
           <div className="action-row">
             <div className="kick-monitor">
               <span>KICK INPUT</span>
-              <i aria-hidden="true"><b style={{ transform: `scaleX(${playback.kick})` }} /></i>
+              <i aria-hidden="true">
+                <b style={{ transform: `scaleX(${playback.kick})` }} />
+              </i>
             </div>
             <div className="button-group">
               <button
@@ -187,10 +186,15 @@ export function PixelExperience() {
 
           {!recorder.supported && (
             <p className="support-note">
-              H.264 MP4 저장은 지원 브라우저에서만 활성화됩니다. 화면 조작과 자동 Kick 반응은 그대로 사용할 수 있습니다.
+              H.264 MP4 저장은 지원 브라우저에서만 활성화됩니다. 화면 조작과 자동 Kick 반응은 그대로
+              사용할 수 있습니다.
             </p>
           )}
-          {activeError && <p className="error-note" role="alert">{activeError}</p>}
+          {activeError && (
+            <p className="error-note" role="alert">
+              {activeError}
+            </p>
+          )}
         </section>
       </div>
     </ExperienceFrame>
