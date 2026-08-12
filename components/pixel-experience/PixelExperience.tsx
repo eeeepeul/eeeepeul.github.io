@@ -18,7 +18,6 @@ import { ColorPanel } from './ColorPanel'
 import { DragControl } from './DragControl'
 import { ExperienceFrame } from './ExperienceFrame.mjs'
 import { ExportButton } from './ExportButton'
-import { HouseVisitRecorder } from './HouseVisitRecorder'
 import { PixelCanvas } from './PixelCanvas'
 import type { MosaicSettings } from './SettingsPanel'
 
@@ -107,7 +106,6 @@ export function PixelExperience() {
         />
       }
     >
-      <HouseVisitRecorder />
       <div className="stage-workspace">
         <section className="visual-stage" aria-label="픽셀 CCTV 재생 영역">
           <PixelCanvas

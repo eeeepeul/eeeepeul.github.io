@@ -7,15 +7,14 @@ import {
   buildVisitorTimeline,
   filterTrackedVisits,
   getVisitorDayNumber,
-  loadVisitorVisits,
-  recordVisitorPageView,
+  VISITOR_TIMELINE_START_MS,
 } from '../../lib/visitor-activity.mjs'
+import { startSharedVisitFeed } from '../../lib/shared-visits.mjs'
+import { getSharedVisitStore } from '../../lib/supabase-browser.mjs'
 
 const SIDEBAR_CARET_URL = assetPath('media/figma-sidebar-caret.svg')
-const ACTIVITY_ENDPOINT = process.env.NEXT_PUBLIC_VISITOR_ACTIVITY_ENDPOINT || ''
 const REMOTE_REFRESH_MS = 30_000
 const ACTIVITY_VISIT_LIMIT = 72
-let pageViewRecorded = false
 
 function formatTime(timestamp) {
   if (!timestamp) return '--:--:--'
@@ -44,6 +43,7 @@ function ActivityBlock({ block, className, index }) {
 export function VisitorActivityCard() {
   const [nowMs, setNowMs] = useState(0)
   const [visits, setVisits] = useState([])
+  const [connectionStatus, setConnectionStatus] = useState('connecting')
   const [selectedDay, setSelectedDay] = useState(() => getVisitorDayNumber(Date.now()))
   const [isPeriodOpen, setIsPeriodOpen] = useState(false)
   const liveNow = nowMs || Date.now()
@@ -54,30 +54,21 @@ export function VisitorActivityCard() {
   const availableDays = Array.from({ length: currentDay }, (_, index) => currentDay - index)
 
   useEffect(() => {
-    let isMounted = true
-    const storage = window.localStorage
     const initialNow = Date.now()
 
     setNowMs(initialNow)
-
-    if (!pageViewRecorded) {
-      pageViewRecorded = true
-      void recordVisitorPageView({
-        endpoint: ACTIVITY_ENDPOINT,
-        storage,
-        nowMs: initialNow,
-      }).then((nextVisits) => {
-        if (isMounted) setVisits(nextVisits)
-      })
-    } else {
-      void loadVisitorVisits({
-        endpoint: ACTIVITY_ENDPOINT,
-        storage,
-        nowMs: initialNow,
-      }).then((nextVisits) => {
-        if (isMounted) setVisits(nextVisits)
-      })
-    }
+    const feed = startSharedVisitFeed({
+      store: getSharedVisitStore(),
+      getSinceMs: () => VISITOR_TIMELINE_START_MS,
+      onVisits: (sharedVisits) => {
+        setVisits(sharedVisits.map((visit) => visit.visitedAt))
+      },
+      onStatus: setConnectionStatus,
+      eventTarget: window,
+      setIntervalImpl: window.setInterval.bind(window),
+      clearIntervalImpl: window.clearInterval.bind(window),
+      refreshMs: REMOTE_REFRESH_MS,
+    })
 
     const clockTimer = window.setInterval(() => {
       const nextNow = Date.now()
@@ -85,21 +76,9 @@ export function VisitorActivityCard() {
       setVisits((currentVisits) => filterTrackedVisits(currentVisits, nextNow))
     }, 1_000)
 
-    const refreshTimer = window.setInterval(() => {
-      const nextNow = Date.now()
-      void loadVisitorVisits({
-        endpoint: ACTIVITY_ENDPOINT,
-        storage,
-        nowMs: nextNow,
-      }).then((nextVisits) => {
-        if (isMounted) setVisits(nextVisits)
-      })
-    }, REMOTE_REFRESH_MS)
-
     return () => {
-      isMounted = false
       window.clearInterval(clockTimer)
-      window.clearInterval(refreshTimer)
+      void feed.cleanup()
     }
   }, [])
 
@@ -110,7 +89,13 @@ export function VisitorActivityCard() {
       'aria-label': '최근 24시간 방문 활동',
       'data-activity-source': 'live',
       'data-activity-progress': 'live',
-      'data-activity-storage': ACTIVITY_ENDPOINT ? 'shared' : 'local',
+      'data-activity-storage': connectionStatus,
+      title:
+        connectionStatus === 'shared'
+          ? '모든 방문자의 기록과 실시간 연결됨'
+          : connectionStatus === 'offline'
+            ? '공유 방문 기록 연결을 다시 시도하고 있습니다'
+            : '공유 방문 기록 연결 중',
     },
     createElement(
       'header',

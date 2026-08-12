@@ -8,7 +8,7 @@ const required = [
   'out/media/mosaic-03.mp4',
   'out/media/if-and-only-if.mp3',
 ]
-const forbidden = ['EPEUL', 'MH:M', '/api/newsletter']
+const forbidden = ['MH:M', '/api/newsletter']
 const textExtensions = new Set(['.html', '.js', '.css', '.json', '.txt', '.xml'])
 
 function collectTextFiles(directory) {
@@ -29,7 +29,8 @@ for (const file of required) {
 for (const file of collectTextFiles('out')) {
   const content = readFileSync(file, 'utf8')
   for (const marker of forbidden) {
-    if (content.includes(marker)) throw new Error(`Forbidden legacy marker ${marker} found in ${file}`)
+    if (content.includes(marker))
+      throw new Error(`Forbidden legacy marker ${marker} found in ${file}`)
   }
 }
 

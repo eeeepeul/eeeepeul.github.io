@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: yarn
       - id: configurepages
         uses: actions/configure-pages@v5
@@ -39,6 +39,8 @@ jobs:
           EXPORT: 1
           UNOPTIMIZED: 1
           BASE_PATH: ${{ steps.configurepages.outputs.base_path }}
+          NEXT_PUBLIC_SUPABASE_URL: https://fppdszzeuswysehosgcf.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_xoAXClURBLTal8Y-ByxmOg_GP7DiwLz
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
