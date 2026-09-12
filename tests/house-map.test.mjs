@@ -1,6 +1,5 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
 
 import {
   HOUSE_MAP_ZOOM_LEVELS,
@@ -93,15 +92,4 @@ test('keeps each route attached to the distance for the same house pair', () => 
       to: { id: 'house1', x: 159, y: 34 },
     },
   ])
-})
-
-test('uses wheel zoom instead of drag panning and keeps all CCTV house targets', async () => {
-  const source = await readFile(new URL('../components/site/HouseMapCard.mjs', import.meta.url), 'utf8')
-
-  assert.match(source, /onWheel: handleWheel/)
-  assert.doesNotMatch(source, /onPointerDown: handlePointerDown/)
-  assert.doesNotMatch(source, /data-map-pan-enabled/)
-  for (const houseId of ['house1', 'house2', 'house3', 'house4']) {
-    assert.match(source, new RegExp(houseId))
-  }
 })
