@@ -87,7 +87,7 @@ function renderHouseShape(house) {
     house3: 'M-6 -7H7V5H3V8H-6Z', house4: 'M-5 -5H6V6H-5Z',
   }
   const rotations = { house1: -14, house2: 16, house3: 30, house4: -22 }
-  return createElement('path', { className: 'figma-island-building', d: shapes[house.id], transform: `translate(${house.x} ${house.y}) rotate(${rotations[house.id]})` })
+  return createElement('path', { className: 'figma-island-building', 'data-map-house': house.id, d: shapes[house.id], transform: `translate(${house.x} ${house.y}) rotate(${rotations[house.id]})` })
 }
 
 export function HouseMapCard({ distances = [], houseIndex = 0, visitCounts = {} }) {

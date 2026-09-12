@@ -105,3 +105,12 @@ test('uses wheel zoom instead of drag panning and keeps all CCTV house targets',
     assert.match(source, new RegExp(houseId))
   }
 })
+
+test('defines cartographic layers without pan affordances', async () => {
+  const css = await readFile(new URL('../app/globals.css', import.meta.url), 'utf8')
+
+  assert.match(css, /\.figma-island-overview/)
+  assert.match(css, /\.figma-island-detail/)
+  assert.match(css, /prefers-reduced-motion: reduce/)
+  assert.doesNotMatch(css, /\.figma-house-map-canvas\.can-pan/)
+})

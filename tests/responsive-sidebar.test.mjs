@@ -267,16 +267,13 @@ test('the live house map keeps every route black and exposes keyboard focus on h
   )
 })
 
-test('the enlarged house map exposes direct drag affordances without animating behind the pointer', () => {
+test('the fixed-focus house map exposes scroll zoom without drag affordances', () => {
   assert.match(
     css,
-    /\.figma-house-map-canvas\.can-pan\s*\{[^}]*cursor:\s*grab;[^}]*touch-action:\s*none;/s
+    /\.figma-house-map-canvas\s*\{[^}]*cursor:\s*zoom-in;[^}]*touch-action:\s*pan-y;/s
   )
-  assert.match(css, /\.figma-house-map-canvas\.can-pan\.is-dragging\s*\{[^}]*cursor:\s*grabbing;/s)
-  assert.match(
-    css,
-    /\.figma-house-map-canvas\.is-dragging \.figma-house-map-viewport\s*\{[^}]*transition:\s*none;/s
-  )
+  assert.doesNotMatch(css, /\.figma-house-map-canvas\.can-pan/)
+  assert.doesNotMatch(css, /\.figma-house-map-canvas\.is-dragging/)
 })
 
 test('the map zoom control keeps the 100 percent label and both buttons inside stable columns', () => {

@@ -1119,34 +1119,18 @@ button:focus-visible,
 
 .figma-house-map-canvas {
   user-select: none;
+  cursor: zoom-in;
+  touch-action: pan-y;
 }
 
-.figma-house-map-canvas.can-pan {
-  cursor: grab;
-  touch-action: none;
-}
-
-.figma-house-map-canvas.can-pan.is-dragging {
-  cursor: grabbing;
-}
-
-.figma-house-map-canvas.can-pan .figma-house-map-house-link {
-  cursor: grab;
-  touch-action: none;
-}
-
-.figma-house-map-canvas.can-pan.is-dragging .figma-house-map-house-link {
-  cursor: grabbing;
+.figma-house-map[data-map-zoom='100'] .figma-house-map-canvas {
+  cursor: zoom-out;
 }
 
 .figma-house-map-viewport {
   transform-box: view-box;
   transform-origin: 0 0;
   transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.figma-house-map-canvas.is-dragging .figma-house-map-viewport {
-  transition: none;
 }
 
 .figma-sidebar-network .figma-house-map-route {
@@ -1214,6 +1198,99 @@ button:focus-visible,
 .figma-sidebar-network .figma-house-map-distance.is-selected {
   fill: #282828;
   font-weight: 500;
+}
+
+.figma-island-overview,
+.figma-island-detail,
+.figma-island-houses {
+  transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.figma-island-overview {
+  opacity: var(--map-overview-opacity);
+}
+
+.figma-island-detail {
+  opacity: var(--map-detail-opacity);
+}
+
+.figma-island-silhouette {
+  fill: #999;
+  stroke: none;
+}
+
+.figma-island-silhouette--shore {
+  fill: #a8a8a8;
+}
+
+.figma-sidebar-network .figma-island-glyph-row {
+  fill: #f9f9f9;
+  font-family: "Nanum Gothic Coding", ui-monospace, monospace;
+  font-size: 6px;
+  letter-spacing: 1px;
+  opacity: 0.92;
+}
+
+.figma-sidebar-network .figma-island-detail path,
+.figma-sidebar-network .figma-island-detail line {
+  fill: none;
+  stroke: #282828;
+  vector-effect: non-scaling-stroke;
+}
+
+.figma-sidebar-network .figma-island-road {
+  stroke-width: 1.25;
+}
+
+.figma-sidebar-network .figma-island-road--thin,
+.figma-sidebar-network .figma-island-contour {
+  stroke-width: 0.62;
+  opacity: 0.68;
+}
+
+.figma-sidebar-network .figma-island-terrain {
+  fill: url(#none);
+  stroke-dasharray: 1.2 2.6;
+  stroke-width: 0.8;
+  opacity: 0.55;
+}
+
+.figma-sidebar-network .figma-island-current {
+  stroke-width: 0.75;
+  opacity: 0.74;
+}
+
+.figma-sidebar-network .figma-island-current::after {
+  content: '';
+}
+
+.figma-sidebar-network .figma-island-coordinate,
+.figma-sidebar-network .figma-island-scale,
+.figma-sidebar-network .figma-island-north {
+  fill: #282828;
+  font-family: "Poppins", Arial, sans-serif;
+  font-size: 5px;
+  letter-spacing: 0.08em;
+}
+
+.figma-sidebar-network .figma-island-north {
+  font-family: Georgia, serif;
+  font-size: 25px;
+  opacity: 0.45;
+}
+
+.figma-sidebar-network .figma-island-building {
+  fill: #282828;
+  stroke: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .figma-house-map-viewport,
+  .figma-island-overview,
+  .figma-island-detail,
+  .figma-island-houses {
+    transition: none;
+  }
 }
 
 .figma-network-zoom {
