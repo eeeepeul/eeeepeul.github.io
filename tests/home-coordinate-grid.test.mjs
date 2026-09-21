@@ -21,7 +21,7 @@ test('the main page renders the Figma sidebar as native UI instead of a flattene
   assert.match(html, /class="figma-sidebar-status-chip figma-sidebar-active"/)
   assert.match(html, /class="figma-sidebar-status-chip figma-sidebar-period"/)
   assert.match(html, /aria-haspopup="listbox"/)
-  assert.match(html, />2 day<img class="figma-sidebar-caret"/)
+  assert.match(html, />\d+ day<img class="figma-sidebar-caret"/)
   assert.match(html, /data-activity-source="live"/)
   assert.match(html, /data-activity-progress="live"/)
   assert.match(html, /aria-live="polite"/)

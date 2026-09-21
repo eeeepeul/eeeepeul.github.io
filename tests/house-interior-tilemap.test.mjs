@@ -12,7 +12,10 @@ test('renders a data-driven 64 by 48 tilemap with stable layer names', () => {
   assert.match(html, /data-map-width="64"/)
   assert.match(html, /data-map-height="48"/)
   assert.match(html, /data-tile-size="16"/)
-  assert.match(html, /data-tile-id="floor-0-0"[^>]*style="left:0%;top:0%;width:1.5625%;height:2.083333333333333%/) 
+  assert.match(
+    html,
+    /style="left:0%;top:0%;width:1.5625%;height:2.083333333333333%"[^>]*data-tile-id="floor-0-0"/
+  )
 
   for (const layer of [
     'floor',
