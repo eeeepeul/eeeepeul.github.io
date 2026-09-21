@@ -38,19 +38,13 @@ const tileAt = (regions, x, y) => {
   return tileId
 }
 
-const renderFloorLayer = (map) => {
+const createFloorTiles = (map) => {
   const regions = map.layers.floor ?? []
   const tiles = []
   for (let y = 0; y < map.height; y += 1) {
     for (let x = 0; x < map.width; x += 1) {
       const tileId = tileAt(regions, x, y)
-      tiles.push(
-        renderTile(
-          { id: `floor-${x}-${y}`, tileId, x, y, width: 1, height: 1 },
-          map,
-          'floor'
-        )
-      )
+      tiles.push({ id: `floor-${x}-${y}`, tileId, x, y, width: 1, height: 1 })
     }
   }
   return tiles
@@ -106,7 +100,7 @@ const renderSpawnLayer = (map) =>
 
 export function HouseInteriorTilemap({ map = HOUSE_INTERIOR_MAP }) {
   const layers = [
-    renderLayer('floor', renderFloorLayer(map), map),
+    renderLayer('floor', createFloorTiles(map), map),
     renderLayer('walls', map.layers.walls ?? [], map),
     renderLayer('doors_windows', map.layers.doors_windows ?? [], map),
     renderLayer('furniture', map.layers.furniture ?? [], map),
