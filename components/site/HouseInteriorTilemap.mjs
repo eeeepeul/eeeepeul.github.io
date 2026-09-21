@@ -21,12 +21,13 @@ const renderTile = (tile, map, layerName) =>
     style: tileStyle(tile, map),
     'data-tile-id': tile.id,
     'data-tile-type': tile.tileId,
+    ...(tile.room ? { 'data-room': tile.room } : {}),
     'data-layer': layerName,
     'aria-hidden': 'true',
   })
 
 const tileAt = (regions, x, y) => {
-  let tileId = 'floor-ivory'
+  let tileId = 'floor-void'
   regions.forEach((region) => {
     const isInside =
       x >= region.x &&

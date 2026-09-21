@@ -2013,6 +2013,10 @@ button:focus-visible,
   background: #f3f0e7;
 }
 
+.house-interior-tile--floor-void {
+  background: #dbe4e9;
+}
+
 .house-interior-tile--floor-cool {
   background: #e4ebef;
 }
