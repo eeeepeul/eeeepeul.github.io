@@ -2,7 +2,7 @@
 
 import { createElement, useRef, useState } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
-import { FollowingCharacterWorld } from './FollowingCharacterWorld.mjs'
+import { HouseInteriorWorld } from './HouseInteriorWorld.mjs'
 import { LandingFrame } from './LandingFrame.mjs'
 
 const INITIAL_CHARACTER_IDS = Array.from({ length: 6 }, (_, index) => `npc-${index + 1}`)
@@ -22,7 +22,7 @@ export function SecondaryLanding() {
   return createElement(LandingFrame, {
     houseHref: assetPath(''),
     houseLabel: '메인 화면으로 이동',
-    playfield: createElement(FollowingCharacterWorld, {
+    playfield: createElement(HouseInteriorWorld, {
       activeCharacterId,
       characterIds,
     }),

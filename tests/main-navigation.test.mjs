@@ -59,6 +59,8 @@ test('renders the second page with six NPCs and a character-add control', async 
 
   const html = renderToStaticMarkup(createElement(secondaryModule.SecondaryLanding))
   assert.match(html, /<main class="experience-shell landing-shell">/)
+  assert.match(html, /class="house-interior-world"/)
+  assert.match(html, /class="house-interior-tilemap"/)
   assert.match(
     html,
     /<a class="house-link" href="\/" aria-label="메인 화면으로 이동">.*<\/a>/

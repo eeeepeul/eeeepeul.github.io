@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 기존 라우트와 기능을 건드리지 않고 `/house/`에 64×48 실내용 픽셀 하우스 배경 타일맵을 추가한다.
+**Goal:** 기존 라우트와 기능을 건드리지 않고 `/second/`의 기존 playfield 배경에 64×48 실내용 픽셀 하우스 타일맵을 통합한다.
 
-**Architecture:** 맵 계약과 배치 데이터는 `lib/house-interior-map.mjs`에 둔다. `HouseInteriorTilemap.mjs`는 데이터를 시각 레이어와 숨은 데이터 레이어로 렌더링하고, `/house/` 페이지는 이를 전체 화면 프리뷰로 감싼다. 기존 `/`, `/second/`, `/experience/` 컴포넌트는 수정하지 않는다.
+**Architecture:** 맵 계약과 배치 데이터는 `lib/house-interior-map.mjs`에 둔다. `HouseInteriorTilemap.mjs`는 데이터를 시각 레이어와 숨은 데이터 레이어로 렌더링하고, `HouseInteriorWorld.mjs`는 이를 `/second/`의 기존 캐릭터 playfield 뒤에 배치한다. 기존 사이드바와 캐릭터 레이어는 유지한다.
 
 **Tech Stack:** Next.js 15 App Router, React 19, ES modules, CSS Grid/absolute positioning, Node built-in test runner.
 
@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - 기존 `/`, `/second/`, `/experience/` 라우트와 기존 사이드바·네비게이션·기능을 변경하지 않는다.
-- 새 페이지는 `/house/`에만 추가한다.
+- 새 페이지를 만들지 않고 기존 `/second/`에만 통합한다.
 - 맵 규격은 `64 × 48` 타일, `16 × 16px` tile size를 사용한다.
 - 외부 정원·연못·숲·마당은 렌더링하지 않는다.
 - 캐릭터 이동, NPC, DB, 키보드/포인터 입력, 카메라 추적, 네트워크 동기화는 구현하지 않는다.
@@ -25,7 +25,7 @@
 - 방 범위와 현관 돌출부가 요구 좌표에서 벗어나지 않는지 — Task 1의 좌표 계약 테스트
 - 거실과 주변 방의 연결부가 긴 복도로 변하지 않는지 — Task 1의 connection 테스트
 - 충돌/스폰 정보가 시각 레이어에 섞이지 않는지 — Task 1의 layer separation 테스트
-- `/house/`가 새 배경을 표시하면서 기존 `/second/` 정적 마크업을 바꾸지 않는지 — Task 3의 route render 테스트
+- `/second/`가 새 배경을 표시하면서 기존 사이드바·캐릭터 정적 마크업을 유지하는지 — Task 3의 통합 render 테스트
 - 작은 화면에서도 맵이 잘리지 않고 픽셀 비율을 유지하는지 — Task 3의 CSS/정적 빌드 검증
 
 ---
@@ -248,20 +248,21 @@ git add components/site/HouseInteriorTilemap.mjs tests/house-interior-tilemap.te
 git commit -m "feat: render layered house interior tilemap"
 ```
 
-### Task 3: New `/house/` route and isolated pixel styling
+### Task 3: Integrate the map into the existing `/second/` playfield
 
 **Files:**
-- Create: `app/house/page.tsx`
-- Create: `components/site/HouseInteriorPage.mjs`
+- Create: `components/site/HouseInteriorWorld.mjs`
+- Modify: `components/site/SecondaryLanding.mjs`
 - Modify: `app/globals.css` by appending only `.house-interior-*` rules
-- Create: `tests/house-interior-route.test.mjs`
+- Modify: `tests/main-navigation.test.mjs`
+- Delete: `app/house/page.tsx`, `components/site/HouseInteriorPage.mjs`, `tests/house-interior-route.test.mjs`
 
 **Interfaces:**
 - Consumes: `HouseInteriorTilemap` from Task 2
-- Produces: `HouseInteriorPage()` with a full-viewport `.house-interior-page` and `.house-interior-viewport`
-- Produces: `app/house/page.tsx` as a thin App Router wrapper around `HouseInteriorPage`
+- Produces: `HouseInteriorWorld({ activeCharacterId, characterIds })`
+- Keeps `FollowingCharacterWorld` in a foreground layer so the existing character-follow and add-character behavior remains intact
 
-- [ ] **Step 1: Write the failing route-render test**
+- [x] **Step 1: Write the failing `/second/` integration assertion**
 
 ```js
 import test from 'node:test'
@@ -271,71 +272,61 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { HouseInteriorPage } from '../components/site/HouseInteriorPage.mjs'
 
-test('renders the new house page without replacing the existing second-page component', () => {
-  assert.equal(typeof HouseInteriorPage, 'function')
-  const html = renderToStaticMarkup(createElement(HouseInteriorPage))
-  assert.match(html, /class="house-interior-page"/)
-  assert.match(html, /class="house-interior-viewport"/)
+test('renders the second page with the interior map behind its existing characters', () => {
+  const html = renderToStaticMarkup(createElement(SecondaryLanding))
+  assert.match(html, /class="house-interior-world"/)
   assert.match(html, /class="house-interior-tilemap"/)
-  const secondPageSource = readFileSync(new URL('../app/second/page.tsx', import.meta.url), 'utf8')
-  assert.match(secondPageSource, /SecondaryLanding/)
+  assert.match(html, /class="house-interior-character-layer"/)
+  assert.match(html, /class="wandering-character"/)
 })
 ```
 
-- [ ] **Step 2: Run the focused route test and verify it fails**
+- [x] **Step 2: Run the focused integration test and verify it fails before wiring**
 
-Run: `npm test -- tests/house-interior-route.test.mjs`
+Run: `npm test -- tests/main-navigation.test.mjs`
 
-Expected: FAIL because `components/site/HouseInteriorPage.mjs` and the isolated page markup do not exist.
+Expected: FAIL because `SecondaryLanding` still renders only `FollowingCharacterWorld`.
 
-- [ ] **Step 3: Implement the route**
+- [x] **Step 3: Implement the background/foreground wrapper**
 
-Create `components/site/HouseInteriorPage.mjs` with a default function that returns:
+Create `components/site/HouseInteriorWorld.mjs`:
 
 ```js
 import { createElement } from 'react'
+import { FollowingCharacterWorld } from './FollowingCharacterWorld.mjs'
 import { HouseInteriorTilemap } from './HouseInteriorTilemap.mjs'
 
-export function HouseInteriorPage() {
+export function HouseInteriorWorld({ activeCharacterId, characterIds }) {
   return createElement(
-    'main',
-    { className: 'house-interior-page' },
-    createElement('div', { className: 'house-interior-viewport' }, createElement(HouseInteriorTilemap))
+    'div',
+    { className: 'house-interior-world' },
+    createElement(HouseInteriorTilemap),
+    createElement(
+      'div',
+      { className: 'house-interior-character-layer' },
+      createElement(FollowingCharacterWorld, { activeCharacterId, characterIds })
+    )
   )
 }
 ```
 
-Then create the App Router wrapper at `app/house/page.tsx`:
+Update `SecondaryLanding.mjs` to render `HouseInteriorWorld` in the existing `LandingFrame` playfield slot. Do not alter the sidebar, home link, character IDs, or spawn button.
 
-```tsx
-import { HouseInteriorPage } from '../../components/site/HouseInteriorPage.mjs'
+- [x] **Step 4: Add isolated responsive CSS**
 
-export default function HousePage() {
-  return <HouseInteriorPage />
-}
-```
+Append `.house-interior-world`, `.house-interior-character-layer`, and the existing `.house-interior-*` tile rules. The wrapper fills the existing playfield; the map is z-index 0 and the existing character layer is z-index 10. Do not edit the existing sidebar or shell geometry.
 
-- [ ] **Step 4: Add isolated responsive CSS**
+- [ ] **Step 5: Run the integration test and verify it passes**
 
-Append rules scoped to `.house-interior-page` only. Use a dark blue outer frame, an ivory board, CSS Grid for the 64×48 logical grid, `image-rendering: pixelated`, and CSS variables for each tile’s logical position. Define classes for the required furniture/decor tile IDs with limited ivory, blue, slate, and coral colors. Use `aspect-ratio: 4 / 3`, `max-width: min(96vw, 1120px)`, `max-height: 92dvh`, `overflow: auto`, and `object-fit`-equivalent grid sizing so the map stays wholly visible on narrow screens. Do not edit any existing selectors.
+Run: `npm test -- tests/main-navigation.test.mjs`
 
-- [ ] **Step 5: Run route tests and verify they pass**
+Expected: PASS with the existing `/second/` panel and six character nodes still present.
 
-Run: `npm test -- tests/house-interior-route.test.mjs`
-
-Expected: PASS and the existing `/second/` import remains available.
-
-- [ ] **Step 6: Build the static site**
-
-Run: `npm run build`
-
-Expected: Next.js static export succeeds and includes `out/house/index.html`.
-
-- [ ] **Step 7: Commit the route and styling**
+- [ ] **Step 6: Commit the integration and styling**
 
 ```bash
-git add app/house/page.tsx app/globals.css tests/house-interior-route.test.mjs
-git commit -m "feat: add house interior preview route"
+git add components/site/HouseInteriorWorld.mjs components/site/SecondaryLanding.mjs app/globals.css tests/main-navigation.test.mjs
+git commit -m "feat: use house interior map as second page background"
 ```
 
 ### Task 4: Full regression and visual verification
@@ -355,13 +346,13 @@ Run: `npm run verify:static`
 
 Expected: static output checks pass without changing existing route artifacts.
 
-- [ ] **Step 3: Start or reuse the local server and inspect `/house/`**
+- [ ] **Step 3: Start or reuse the local server and inspect `/second/`**
 
-Use the existing local server if it is already running; otherwise run `npm run dev` on its configured port. Open `/house/` and verify the full house interior is visible: living room centered and largest, all seven surrounding spaces readable, entrance projection attached at the bottom, no exterior scenery, and no characters/NPCs.
+Use the existing local server if it is already running; otherwise run `npm run dev` on its configured port. Open `/second/` and verify the full house interior is visible as the playfield background: living room centered and largest, all seven surrounding spaces readable, entrance projection attached at the bottom, and the existing character layer remains above it.
 
 - [ ] **Step 4: Inspect regression routes**
 
-Open `/second/` and `/experience/` and verify their existing visual structure and interactions are unchanged. Do not replace the canonical local site with the new route.
+Open `/second/` and `/experience/` and verify their existing visual structure and interactions are unchanged apart from the requested `/second/` background. Do not replace the canonical local site with a new route.
 
 - [ ] **Step 5: Record the final implementation notes**
 

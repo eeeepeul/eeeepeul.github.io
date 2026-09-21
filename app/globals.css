@@ -238,6 +238,34 @@ button:focus-visible,
   height: 180%;
 }
 
+/* The /second/ playfield keeps the existing character layer above the map. */
+.house-interior-world {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background: #dbe4e9;
+}
+
+.house-interior-world > .house-interior-tilemap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.house-interior-character-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.house-interior-character-layer > .character-world {
+  position: absolute;
+  inset: 0;
+}
+
 .wandering-character {
   position: absolute;
   top: 0;
@@ -1937,29 +1965,6 @@ button:focus-visible,
   }
 }
 
-/* 미발화하우스 — isolated interior tilemap preview */
-.house-interior-page {
-  min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  padding: clamp(12px, 3vw, 48px);
-  overflow: auto;
-  background: #172d4a;
-  color: #172d4a;
-}
-
-.house-interior-viewport {
-  width: min(96vw, calc(92dvh * 4 / 3), 1120px);
-  aspect-ratio: 4 / 3;
-  display: grid;
-  place-items: center;
-  padding: clamp(8px, 1.5vw, 20px);
-  overflow: hidden;
-  background: #dbe4e9;
-  border: 2px solid #0f2743;
-  box-shadow: 10px 12px 0 #0f2743;
-}
-
 .house-interior-tilemap {
   position: relative;
   width: 100%;
@@ -2125,16 +2130,4 @@ button:focus-visible,
 
 .house-interior-data-layer {
   display: none;
-}
-
-@media (max-width: 640px) {
-  .house-interior-page {
-    padding: 8px;
-  }
-
-  .house-interior-viewport {
-    width: min(98vw, calc(96dvh * 4 / 3));
-    padding: 7px;
-    box-shadow: 6px 7px 0 #0f2743;
-  }
 }
