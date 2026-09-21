@@ -1936,3 +1936,201 @@ button:focus-visible,
     animation-duration: 0.01ms !important;
   }
 }
+
+/* 미발화하우스 — isolated interior tilemap preview */
+.house-interior-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: clamp(12px, 3vw, 48px);
+  overflow: auto;
+  background: #172d4a;
+  color: #172d4a;
+}
+
+.house-interior-viewport {
+  width: min(96vw, calc(92dvh * 4 / 3), 1120px);
+  aspect-ratio: 4 / 3;
+  display: grid;
+  place-items: center;
+  padding: clamp(8px, 1.5vw, 20px);
+  overflow: hidden;
+  background: #dbe4e9;
+  border: 2px solid #0f2743;
+  box-shadow: 10px 12px 0 #0f2743;
+}
+
+.house-interior-tilemap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  background: #f3f0e7;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.house-interior-map-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.house-interior-map-layer--floor {
+  z-index: 0;
+  background-color: #f3f0e7;
+  background-image:
+    linear-gradient(rgba(34, 64, 91, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 64, 91, 0.045) 1px, transparent 1px);
+  background-size: 1.5625% 2.083333%;
+}
+
+.house-interior-map-layer--walls {
+  z-index: 2;
+}
+
+.house-interior-map-layer--doors_windows {
+  z-index: 3;
+}
+
+.house-interior-map-layer--furniture {
+  z-index: 4;
+}
+
+.house-interior-map-layer--decor {
+  z-index: 5;
+}
+
+.house-interior-tile {
+  position: absolute;
+  display: block;
+  overflow: hidden;
+  border-radius: 0;
+}
+
+.house-interior-tile--floor-ivory {
+  background: #f3f0e7;
+}
+
+.house-interior-tile--floor-cool {
+  background: #e4ebef;
+}
+
+.house-interior-tile--wall-horizontal,
+.house-interior-tile--wall-vertical {
+  background: #173d64;
+  box-shadow: inset 0 0 0 1px #0f2743;
+}
+
+.house-interior-tile--door-blue,
+.house-interior-tile--door-coral {
+  margin: 0.14%;
+  border: 2px solid #173d64;
+  background: #9ac2f0;
+}
+
+.house-interior-tile--door-coral {
+  background: #e77365;
+}
+
+.house-interior-tile--window-blue {
+  margin: 0.18%;
+  border: 1px solid #173d64;
+  background: repeating-linear-gradient(
+    90deg,
+    #9ac2f0 0 12%,
+    #dbe4e9 12% 24%
+  );
+}
+
+.house-interior-tile--rug-blue,
+.house-interior-tile--rug-coral {
+  margin: 0.35%;
+  border: 1px solid rgba(23, 61, 100, 0.44);
+  background: repeating-linear-gradient(
+    0deg,
+    #9ac2f0 0 12%,
+    #dbe4e9 12% 24%
+  );
+}
+
+.house-interior-tile--rug-coral {
+  border-color: rgba(183, 0, 0, 0.42);
+  background: repeating-linear-gradient(
+    90deg,
+    #e77365 0 12%,
+    #f3d6cb 12% 24%
+  );
+}
+
+.house-interior-tile--bed,
+.house-interior-tile--sofa-blue,
+.house-interior-tile--sofa-slate,
+.house-interior-tile--low-table,
+.house-interior-tile--dining-table,
+.house-interior-tile--desk,
+.house-interior-tile--counter,
+.house-interior-tile--console,
+.house-interior-tile--bookcase,
+.house-interior-tile--tub {
+  margin: 0.35%;
+  border: 1px solid #173d64;
+  background: #9ac2f0;
+  box-shadow: inset 0 0 0 2px rgba(243, 240, 231, 0.36);
+}
+
+.house-interior-tile--bed {
+  background: linear-gradient(#dbe4e9 0 25%, #9ac2f0 25% 100%);
+}
+
+.house-interior-tile--sofa-slate,
+.house-interior-tile--bookcase,
+.house-interior-tile--counter {
+  background: #6c879f;
+}
+
+.house-interior-tile--low-table,
+.house-interior-tile--dining-table,
+.house-interior-tile--desk,
+.house-interior-tile--console {
+  background: #d2b8a7;
+}
+
+.house-interior-tile--nightstand,
+.house-interior-tile--chair,
+.house-interior-tile--sink {
+  margin: 0.4%;
+  border: 1px solid #173d64;
+  background: #dbe4e9;
+}
+
+.house-interior-tile--lamp-coral {
+  margin: 12%;
+  border: 1px solid #b70000;
+  border-radius: 50%;
+  background: #e77365;
+}
+
+.house-interior-tile--plant {
+  margin: 8%;
+  border: 1px solid #173d64;
+  border-radius: 30% 30% 12% 12%;
+  background: #6c879f;
+}
+
+.house-interior-data-layer {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .house-interior-page {
+    padding: 8px;
+  }
+
+  .house-interior-viewport {
+    width: min(98vw, calc(96dvh * 4 / 3));
+    padding: 7px;
+    box-shadow: 6px 7px 0 #0f2743;
+  }
+}
