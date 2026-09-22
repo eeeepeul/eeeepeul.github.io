@@ -1,47 +1,33 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { DEFAULT_PIXEL_PALETTE, hexToUnitRgb } from '../../lib/pixel-palette.mjs'
+import { LIQUID_WARP_FRAGMENT_SHADER as FRAGMENT_SHADER } from '../../lib/liquid-warp-shader'
+import { resolveLiquidControls } from '../../lib/liquid-controls.mjs'
 import {
-  GLYPH_ATLAS_CELL_HEIGHT,
-  GLYPH_ATLAS_CELL_WIDTH,
-  GLYPH_ATLAS_FONT_FAMILY,
-  GLYPH_ATLAS_FONT_SIZE,
-  fitGlyphFontSize,
-  resolveGlyphAtlasLayout,
-  resolveGlyphBaseline,
-  resolveGlyphHorizontalOffset,
-  resolveGlyphHorizontalScale,
-  resolveGlyphTextureFilter,
-} from '../../lib/glyph-atlas.mjs'
-import { getMosaicShapePreset, resolveMosaicGrid } from '../../lib/mosaic-settings.mjs'
-import { EXPORT_HEIGHT, EXPORT_WIDTH, FRAGMENT_SHADER, VERTEX_SHADER } from '../../lib/pixel-shaders'
+  DISPLAY_FRAGMENT_SHADER,
+  EXPORT_HEIGHT,
+  EXPORT_WIDTH,
+  VERTEX_SHADER,
+} from '../../lib/pixel-shaders'
 import type { MosaicSettings } from './SettingsPanel'
-
-type PixelPalette = {
-  background: string
-  diagonal: string
-  circle: string
-  solid: string
-  glyph: string
-}
-type CharacterSetPreset = {
-  id: string
-  characters: string
-  useAtlas: boolean
-}
 
 type PixelCanvasProps = {
   video: HTMLVideoElement | null
-  tiles: number
-  glitch: number
-  palette: PixelPalette
+  flowPosition: number
+  pulse: number
   settings: MosaicSettings
-  characterSet: CharacterSetPreset
   playing: boolean
   recording: boolean
   canvasRef: React.RefObject<HTMLCanvasElement | null>
   onError: (message: string) => void
+  onReady?: () => void
+}
+
+type FeedbackTarget = {
+  texture: WebGLTexture
+  framebuffer: WebGLFramebuffer
+  width: number
+  height: number
 }
 
 function compileShader(gl: WebGLRenderingContext, type: number, source: string) {
@@ -57,11 +43,11 @@ function compileShader(gl: WebGLRenderingContext, type: number, source: string) 
   return shader
 }
 
-function createProgram(gl: WebGLRenderingContext) {
+function createProgram(gl: WebGLRenderingContext, fragmentSource: string) {
   const program = gl.createProgram()
   if (!program) throw new Error('WebGL 프로그램을 만들 수 없습니다.')
   const vertex = compileShader(gl, gl.VERTEX_SHADER, VERTEX_SHADER)
-  const fragment = compileShader(gl, gl.FRAGMENT_SHADER, FRAGMENT_SHADER)
+  const fragment = compileShader(gl, gl.FRAGMENT_SHADER, fragmentSource)
   gl.attachShader(program, vertex)
   gl.attachShader(program, fragment)
   gl.linkProgram(program)
@@ -75,73 +61,89 @@ function createProgram(gl: WebGLRenderingContext) {
   return program
 }
 
-function createGlyphAtlas(characters: string) {
-  const glyphs = Array.from(characters).slice(0, 32)
-  const layout = resolveGlyphAtlasLayout(glyphs.length)
-  const cellWidth = GLYPH_ATLAS_CELL_WIDTH
-  const cellHeight = GLYPH_ATLAS_CELL_HEIGHT
-  const atlas = document.createElement('canvas')
-  atlas.width = layout.width
-  atlas.height = layout.height
-  const context = atlas.getContext('2d', { alpha: false })
-  if (!context) throw new Error('문자 세트 텍스처를 만들 수 없습니다.')
+function createFeedbackTarget(
+  gl: WebGLRenderingContext,
+  width: number,
+  height: number
+): FeedbackTarget {
+  const texture = gl.createTexture()
+  const framebuffer = gl.createFramebuffer()
+  if (!texture || !framebuffer) {
+    if (texture) gl.deleteTexture(texture)
+    if (framebuffer) gl.deleteFramebuffer(framebuffer)
+    throw new Error('액상 피드백 버퍼를 준비할 수 없습니다.')
+  }
 
-  context.fillStyle = '#000000'
-  context.fillRect(0, 0, atlas.width, atlas.height)
-  context.fillStyle = '#FFFFFF'
-  context.font = `700 ${GLYPH_ATLAS_FONT_SIZE}px ${GLYPH_ATLAS_FONT_FAMILY}`
-  const widestGlyph = glyphs.reduce(
-    (width, glyph) => Math.max(width, context.measureText(glyph).width),
+  gl.bindTexture(gl.TEXTURE_2D, texture)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,
+    gl.RGBA,
+    width,
+    height,
+    0,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    null
+  )
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer)
+  gl.framebufferTexture2D(
+    gl.FRAMEBUFFER,
+    gl.COLOR_ATTACHMENT0,
+    gl.TEXTURE_2D,
+    texture,
     0
   )
-  context.font = `700 ${fitGlyphFontSize(widestGlyph)}px ${GLYPH_ATLAS_FONT_FAMILY}`
-  context.textAlign = 'center'
-  context.textBaseline = 'alphabetic'
-  const normalizeIdentityWidths = glyphs.join('') === 'EOM'
-  glyphs.forEach((glyph, index) => {
-    const metrics = context.measureText(glyph)
-    const visibleWidth = metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight || metrics.width
-    const horizontalScale = normalizeIdentityWidths
-      ? resolveGlyphHorizontalScale(visibleWidth)
-      : 1
-    const horizontalOffset = resolveGlyphHorizontalOffset(
-      metrics.actualBoundingBoxLeft,
-      metrics.actualBoundingBoxRight
-    )
-    const baseline = resolveGlyphBaseline(
-      metrics.actualBoundingBoxAscent,
-      metrics.actualBoundingBoxDescent,
-      cellHeight
-    )
-    context.save()
-    context.translate(index * cellWidth + cellWidth / 2, baseline)
-    context.scale(horizontalScale, 1)
-    context.fillText(glyph, horizontalOffset, 0)
-    context.restore()
-  })
+  if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+    gl.deleteTexture(texture)
+    gl.deleteFramebuffer(framebuffer)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    throw new Error('액상 피드백 화면을 완성할 수 없습니다.')
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null)
 
-  return { atlas, count: layout.glyphCount, columns: layout.columns }
+  return { texture, framebuffer, width, height }
+}
+
+function destroyFeedbackTarget(gl: WebGLRenderingContext, target: FeedbackTarget) {
+  gl.deleteFramebuffer(target.framebuffer)
+  gl.deleteTexture(target.texture)
+}
+
+function bindFullscreenBuffer(
+  gl: WebGLRenderingContext,
+  program: WebGLProgram,
+  buffer: WebGLBuffer
+) {
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+  const position = gl.getAttribLocation(program, 'aPosition')
+  gl.enableVertexAttribArray(position)
+  gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0)
 }
 
 export function PixelCanvas({
   video,
-  tiles,
-  glitch,
-  palette,
+  flowPosition,
+  pulse,
   settings,
-  characterSet,
   playing,
   recording,
   canvasRef,
   onError,
+  onReady,
 }: PixelCanvasProps) {
+  const localCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  const readyRef = useRef(false)
   const valuesRef = useRef({
     video,
-    tiles,
-    glitch,
-    palette,
+    flowPosition,
+    pulse,
     settings,
-    characterSet,
     playing,
     recording,
   })
@@ -150,19 +152,17 @@ export function PixelCanvas({
   useEffect(() => {
     valuesRef.current = {
       video,
-      tiles,
-      glitch,
-      palette,
+      flowPosition,
+      pulse,
       settings,
-      characterSet,
       playing,
       recording,
     }
     wakeRendererRef.current()
-  }, [video, tiles, glitch, palette, settings, characterSet, playing, recording])
+  }, [video, flowPosition, pulse, settings, playing, recording])
 
   useEffect(() => {
-    const canvas = canvasRef.current
+    const canvas = localCanvasRef.current
     if (!canvas) return
     const gl = canvas.getContext('webgl', {
       alpha: false,
@@ -176,65 +176,70 @@ export function PixelCanvas({
       return
     }
 
-    let program: WebGLProgram | null = null
+    let feedbackProgram: WebGLProgram | null = null
+    let displayProgram: WebGLProgram | null = null
     let buffer: WebGLBuffer | null = null
     let videoTexture: WebGLTexture | null = null
-    let glyphTexture: WebGLTexture | null = null
-    let glyphAtlasKey = ''
-    let glyphCount = 1
-    let glyphAtlasColumns = 1
-    let glyphTextureFilter: 'linear' | 'mipmap' | null = null
+    let feedbackTargets: [FeedbackTarget, FeedbackTarget] | null = null
+    let readTargetIndex = 0
+    let feedbackKey = ''
     let frame = 0
     let lastFrame = 0
 
+    const destroyFeedbackTargets = () => {
+      if (!feedbackTargets) return
+      destroyFeedbackTarget(gl, feedbackTargets[0])
+      destroyFeedbackTarget(gl, feedbackTargets[1])
+      feedbackTargets = null
+    }
+
+    const clearFeedbackTargets = () => {
+      if (!feedbackTargets) return
+      gl.clearColor(0, 0, 0, 0)
+      for (const target of feedbackTargets) {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, target.framebuffer)
+        gl.viewport(0, 0, target.width, target.height)
+        gl.clear(gl.COLOR_BUFFER_BIT)
+      }
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+      readTargetIndex = 0
+    }
+
+    const ensureFeedbackTargets = () => {
+      if (
+        feedbackTargets
+        && feedbackTargets[0].width === canvas.width
+        && feedbackTargets[0].height === canvas.height
+      ) return
+
+      destroyFeedbackTargets()
+      feedbackTargets = [
+        createFeedbackTarget(gl, canvas.width, canvas.height),
+        createFeedbackTarget(gl, canvas.width, canvas.height),
+      ]
+      feedbackKey = ''
+      clearFeedbackTargets()
+    }
+
     try {
-      program = createProgram(gl)
+      feedbackProgram = createProgram(gl, FRAGMENT_SHADER)
+      displayProgram = createProgram(gl, DISPLAY_FRAGMENT_SHADER)
       buffer = gl.createBuffer()
       videoTexture = gl.createTexture()
-      glyphTexture = gl.createTexture()
-      if (!buffer || !videoTexture || !glyphTexture) {
-        throw new Error('WebGL 버퍼를 준비할 수 없습니다.')
-      }
+      if (!buffer || !videoTexture) throw new Error('WebGL 버퍼를 준비할 수 없습니다.')
 
-      gl.useProgram(program)
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
       gl.bufferData(
         gl.ARRAY_BUFFER,
         new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
         gl.STATIC_DRAW
       )
-      const position = gl.getAttribLocation(program, 'aPosition')
-      gl.enableVertexAttribArray(position)
-      gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0)
 
-      gl.activeTexture(gl.TEXTURE0)
       gl.bindTexture(gl.TEXTURE_2D, videoTexture)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1)
-      gl.uniform1i(gl.getUniformLocation(program, 'uVideo'), 0)
-
-      gl.activeTexture(gl.TEXTURE1)
-      gl.bindTexture(gl.TEXTURE_2D, glyphTexture)
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        1,
-        1,
-        0,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        new Uint8Array([255, 255, 255, 255])
-      )
-      gl.uniform1i(gl.getUniformLocation(program, 'uGlyphAtlas'), 1)
-      gl.activeTexture(gl.TEXTURE0)
     } catch (error) {
       onError(error instanceof Error ? error.message : 'WebGL 초기화에 실패했습니다.')
       return
@@ -254,6 +259,7 @@ export function PixelCanvas({
         canvas.height = height
       }
       gl.viewport(0, 0, canvas.width, canvas.height)
+      ensureFeedbackTargets()
     }
 
     const draw = (now: number) => {
@@ -265,98 +271,143 @@ export function PixelCanvas({
       }
       lastFrame = now
       resize()
-      if (!program || !videoTexture || !glyphTexture || !current.video || current.video.readyState < 2) {
+      if (
+        !feedbackProgram
+        || !displayProgram
+        || !buffer
+        || !videoTexture
+        || !feedbackTargets
+        || !current.video
+        || current.video.readyState < 2
+      ) {
         if (current.playing) wake()
         return
       }
 
       try {
-        gl.useProgram(program)
-        if (current.characterSet.useAtlas && glyphAtlasKey !== current.characterSet.id) {
-          const generated = createGlyphAtlas(current.characterSet.characters)
-          gl.activeTexture(gl.TEXTURE1)
-          gl.bindTexture(gl.TEXTURE_2D, glyphTexture)
-          gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1)
-          gl.texImage2D(
-            gl.TEXTURE_2D,
-            0,
-            gl.RGBA,
-            gl.RGBA,
-            gl.UNSIGNED_BYTE,
-            generated.atlas
-          )
-          gl.generateMipmap(gl.TEXTURE_2D)
-          glyphAtlasKey = current.characterSet.id
-          glyphCount = generated.count
-          glyphAtlasColumns = generated.columns
-          glyphTextureFilter = null
+        const nextFeedbackKey = `${current.video.currentSrc}:${canvas.width}x${canvas.height}`
+        if (feedbackKey !== nextFeedbackKey) {
+          feedbackKey = nextFeedbackKey
+          clearFeedbackTargets()
         }
+
+        const readTarget = feedbackTargets[readTargetIndex]
+        const writeTarget = feedbackTargets[1 - readTargetIndex]
+        const controls = resolveLiquidControls({
+          position: current.flowPosition,
+          scale: current.settings.scale,
+          diffusion: current.settings.spacing,
+          pulse: current.pulse,
+        })
+
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1)
         gl.activeTexture(gl.TEXTURE0)
         gl.bindTexture(gl.TEXTURE_2D, videoTexture)
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1)
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, current.video)
-        const grid = resolveMosaicGrid(current.tiles, canvas.width, canvas.height)
-        const nextGlyphTextureFilter = resolveGlyphTextureFilter(current.tiles, canvas.width)
-        if (current.characterSet.useAtlas && glyphTextureFilter !== nextGlyphTextureFilter) {
-          gl.activeTexture(gl.TEXTURE1)
-          gl.bindTexture(gl.TEXTURE_2D, glyphTexture)
-          gl.texParameteri(
-            gl.TEXTURE_2D,
-            gl.TEXTURE_MIN_FILTER,
-            nextGlyphTextureFilter === 'linear' ? gl.LINEAR : gl.LINEAR_MIPMAP_LINEAR
-          )
-          glyphTextureFilter = nextGlyphTextureFilter
-          gl.activeTexture(gl.TEXTURE0)
-        }
-        gl.uniform2f(gl.getUniformLocation(program, 'uResolution'), canvas.width, canvas.height)
-        gl.uniform1f(gl.getUniformLocation(program, 'uColumns'), current.tiles)
-        gl.uniform1f(gl.getUniformLocation(program, 'uRows'), grid.rows)
-        gl.uniform1f(gl.getUniformLocation(program, 'uGlitch'), current.glitch)
-        gl.uniform1f(gl.getUniformLocation(program, 'uTime'), now / 1000)
-        gl.uniform1f(gl.getUniformLocation(program, 'uSpacing'), current.settings.spacing)
-        gl.uniform1f(
-          gl.getUniformLocation(program, 'uShapeMode'),
-          getMosaicShapePreset(current.settings.shape).shaderMode
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, writeTarget.framebuffer)
+        gl.viewport(0, 0, writeTarget.width, writeTarget.height)
+        gl.useProgram(feedbackProgram)
+        bindFullscreenBuffer(gl, feedbackProgram, buffer)
+        gl.activeTexture(gl.TEXTURE0)
+        gl.bindTexture(gl.TEXTURE_2D, videoTexture)
+        gl.uniform1i(gl.getUniformLocation(feedbackProgram, 'uVideo'), 0)
+        gl.activeTexture(gl.TEXTURE1)
+        gl.bindTexture(gl.TEXTURE_2D, readTarget.texture)
+        gl.uniform1i(gl.getUniformLocation(feedbackProgram, 'uFeedback'), 1)
+        gl.uniform2f(
+          gl.getUniformLocation(feedbackProgram, 'uResolution'),
+          canvas.width,
+          canvas.height
         )
-        gl.uniform1f(gl.getUniformLocation(program, 'uShapeYScale'), grid.shapeYScale)
-        gl.uniform1f(gl.getUniformLocation(program, 'uBrightness'), current.settings.brightness / 100)
-        gl.uniform1f(gl.getUniformLocation(program, 'uContrast'), current.settings.contrast / 100)
-        gl.uniform1f(gl.getUniformLocation(program, 'uSaturation'), current.settings.saturation / 100)
-        gl.uniform1f(gl.getUniformLocation(program, 'uHue'), current.settings.hue * Math.PI / 180)
-        gl.uniform1f(gl.getUniformLocation(program, 'uSharpness'), current.settings.sharpness / 100)
-        gl.uniform1f(gl.getUniformLocation(program, 'uGamma'), current.settings.gamma)
+        gl.uniform1f(gl.getUniformLocation(feedbackProgram, 'uTime'), now / 1000)
         gl.uniform1f(
-          gl.getUniformLocation(program, 'uColorMode'),
+          gl.getUniformLocation(feedbackProgram, 'uFlowFrequency'),
+          controls.flowFrequency
+        )
+        gl.uniform1f(
+          gl.getUniformLocation(feedbackProgram, 'uWarpStrength'),
+          controls.warpStrength
+        )
+        gl.uniform1f(
+          gl.getUniformLocation(feedbackProgram, 'uFoldDisplacement'),
+          controls.foldDisplacement
+        )
+        gl.uniform1f(
+          gl.getUniformLocation(feedbackProgram, 'uFoldVelocity'),
+          controls.foldVelocity
+        )
+        gl.uniform1f(
+          gl.getUniformLocation(feedbackProgram, 'uTangentFan'),
+          controls.tangentFan
+        )
+        gl.uniform1f(
+          gl.getUniformLocation(feedbackProgram, 'uVerticalSmear'),
+          controls.verticalSmear
+        )
+        gl.uniform1f(
+          gl.getUniformLocation(feedbackProgram, 'uFeedbackRetention'),
+          controls.feedbackRetention
+        )
+        gl.uniform1f(
+          gl.getUniformLocation(feedbackProgram, 'uHistoryColorRetention'),
+          controls.historyColorRetention
+        )
+        gl.uniform1f(
+          gl.getUniformLocation(feedbackProgram, 'uShadowMassStrength'),
+          controls.shadowMassStrength
+        )
+        gl.uniform1f(
+          gl.getUniformLocation(feedbackProgram, 'uSourceMix'),
+          controls.sourceMix
+        )
+        gl.uniform1f(gl.getUniformLocation(feedbackProgram, 'uBloom'), controls.bloom)
+        gl.uniform1f(gl.getUniformLocation(feedbackProgram, 'uKick'), current.pulse)
+        gl.uniform1f(
+          gl.getUniformLocation(feedbackProgram, 'uBrightness'),
+          current.settings.brightness / 100
+        )
+        gl.uniform1f(
+          gl.getUniformLocation(feedbackProgram, 'uContrast'),
+          current.settings.contrast / 100
+        )
+        gl.uniform1f(
+          gl.getUniformLocation(feedbackProgram, 'uSaturation'),
+          current.settings.saturation / 100
+        )
+        gl.uniform1f(
+          gl.getUniformLocation(feedbackProgram, 'uHue'),
+          current.settings.hue * Math.PI / 180
+        )
+        gl.uniform1f(
+          gl.getUniformLocation(feedbackProgram, 'uSharpness'),
+          current.settings.sharpness / 100
+        )
+        gl.uniform1f(gl.getUniformLocation(feedbackProgram, 'uGamma'), current.settings.gamma)
+        gl.uniform1f(
+          gl.getUniformLocation(feedbackProgram, 'uColorMode'),
           current.settings.colorMode === 'mono' ? 1 : 0
         )
-        gl.uniform1f(gl.getUniformLocation(program, 'uIntensity'), current.settings.intensity)
         gl.uniform1f(
-          gl.getUniformLocation(program, 'uUseGlyphAtlas'),
-          current.characterSet.useAtlas ? 1 : 0
-        )
-        gl.uniform1f(gl.getUniformLocation(program, 'uGlyphCount'), glyphCount)
-        gl.uniform1f(gl.getUniformLocation(program, 'uGlyphAtlasColumns'), glyphAtlasColumns)
-        gl.uniform3fv(
-          gl.getUniformLocation(program, 'uBackgroundColor'),
-          hexToUnitRgb(current.palette.background, DEFAULT_PIXEL_PALETTE.background)
-        )
-        gl.uniform3fv(
-          gl.getUniformLocation(program, 'uDiagonalColor'),
-          hexToUnitRgb(current.palette.diagonal, DEFAULT_PIXEL_PALETTE.diagonal)
-        )
-        gl.uniform3fv(
-          gl.getUniformLocation(program, 'uCircleColor'),
-          hexToUnitRgb(current.palette.circle, DEFAULT_PIXEL_PALETTE.circle)
-        )
-        gl.uniform3fv(
-          gl.getUniformLocation(program, 'uSolidColor'),
-          hexToUnitRgb(current.palette.solid, DEFAULT_PIXEL_PALETTE.solid)
-        )
-        gl.uniform3fv(
-          gl.getUniformLocation(program, 'uGlyphColor'),
-          hexToUnitRgb(current.palette.glyph, DEFAULT_PIXEL_PALETTE.glyph)
+          gl.getUniformLocation(feedbackProgram, 'uIntensity'),
+          current.settings.intensity
         )
         gl.drawArrays(gl.TRIANGLES, 0, 6)
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+        gl.viewport(0, 0, canvas.width, canvas.height)
+        gl.useProgram(displayProgram)
+        bindFullscreenBuffer(gl, displayProgram, buffer)
+        gl.activeTexture(gl.TEXTURE0)
+        gl.bindTexture(gl.TEXTURE_2D, writeTarget.texture)
+        gl.uniform1i(gl.getUniformLocation(displayProgram, 'uTexture'), 0)
+        gl.drawArrays(gl.TRIANGLES, 0, 6)
+
+        readTargetIndex = 1 - readTargetIndex
+        if (!readyRef.current) {
+          readyRef.current = true
+          onReady?.()
+        }
       } catch (error) {
         onError(error instanceof Error ? error.message : '영상 프레임을 그리지 못했습니다.')
         return
@@ -372,24 +423,41 @@ export function PixelCanvas({
       resize()
       wake()
     })
+    // The canvas is positioned inside the fixed CCTV stage. Observe the stage
+    // container as well as the canvas so an early 300×150 intrinsic canvas size
+    // cannot become the renderer's permanent backing resolution.
     observer.observe(canvas)
-    const wakeForMedia = () => wake()
-    valuesRef.current.video?.addEventListener('loadeddata', wakeForMedia)
+    if (canvas.parentElement) observer.observe(canvas.parentElement)
     wakeRendererRef.current = wake
     resize()
+    window.requestAnimationFrame(() => {
+      resize()
+      wake()
+    })
     wake()
 
     return () => {
       observer.disconnect()
       window.cancelAnimationFrame(frame)
-      valuesRef.current.video?.removeEventListener('loadeddata', wakeForMedia)
       wakeRendererRef.current = () => {}
-      if (glyphTexture) gl.deleteTexture(glyphTexture)
+      destroyFeedbackTargets()
       if (videoTexture) gl.deleteTexture(videoTexture)
       if (buffer) gl.deleteBuffer(buffer)
-      if (program) gl.deleteProgram(program)
+      if (displayProgram) gl.deleteProgram(displayProgram)
+      if (feedbackProgram) gl.deleteProgram(feedbackProgram)
     }
-  }, [canvasRef, onError])
+  }, [canvasRef, onError, onReady])
 
-  return <canvas ref={canvasRef} className="pixel-canvas" aria-label="Kick에 반응하는 픽셀 CCTV 영상" />
+  return (
+    <canvas
+      ref={(node) => {
+        localCanvasRef.current = node
+        canvasRef.current = node
+      }}
+      width={EXPORT_WIDTH}
+      height={EXPORT_HEIGHT}
+      className="pixel-canvas"
+      aria-label="Kick에 반응하는 액상 안료 CCTV 영상"
+    />
+  )
 }

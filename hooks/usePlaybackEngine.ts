@@ -1,7 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { bandEnergy, nextKickEnvelope } from '../lib/kick-envelope.mjs'
+import { frequencyBandsFromData } from '../lib/frequency-bands.mjs'
+import {
+  bandEnergy,
+  kickEqualizerBands,
+  nextKickEnvelope,
+  nextKickPulse,
+} from '../lib/kick-envelope.mjs'
 import { nextKickGlitch } from '../lib/kick-glitch.mjs'
 import { withTimeout } from '../lib/promise-timeout.mjs'
 
@@ -13,6 +19,7 @@ type AudioGraph = {
   analyser: AnalyserNode
   recording: MediaStreamAudioDestinationNode
   frequencyData: Uint8Array<ArrayBuffer>
+  timeDomainData: Uint8Array<ArrayBuffer>
 }
 
 export function usePlaybackEngine() {
@@ -22,10 +29,14 @@ export function usePlaybackEngine() {
   const animationRef = useRef(0)
   const lastFrameRef = useRef(0)
   const kickStateRef = useRef({ floor: 0.05, envelope: 0 })
+  const kickPulseStateRef = useRef({ floor: 0.05, previousEnergy: 0.05, pulse: 0, cooldown: 0 })
   const glitchStateRef = useRef({ previousKick: 0, pulse: 0, elapsedSinceTrigger: 520 })
   const [status, setStatus] = useState<PlaybackStatus>('idle')
   const [kick, setKick] = useState(0)
   const [glitch, setGlitch] = useState(0)
+  const [frequencyBands, setFrequencyBands] = useState<number[]>(() => Array(12).fill(0))
+  const [kickBands, setKickBands] = useState<number[]>(() => Array(12).fill(0))
+  const [waveformSamples, setWaveformSamples] = useState<number[]>(() => Array(256).fill(0.5))
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(264.072)
   const [error, setError] = useState<string | null>(null)
@@ -53,6 +64,7 @@ export function usePlaybackEngine() {
       analyser,
       recording,
       frequencyData: new Uint8Array(analyser.frequencyBinCount),
+      timeDomainData: new Uint8Array(analyser.fftSize),
     }
     graphRef.current = graph
     setRecordingAudioStream(recording.stream)
@@ -68,6 +80,21 @@ export function usePlaybackEngine() {
       const delta = lastFrameRef.current ? Math.min(250, now - lastFrameRef.current) : 16
       lastFrameRef.current = now
       graph.analyser.getByteFrequencyData(graph.frequencyData)
+      graph.analyser.getByteTimeDomainData(graph.timeDomainData)
+      const waveformSampleCount = 256
+      const nextWaveformSamples = Array.from({ length: waveformSampleCount }, (_, index) => {
+        const sampleIndex = Math.min(
+          graph.timeDomainData.length - 1,
+          Math.floor((index / waveformSampleCount) * graph.timeDomainData.length)
+        )
+        return (graph.timeDomainData[sampleIndex] ?? 128) / 255
+      })
+      const nextBands = frequencyBandsFromData(
+        graph.frequencyData,
+        graph.context.sampleRate,
+        graph.analyser.fftSize,
+        12
+      )
       const energy = bandEnergy(
         graph.frequencyData,
         graph.context.sampleRate,
@@ -77,9 +104,15 @@ export function usePlaybackEngine() {
       )
       kickStateRef.current = nextKickEnvelope(kickStateRef.current, energy, delta)
       const nextKick = kickStateRef.current.envelope
+      kickPulseStateRef.current = nextKickPulse(kickPulseStateRef.current, energy, delta)
+      const nextKickPulseValue = kickPulseStateRef.current.pulse
+      const equalizerKick = Math.max(nextKickPulseValue, nextKick * 0.25)
       glitchStateRef.current = nextKickGlitch(glitchStateRef.current, nextKick, delta)
       setKick(nextKick)
       setGlitch(glitchStateRef.current.pulse)
+      setFrequencyBands(nextBands)
+      setWaveformSamples(nextWaveformSamples)
+      setKickBands(kickEqualizerBands(equalizerKick, 12))
       setCurrentTime(audio.currentTime)
       animationRef.current = window.requestAnimationFrame(runAnalysis)
     },
@@ -106,11 +139,17 @@ export function usePlaybackEngine() {
           video.currentTime = 0
           setCurrentTime(0)
           kickStateRef.current = { floor: 0.05, envelope: 0 }
+          kickPulseStateRef.current = { floor: 0.05, previousEnergy: 0.05, pulse: 0, cooldown: 0 }
           glitchStateRef.current = { previousKick: 0, pulse: 0, elapsedSinceTrigger: 520 }
           setKick(0)
           setGlitch(0)
+          setWaveformSamples(Array(256).fill(0.5))
+          setKickBands(kickEqualizerBands(0, 12))
         }
-        video.loop = false
+        // A CCTV feed should keep moving even when its short source clip ends.
+        // Audio controls can still restart/pause the feed without freezing on
+        // the final decoded frame.
+        video.loop = true
         video.muted = true
         await withTimeout(
           Promise.all([video.play(), audio.play()]),
@@ -134,6 +173,35 @@ export function usePlaybackEngine() {
 
   const start = useCallback(() => begin(true), [begin])
   const restart = useCallback(() => begin(true), [begin])
+  const pause = useCallback(() => {
+    const audio = audioRef.current
+    const video = videoRef.current
+    audio?.pause()
+    video?.pause()
+    window.cancelAnimationFrame(animationRef.current)
+    setStatus((current) => (current === 'playing' ? 'ready' : current))
+  }, [])
+  const toggle = useCallback(async () => {
+    if (status === 'playing') {
+      pause()
+      return
+    }
+    await begin(false)
+  }, [begin, pause, status])
+  const seek = useCallback(
+    (nextTime: number) => {
+      const audio = audioRef.current
+      if (!audio || !Number.isFinite(nextTime)) return
+
+      const mediaDuration = Number.isFinite(duration) && duration > 0 ? duration : audio.duration
+      if (!Number.isFinite(mediaDuration) || mediaDuration <= 0) return
+
+      const target = Math.min(mediaDuration, Math.max(0, nextTime))
+      audio.currentTime = target
+      setCurrentTime(target)
+    },
+    [duration]
+  )
 
   useEffect(() => {
     const audio = audioRef.current
@@ -158,6 +226,10 @@ export function usePlaybackEngine() {
       setCurrentTime(audio.duration || 264.072)
       setKick(0)
       setGlitch(0)
+      setFrequencyBands(Array(12).fill(0))
+      setWaveformSamples(Array(256).fill(0.5))
+      setKickBands(kickEqualizerBands(0, 12))
+      kickPulseStateRef.current = { floor: 0.05, previousEnergy: 0.05, pulse: 0, cooldown: 0 }
       setStatus('ended')
     }
 
@@ -194,11 +266,17 @@ export function usePlaybackEngine() {
     status,
     kick,
     glitch,
+    frequencyBands,
+    kickBands,
+    waveformSamples,
     currentTime,
     duration,
     error,
     start,
     restart,
+    pause,
+    toggle,
+    seek,
     audioRef,
     videoRef,
     recordingAudioStream,

@@ -1,4 +1,5 @@
 import { createElement } from 'react'
+import { PageNavigation } from '../site/PageNavigation.mjs'
 import { ResponsiveSidebar } from '../site/ResponsiveSidebar.mjs'
 
 export function ExperienceFrame({
@@ -7,10 +8,13 @@ export function ExperienceFrame({
   mark,
   panel,
   panelLabel = '색 조합과 이미지 설정',
+  layoutClassName = '',
+  navigationCurrent = '',
 }) {
   return createElement(
     'main',
-    { className: 'experience-shell' },
+    { className: `experience-shell${layoutClassName ? ` ${layoutClassName}` : ''}` },
+    createElement(PageNavigation, { current: navigationCurrent }),
     createElement(
       'div',
       { className: 'experience-mark' },

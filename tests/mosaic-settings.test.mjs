@@ -35,11 +35,12 @@ test('keeps the finest mosaic dense without collapsing glyphs into a subpixel sq
   assert.ok(Math.abs(shapeYScale - 1) < 0.01)
 })
 
-test('uses scale 5 and renders a detailed 125-column initial mosaic', () => {
-  assert.equal(resolveMosaicColumns(89, DEFAULT_MOSAIC_SETTINGS), 45)
-  assert.equal(resolveMosaicColumns(249, DEFAULT_MOSAIC_SETTINGS), 125)
+test('starts with scale 0 and keeps the legacy column resolver bounded', () => {
+  assert.equal(DEFAULT_MOSAIC_SETTINGS.scale, 0)
+  assert.equal(resolveMosaicColumns(89, DEFAULT_MOSAIC_SETTINGS), 223)
+  assert.equal(resolveMosaicColumns(249, DEFAULT_MOSAIC_SETTINGS), 240)
   assert.deepEqual(DEFAULT_MOSAIC_SETTINGS, {
-    scale: 5,
+    scale: 0,
     spacing: 0,
     outputWidth: 0,
     characterSet: 'eom',

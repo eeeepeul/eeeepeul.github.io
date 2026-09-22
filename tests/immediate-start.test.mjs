@@ -21,3 +21,9 @@ test('uses a compact user gesture to start audible music', () => {
   assert.match(experience, /'음악 시작'/)
   assert.match(experience, /'처음부터'/)
 })
+
+test('passes the mounted video element into the canvas preview', () => {
+  assert.match(experience, /videoElement/)
+  assert.match(experience, /setVideoElement/)
+  assert.match(experience, /video=\{videoElement\}/)
+})

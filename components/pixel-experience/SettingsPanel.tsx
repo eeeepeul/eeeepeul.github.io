@@ -1,7 +1,6 @@
 'use client'
 
 import type { CSSProperties } from 'react'
-import { MOSAIC_SHAPE_PRESETS } from '../../lib/mosaic-settings.mjs'
 
 export type MosaicSettings = {
   scale: number
@@ -72,32 +71,13 @@ function CompactRangeControl({
 export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
   return (
     <div className="settings-panel">
-      <p className="panel-label pattern-label">pattern</p>
-
-      <label className="compact-select-row" htmlFor="setting-shape">
-        <span>shape</span>
-        <select
-          id="setting-shape"
-          value={settings.shape}
-          onChange={(event) => onChange({
-            shape: event.target.value === 'circle'
-              ? 'circle'
-              : event.target.value === 'square'
-                ? 'square'
-                : 'moe',
-          })}
-        >
-          {MOSAIC_SHAPE_PRESETS.map((preset) => (
-            <option value={preset.id} key={preset.id}>{preset.label}</option>
-          ))}
-        </select>
-      </label>
+      <p className="panel-label pattern-label">mosaic pattern</p>
 
       <CompactRangeControl
         id="setting-scale"
         label="scale"
         value={settings.scale}
-        min={1}
+        min={0}
         max={20}
         step={1}
         onChange={(scale) => onChange({ scale })}
