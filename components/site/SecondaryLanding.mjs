@@ -2,11 +2,27 @@
 
 import { createElement, useEffect, useRef, useState } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
+import {
+  CHARACTER_WORLD_ID,
+  SHARED_CHARACTER_EVENT,
+  normalizeCharacterCustomization,
+  startSharedCharacterFeed,
+} from '../../lib/shared-characters.mjs'
+import { getSharedCharacterStore } from '../../lib/supabase-browser.mjs'
 import { CustomSidebarContent } from './CustomSidebarContent.mjs'
 import { HouseInteriorWorld } from './HouseInteriorWorld.mjs'
 import { LandingFrame } from './LandingFrame.mjs'
 
 const INITIAL_CHARACTER_IDS = Array.from({ length: 6 }, (_, index) => `npc-${index + 1}`)
+const SHARED_CHARACTER_PREFIX = 'shared-character-'
+const DEFAULT_CUSTOMIZATION = {
+  'match-color': 0,
+  expression: 0,
+  'flame-color': 0,
+  'flame-shape': 0,
+  shoes: 0,
+}
+const SHARED_CHARACTER_WINDOW_MS = 24 * 60 * 60 * 1000
 
 export function SecondaryLanding() {
   // The custom page keeps the same house interior world built for /second/;
@@ -22,15 +38,71 @@ export function SecondaryLanding() {
     setIsCustomView(view === 'custom')
   }, [])
 
+  useEffect(() => {
+    const feed = startSharedCharacterFeed({
+      store: getSharedCharacterStore(),
+      getSinceMs: () => Date.now() - SHARED_CHARACTER_WINDOW_MS,
+      onCharacters: (characters) => {
+        const remoteIds = characters.map(({ id }) => `${SHARED_CHARACTER_PREFIX}${id}`)
+        setCharacterIds((currentIds) => [
+          ...currentIds.filter((id) => !id.startsWith(SHARED_CHARACTER_PREFIX)),
+          ...remoteIds,
+        ])
+        setCharacterCustomizations((currentCustomizations) => {
+          const nextCustomizations = { ...currentCustomizations }
+          characters.forEach(({ id, customization }) => {
+            nextCustomizations[`${SHARED_CHARACTER_PREFIX}${id}`] = customization
+          })
+          Object.keys(nextCustomizations).forEach((id) => {
+            if (id.startsWith(SHARED_CHARACTER_PREFIX) && !remoteIds.includes(id)) {
+              delete nextCustomizations[id]
+            }
+          })
+          return nextCustomizations
+        })
+      },
+    })
+
+    return () => {
+      void feed.cleanup()
+    }
+  }, [])
+
   const addCharacter = (customization) => {
-    const characterId = `character-${nextCharacterNumber.current}`
+    const selectedCustomization = normalizeCharacterCustomization(customization) ?? {
+      ...DEFAULT_CUSTOMIZATION,
+    }
+    const localCharacterId = `character-${nextCharacterNumber.current}`
     nextCharacterNumber.current += 1
-    setCharacterIds((currentIds) => [...currentIds, characterId])
+    setCharacterIds((currentIds) => [...currentIds, localCharacterId])
     setCharacterCustomizations((currentCustomizations) => ({
       ...currentCustomizations,
-      [characterId]: customization,
+      [localCharacterId]: selectedCustomization,
     }))
-    setActiveCharacterId(characterId)
+    setActiveCharacterId(localCharacterId)
+
+    const store = getSharedCharacterStore()
+    if (!store) return
+
+    void store
+      .recordCharacter(selectedCustomization, CHARACTER_WORLD_ID)
+      .then((character) => {
+        const sharedCharacterId = `${SHARED_CHARACTER_PREFIX}${character.id}`
+        setCharacterIds((currentIds) => [
+          ...currentIds.filter((id) => id !== localCharacterId),
+          ...(currentIds.includes(sharedCharacterId) ? [] : [sharedCharacterId]),
+        ])
+        setCharacterCustomizations((currentCustomizations) => {
+          const nextCustomizations = { ...currentCustomizations, [sharedCharacterId]: character.customization }
+          delete nextCustomizations[localCharacterId]
+          return nextCustomizations
+        })
+        setActiveCharacterId(sharedCharacterId)
+        window.dispatchEvent(new CustomEvent(SHARED_CHARACTER_EVENT, { detail: { character } }))
+      })
+      .catch(() => {
+        // The local character stays visible when shared storage is unavailable.
+      })
   }
 
   return createElement(LandingFrame, {
