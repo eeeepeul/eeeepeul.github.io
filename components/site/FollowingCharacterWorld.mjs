@@ -2,105 +2,119 @@
 
 import { createElement, useEffect, useRef } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
+import { MATCH_COLOR_FILTERS, SHOE_TONES } from '../../lib/character-customization.mjs'
+import { HOUSE_INTERIOR_MAP } from '../../lib/house-interior-map.mjs'
 import {
-  advanceBouncingCharacter,
-  createCameraRelativeWorldPosition,
-  createFollowCameraOffset,
-  createRandomBouncingCharacter,
-} from '../../lib/bouncing-character.mjs'
+  advanceWanderState,
+  createInteriorNavigation,
+  createWanderState,
+} from '../../lib/house-interior-navigation.mjs'
 
-export function FollowingCharacterWorld({ activeCharacterId, characterIds }) {
+const LIVING_ROOM_CAMERA_FOCUS = { x: 31, y: 24 }
+const DEFAULT_CHARACTER_CELLS = [
+  { x: 31, y: 27 },
+  { x: 31, y: 35 },
+  { x: 32, y: 45 },
+  { x: 10, y: 13 },
+  { x: 49, y: 16 },
+  { x: 48, y: 26 },
+]
+
+const getMapPoint = (state, map) => ({
+  x: (state.x / map.width) * 100,
+  y: (state.y / map.height) * 100,
+})
+
+const applyCamera = (cameraWorld, viewport, target, map) => {
+  const worldWidth = cameraWorld.clientWidth
+  const worldHeight = cameraWorld.clientHeight
+  const viewportWidth = viewport.clientWidth
+  const viewportHeight = viewport.clientHeight
+  if (!worldWidth || !worldHeight || !viewportWidth || !viewportHeight) return
+
+  const targetX = (target.x / map.width) * worldWidth
+  const targetY = (target.y / map.height) * worldHeight
+  const minX = Math.min(0, viewportWidth - worldWidth)
+  const minY = Math.min(0, viewportHeight - worldHeight)
+  const x = Math.min(0, Math.max(minX, viewportWidth / 2 - targetX))
+  const y = Math.min(0, Math.max(minY, viewportHeight / 2 - targetY))
+
+  cameraWorld.style.transform = `translate3d(${x}px, ${y}px, 0)`
+}
+
+export function FollowingCharacterWorld({
+  activeCharacterId,
+  characterIds,
+  characterCustomizations = {},
+  map = HOUSE_INTERIOR_MAP,
+  cameraWorldRef,
+  viewportRef,
+}) {
   const activeCharacterRef = useRef(activeCharacterId)
   const characterNodesRef = useRef(new Map())
   const motionStatesRef = useRef(new Map())
-  const screenMotionStatesRef = useRef(new Map())
   const worldRef = useRef(null)
+  const navigationRef = useRef(null)
 
   activeCharacterRef.current = activeCharacterId
 
   useEffect(() => {
-    const world = worldRef.current
-    const viewport = world?.parentElement
-    if (!world || !viewport) return undefined
+    navigationRef.current = createInteriorNavigation(map)
+  }, [map])
 
+  useEffect(() => {
+    const characterWorld = worldRef.current
+    const viewport = viewportRef?.current
+    const cameraWorld = cameraWorldRef?.current
+    if (!characterWorld || !viewport || !cameraWorld) return undefined
+
+    const navigation = navigationRef.current ?? createInteriorNavigation(map)
+    navigationRef.current = navigation
     let frameId = 0
     let previousTime = performance.now()
+
+    const getInitialPosition = (characterId, index) => {
+      if (characterId === activeCharacterRef.current) {
+        return navigation.resolveWalkableCell(LIVING_ROOM_CAMERA_FOCUS)
+      }
+      return navigation.resolveWalkableCell(DEFAULT_CHARACTER_CELLS[index % DEFAULT_CHARACTER_CELLS.length])
+    }
 
     const animate = (currentTime) => {
       const deltaSeconds = Math.min(0.05, Math.max(0, (currentTime - previousTime) / 1000))
       previousTime = currentTime
 
       characterNodesRef.current.forEach((character, characterId) => {
-        const bounds = {
-          width: world.clientWidth,
-          height: world.clientHeight,
-          itemWidth: character.offsetWidth,
-          itemHeight: character.offsetHeight,
-        }
+        const index = characterIds.indexOf(characterId)
+        const existingState = motionStatesRef.current.get(characterId)
+        const initialPosition = getInitialPosition(characterId, Math.max(0, index))
         const previousState =
-          motionStatesRef.current.get(characterId) ?? createRandomBouncingCharacter(bounds)
-        const nextState = advanceBouncingCharacter(previousState, bounds, deltaSeconds)
+          existingState ?? createWanderState(initialPosition, Math.random)
+        const nextState = advanceWanderState(
+          previousState,
+          navigation,
+          deltaSeconds,
+          previousState.random ?? Math.random
+        )
 
         motionStatesRef.current.set(characterId, nextState)
+        const point = getMapPoint(nextState, map)
+        character.style.left = `${point.x}%`
+        character.style.top = `${point.y}%`
       })
 
       const activeId = activeCharacterRef.current
-      const activeCharacter = activeId ? characterNodesRef.current.get(activeId) : null
       const activeState = activeId ? motionStatesRef.current.get(activeId) : null
-
-      if (activeCharacter && activeState) {
-        const offset = createFollowCameraOffset(
-          {
-            ...activeState,
-            itemWidth: activeCharacter.offsetWidth,
-            itemHeight: activeCharacter.offsetHeight,
-          },
-          { width: viewport.clientWidth, height: viewport.clientHeight }
-        )
-        world.style.transform = `translate3d(${offset.x}px, ${offset.y}px, 0)`
-
-        characterNodesRef.current.forEach((character, characterId) => {
-          if (characterId === activeId) {
-            character.style.transform = `translate3d(${activeState.x}px, ${activeState.y}px, 0)`
-            return
-          }
-
-          const screenBounds = {
-            width: viewport.clientWidth,
-            height: viewport.clientHeight,
-            itemWidth: character.offsetWidth,
-            itemHeight: character.offsetHeight,
-          }
-          const previousScreenState =
-            screenMotionStatesRef.current.get(characterId) ??
-            createRandomBouncingCharacter(screenBounds)
-          const nextScreenState = advanceBouncingCharacter(
-            previousScreenState,
-            screenBounds,
-            deltaSeconds
-          )
-          const worldPosition = createCameraRelativeWorldPosition(nextScreenState, offset)
-
-          screenMotionStatesRef.current.set(characterId, nextScreenState)
-          character.style.transform = `translate3d(${worldPosition.x}px, ${worldPosition.y}px, 0)`
-        })
-      } else {
-        world.style.transform = 'translate3d(0, 0, 0)'
-        screenMotionStatesRef.current.clear()
-        characterNodesRef.current.forEach((character, characterId) => {
-          const state = motionStatesRef.current.get(characterId)
-          if (state) {
-            character.style.transform = `translate3d(${state.x}px, ${state.y}px, 0)`
-          }
-        })
-      }
+      const cameraTarget = activeState ?? LIVING_ROOM_CAMERA_FOCUS
+      applyCamera(cameraWorld, viewport, cameraTarget, map)
+      cameraWorld.dataset.cameraMode = activeState ? 'following' : 'living-room'
 
       frameId = requestAnimationFrame(animate)
     }
 
     frameId = requestAnimationFrame(animate)
     return () => cancelAnimationFrame(frameId)
-  }, [])
+  }, [cameraWorldRef, characterIds, map, viewportRef])
 
   return createElement(
     'div',
@@ -109,13 +123,22 @@ export function FollowingCharacterWorld({ activeCharacterId, characterIds }) {
       className: `character-world${activeCharacterId ? ' is-following' : ''}`,
       'data-active-character': activeCharacterId ?? '',
     },
-    characterIds.map((characterId) =>
-      createElement('img', {
-        key: characterId,
-        ref: (node) => {
-          if (node) characterNodesRef.current.set(characterId, node)
-          else characterNodesRef.current.delete(characterId)
-        },
+    characterIds.map((characterId) => {
+      const customization = characterCustomizations[characterId]
+      const matchColorIndex = customization?.['match-color']
+      const shoeIndex = customization?.shoes
+      const hasMatchColor = Number.isInteger(matchColorIndex)
+      const hasShoe = Number.isInteger(shoeIndex)
+      const isCustomized = hasMatchColor || hasShoe
+      const style = isCustomized
+        ? {
+            transform: 'translate3d(-50%, -50%, 0)',
+            ...(hasMatchColor ? { '--character-filter': MATCH_COLOR_FILTERS[matchColorIndex] } : {}),
+            ...(hasShoe ? { '--character-shoe-tone': SHOE_TONES[shoeIndex] } : {}),
+          }
+        : undefined
+
+      const image = createElement('img', {
         className: 'wandering-character',
         src: assetPath('media/page3-character.png'),
         alt: '',
@@ -123,6 +146,34 @@ export function FollowingCharacterWorld({ activeCharacterId, characterIds }) {
         'data-character-id': characterId,
         'data-character-role': characterId === activeCharacterId ? 'player' : 'npc',
       })
-    )
+
+      if (!isCustomized) {
+        return createElement('img', {
+          key: characterId,
+          ref: (node) => {
+            if (node) characterNodesRef.current.set(characterId, node)
+            else characterNodesRef.current.delete(characterId)
+          },
+          ...image.props,
+        })
+      }
+
+      return createElement(
+        'span',
+        {
+          key: characterId,
+          ref: (node) => {
+            if (node) characterNodesRef.current.set(characterId, node)
+            else characterNodesRef.current.delete(characterId)
+          },
+          className: `wandering-character-entity${hasShoe ? ' has-shoe' : ''}`,
+          style,
+        },
+        image,
+        hasShoe
+          ? createElement('i', { className: 'wandering-character-shoe', 'aria-hidden': 'true' })
+          : null
+      )
+    })
   )
 }

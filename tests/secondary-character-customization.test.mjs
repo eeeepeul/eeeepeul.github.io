@@ -3,10 +3,10 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { HouseInteriorCharacterWorld } from '../components/site/HouseInteriorCharacterWorld.mjs'
+import { FollowingCharacterWorld } from '../components/site/FollowingCharacterWorld.mjs'
 
 const source = readFileSync(
-  new URL('../components/site/HouseInteriorCharacterWorld.mjs', import.meta.url),
+  new URL('../components/site/FollowingCharacterWorld.mjs', import.meta.url),
   'utf8'
 )
 const worldSource = readFileSync(
@@ -17,7 +17,7 @@ const css = readFileSync(new URL('../app/globals.css', import.meta.url), 'utf8')
 
 test('passes saved custom selections into the character rendered after input', () => {
   assert.match(worldSource, /characterCustomizations/)
-  assert.match(worldSource, /HouseInteriorCharacterWorld,\s*\{[^}]*characterCustomizations/s)
+  assert.match(worldSource, /FollowingCharacterWorld,\s*\{[^}]*characterCustomizations/s)
   assert.match(source, /characterCustomizations/)
   assert.match(source, /MATCH_COLOR_FILTERS/)
   assert.match(source, /SHOE_TONES/)
@@ -33,7 +33,7 @@ test('keeps custom shoe and color layers attached to the moving character', () =
 
 test('renders the saved match color and shoe on the added character', () => {
   const html = renderToStaticMarkup(
-    createElement(HouseInteriorCharacterWorld, {
+    createElement(FollowingCharacterWorld, {
       activeCharacterId: 'character-7',
       characterIds: ['character-7'],
       characterCustomizations: {

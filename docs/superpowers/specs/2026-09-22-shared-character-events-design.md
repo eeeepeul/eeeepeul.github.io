@@ -8,7 +8,7 @@ After deployment, a character submitted by any visitor on the custom page appear
 
 - `SecondaryLanding` owns `characterIds` and `characterCustomizations` in browser-local React state.
 - `CustomSidebarContent` emits the five selected option indexes when `input` is pressed.
-- `HouseInteriorCharacterWorld` already renders custom match-color filters and shoe layers and moves every character through the existing interior navigator.
+- `FollowingCharacterWorld` is the active interior renderer and accepts the existing custom match-color and shoe layers while moving every character through the current camera/navigation world.
 - Supabase is already configured through `lib/supabase-browser.mjs` and `lib/shared-visits.mjs` for shared visit events and Realtime inserts.
 
 ## Architecture

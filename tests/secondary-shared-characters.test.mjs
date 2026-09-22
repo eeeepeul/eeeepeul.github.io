@@ -7,7 +7,7 @@ const source = readFileSync(
   'utf8'
 )
 const worldSource = readFileSync(
-  new URL('../components/site/HouseInteriorCharacterWorld.mjs', import.meta.url),
+  new URL('../components/site/FollowingCharacterWorld.mjs', import.meta.url),
   'utf8'
 )
 
