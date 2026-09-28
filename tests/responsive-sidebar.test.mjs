@@ -86,7 +86,7 @@ test('the sidebar stays right anchored while expanding from the compact control'
 test('sidebar contents wait for the panel to expand before fading in', () => {
   assert.match(
     css,
-    /\.color-panel\.sidebar-panel\.is-open\s+\.sidebar-wordmark,[\s\S]*\.color-panel\.sidebar-panel\.is-open\s+\.sidebar-content,[\s\S]*\.color-panel\.sidebar-panel\.is-open\s+\.sidebar-footer-mark\s*\{[^}]*animation:\s*sidebar-panel-content-reveal\s+360ms/s
+    /\.color-panel\.sidebar-panel\.is-open\s+\.sidebar-wordmark,[\s\S]*\.color-panel\.sidebar-panel\.is-open\s+\.sidebar-content,[\s\S]*\.color-panel\.sidebar-panel\.is-open\s+\.sidebar-footer-mark,[\s\S]*\.color-panel\.sidebar-panel\.is-open\s+\.sidebar-footer-content\s*\{[^}]*animation:\s*sidebar-panel-content-reveal\s+360ms/s
   )
   assert.match(
     css,
@@ -108,7 +108,7 @@ test('the compact morph is preserved on mobile and moves the icon smoothly', () 
 test('the mobile panel grows from one fixed top-right anchor', () => {
   assert.match(
     css,
-    /@media \(max-width:\s*800px\)[\s\S]*\.color-panel\.sidebar-panel\s*\{[^}]*top:\s*max\(18px,\s*env\(safe-area-inset-top\)\);[^}]*right:\s*max\(18px,\s*env\(safe-area-inset-right\)\);[^}]*bottom:\s*auto;[^}]*width:\s*min\(334px,\s*calc\(100vw\s*-\s*36px\)\);[^}]*height:\s*calc\(100dvh\s*-\s*max\(18px,\s*env\(safe-area-inset-top\)\)\s*-\s*max\(18px,\s*env\(safe-area-inset-bottom\)\)\);/s
+    /@media \(max-width:\s*800px\)[\s\S]*\.color-panel\.sidebar-panel\s*\{[^}]*top:\s*max\(18px,\s*env\(safe-area-inset-top\)\);[^}]*right:\s*max\(18px,\s*env\(safe-area-inset-right\)\);[^}]*bottom:\s*auto;[^}]*width:\s*min\(334px,\s*calc\(100vw\s*-\s*36px\)\);[^}]*height:\s*calc\(\s*100dvh\s*-\s*max\(18px,\s*env\(safe-area-inset-top\)\)\s*-\s*max\(18px,\s*env\(safe-area-inset-bottom\)\)\s*\);/s
   )
   assert.match(
     css,
@@ -153,7 +153,7 @@ test('mobile expansion reveals a fixed full-size panel from its top-right corner
   )
   assert.match(
     css,
-    /@media \(max-width:\s*800px\)[\s\S]*\.color-panel\.sidebar-panel\.is-dismissed\s*\{[^}]*width:\s*min\(334px,\s*calc\(100vw\s*-\s*36px\)\);[^}]*height:\s*calc\(100dvh\s*-\s*max\(18px,\s*env\(safe-area-inset-top\)\)\s*-\s*max\(18px,\s*env\(safe-area-inset-bottom\)\)\);[^}]*padding:\s*16px;[^}]*clip-path:\s*inset\(0 0 calc\(100%\s*-\s*46px\) calc\(100%\s*-\s*52px\) round 8px\);/s
+    /@media \(max-width:\s*800px\)[\s\S]*\.color-panel\.sidebar-panel\.is-dismissed\s*\{[^}]*width:\s*min\(334px,\s*calc\(100vw\s*-\s*36px\)\);[^}]*height:\s*calc\(\s*100dvh\s*-\s*max\(18px,\s*env\(safe-area-inset-top\)\)\s*-\s*max\(18px,\s*env\(safe-area-inset-bottom\)\)\s*\);[^}]*padding:\s*16px;[^}]*clip-path:\s*inset\(0 0 calc\(100%\s*-\s*46px\) calc\(100%\s*-\s*52px\) round 8px\);/s
   )
 })
 
@@ -228,11 +228,11 @@ test('the native Figma cards keep the reference heights and fine distance rule',
   )
   assert.match(
     css,
-    /@font-face\s*\{[^}]*font-family:\s*"Nanum Gothic Coding";[^}]*NanumGothicCoding-Bold\.woff2[^}]*font-weight:\s*700;/s
+    /@font-face\s*\{[^}]*font-family:\s*["']Nanum Gothic Coding["'];[^}]*NanumGothicCoding-Bold\.woff2[^}]*font-weight:\s*700;/s
   )
   assert.match(
     css,
-    /\.figma-sidebar-intro p\s*\{[^}]*font-family:\s*"Nanum Gothic Coding",\s*monospace;[^}]*font-size:\s*12px;[^}]*font-weight:\s*700;[^}]*line-height:\s*12px;[^}]*transform:\s*none;/s
+    /\.figma-sidebar-intro p\s*\{[^}]*font-family:\s*["']Nanum Gothic Coding["'],\s*monospace;[^}]*font-size:\s*12px;[^}]*font-weight:\s*700;[^}]*line-height:\s*12px;[^}]*transform:\s*none;/s
   )
   assert.match(css, /\.figma-sidebar-time\s*\{[^}]*letter-spacing:\s*0;/s)
   assert.match(
@@ -248,18 +248,15 @@ test('the native Figma cards keep the reference heights and fine distance rule',
     css,
     /\.figma-sidebar-network circle,[\s\S]*\.figma-sidebar-network line,[\s\S]*\.figma-sidebar-network polyline\s*\{[^}]*stroke:\s*#282828;[^}]*stroke-width:\s*1\.5;/s
   )
-  assert.match(css, /@font-face\s*\{[^}]*font-family:\s*"Poppins";[^}]*Poppins-Regular\.ttf/s)
+  assert.match(css, /@font-face\s*\{[^}]*font-family:\s*["']Poppins["'];[^}]*Poppins-Regular\.ttf/s)
   assert.match(
     css,
-    /\.figma-home-top-labels\s*\{[^}]*font-family:\s*"Poppins",\s*Arial,\s*sans-serif;/s
+    /\.figma-home-top-labels\s*\{[^}]*font-family:\s*["']Poppins["'],\s*Arial,\s*sans-serif;/s
   )
 })
 
 test('the live house map keeps every route black and exposes keyboard focus on house rings', () => {
-  assert.match(
-    css,
-    /\.figma-sidebar-network \.figma-house-map-route\s*\{[^}]*stroke:\s*#282828;/s
-  )
+  assert.match(css, /\.figma-sidebar-network \.figma-house-map-route\s*\{[^}]*stroke:\s*#282828;/s)
   assert.match(css, /\.figma-house-map-house-link\s*\{[^}]*cursor:\s*pointer;/s)
   assert.match(
     css,

@@ -10,15 +10,12 @@ export function LandingFrame({
   panel,
   panelLabel = '빈 메인 패널',
   playfield,
+  sidebarFooter,
 }) {
   return createElement(
     'main',
     { className: 'experience-shell landing-shell' },
-    createElement(
-      'div',
-      { className: 'landing-space', 'aria-hidden': 'true' },
-      playfield
-    ),
+    createElement('div', { className: 'landing-space', 'aria-hidden': 'true' }, playfield),
     children,
     createElement(HouseLink, {
       assetSrc: houseAssetSrc,
@@ -30,6 +27,7 @@ export function LandingFrame({
       {
         className: 'landing-panel',
         label: panelLabel,
+        footer: sidebarFooter,
       },
       panel
     )

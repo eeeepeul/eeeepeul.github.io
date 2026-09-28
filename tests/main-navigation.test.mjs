@@ -48,11 +48,12 @@ test('renders a silent square link to the CCTV page beside the Figma home panel'
   assert.doesNotMatch(html, /figma-home-sidebar-artwork|figma-home-sidebar\.png/)
   assert.match(html, /class="house-mark house-mark--figma"/)
   assert.match(html, /src="\/media\/figma-home-house\.svg"/)
-  assert.match(html, /<img class="sidebar-footer-mark"[^>]*alt=""/)
+  assert.match(html, /class="attention-heatmap"/)
+  assert.doesNotMatch(html, /class="sidebar-footer-mark"/)
   assert.doesNotMatch(html, /character-spawn-button|palette-presets|settings-panel/)
 })
 
-test('renders the second page with six NPCs and a character-add control', async () => {
+test('renders the second page with six NPCs and the Figma custom input control', async () => {
   const secondaryModule = await import('../components/site/SecondaryLanding.mjs').catch(() => ({}))
 
   assert.equal(typeof secondaryModule.SecondaryLanding, 'function')
@@ -65,7 +66,7 @@ test('renders the second page with six NPCs and a character-add control', async 
     html,
     /<a class="house-link" href="\/" aria-label="메인 화면으로 이동">.*<\/a>/
   )
-  assert.match(html, /<aside[^>]*class="color-panel sidebar-panel landing-panel"[^>]*>.*<img class="sidebar-wordmark"[^>]*alt="M:MH".*<button[^>]*class="character-spawn-button"[^>]*aria-label="새 캐릭터 추가"[^>]*>.*<\/button>.*<img class="sidebar-footer-mark"[^>]*alt="".*<\/aside>/)
+  assert.match(html, /<aside[^>]*class="color-panel sidebar-panel landing-panel"[^>]*>.*<img class="sidebar-wordmark"[^>]*alt="M:MH".*<div class="[^"]*figma-custom-sidebar[^"]*".*<button[^>]*aria-label="input"[^>]*>input<\/button>.*<img class="sidebar-footer-mark"[^>]*alt="".*<\/aside>/)
   assert.match(
     html,
     /<img class="wandering-character" src="\/media\/page3-character.png"[^>]*>/
@@ -73,5 +74,6 @@ test('renders the second page with six NPCs and a character-add control', async 
   assert.equal((html.match(/class="wandering-character"/g) || []).length, 6)
   assert.equal((html.match(/data-character-role="npc"/g) || []).length, 6)
   assert.doesNotMatch(html, /landing-enter-link/)
-  assert.doesNotMatch(html, /<h[1-6]\b|<p\b/)
+  assert.match(html, /class="[^"]*pixel-custom-sidebar[^"]*"/)
+  assert.match(html, />epeul\.<\/span>/)
 })

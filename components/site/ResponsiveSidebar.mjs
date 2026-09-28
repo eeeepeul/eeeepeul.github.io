@@ -14,7 +14,12 @@ export function nextSidebarOpenState(currentState, action) {
   return currentState
 }
 
-export function ResponsiveSidebar({ children, className = '', label = '사이드 메뉴' }) {
+export function ResponsiveSidebar({
+  children,
+  className = '',
+  label = '사이드 메뉴',
+  footer = null,
+}) {
   const [isOpen, setIsOpen] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
   const panelId = useId()
@@ -106,12 +111,14 @@ export function ResponsiveSidebar({ children, className = '', label = '사이드
         )
       ),
       createElement('div', { className: 'sidebar-content' }, children),
-      createElement('img', {
-        className: 'sidebar-footer-mark',
-        src: SIDEBAR_FOOTER_MARK_URL,
-        alt: '',
-        draggable: false,
-      })
+      footer
+        ? createElement('div', { className: 'sidebar-footer-content' }, footer)
+        : createElement('img', {
+            className: 'sidebar-footer-mark',
+            src: SIDEBAR_FOOTER_MARK_URL,
+            alt: '',
+            draggable: false,
+          })
     )
   )
 }
