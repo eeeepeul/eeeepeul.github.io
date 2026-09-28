@@ -1,8 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { CustomSidebarContent } from '../components/site/CustomSidebarContent.mjs'
+import { CustomSidebarContent, PixelSidebarPreview } from '../components/site/CustomSidebarContent.mjs'
+
+const GLOBAL_STYLES = readFileSync(new URL('../app/globals.css', import.meta.url), 'utf8')
 
 test('restores the previous character customization sidebar sections', () => {
   const html = renderToStaticMarkup(createElement(CustomSidebarContent))
@@ -14,11 +17,30 @@ test('restores the previous character customization sidebar sections', () => {
   assert.match(html, /data-custom-label="성냥색" data-item-count="4"/)
   assert.match(html, /data-custom-label="표정" data-item-count="6"/)
   assert.match(html, /data-custom-label="불 색" data-item-count="4"/)
-  assert.match(html, /data-custom-label="불 형태" data-item-count="6"/)
+  assert.match(html, /data-custom-label="불 형태" data-item-count="5"/)
   assert.match(html, /data-custom-label="신발" data-item-count="4"/)
   assert.equal((html.match(/class="pixel-custom-row"/g) ?? []).length, 5)
   assert.equal((html.match(/class="pixel-custom-swatch pixel-shoe-swatch/g) ?? []).length, 4)
+  assert.equal((html.match(/class="pixel-custom-swatch pixel-flame-swatch/g) ?? []).length, 5)
+  assert.equal((html.match(/src="[^\"]*flame-shape-0[1-5]\.png"/g) ?? []).length, 5)
   assert.match(html, /class="custom-sidebar-input[^\"]*pixel-sidebar-input[^\"]*"/)
+})
+
+test('uses the requested flame color swatches in order', () => {
+  const html = renderToStaticMarkup(createElement(CustomSidebarContent))
+
+  assert.match(html, /--flame-tone:#00B9F6/)
+  assert.match(html, /--flame-tone:#C50011/)
+  assert.match(html, /--flame-tone:#FFD15D/)
+  assert.match(html, /--flame-tone:#EBAAD1/)
+  assert.match(
+    GLOBAL_STYLES,
+    /\.pixel-custom-row\[data-custom-label='불 색'\] \.pixel-custom-swatch\s*\{[^}]*background:\s*var\(--flame-tone/s
+  )
+  assert.doesNotMatch(
+    GLOBAL_STYLES,
+    /\.pixel-custom-row:nth-child\(3\)[\s\S]*?\.pixel-custom-swatch:nth-child\(2\)[\s\S]*?background:\s*#d5d5d5/
+  )
 })
 
 test('keeps the input disabled until all custom sections are selected', async () => {
@@ -35,4 +57,26 @@ test('keeps the input disabled until all custom sections are selected', async ()
     }),
     true
   )
+})
+
+test('fits every flame shape inside its swatch without clipping the source artwork', () => {
+  assert.match(GLOBAL_STYLES, /\.pixel-flame-swatch\s*\{[^}]*overflow:\s*hidden/s)
+  assert.match(GLOBAL_STYLES, /\.pixel-flame-shape\s*\{[^}]*object-fit:\s*contain/s)
+  assert.match(GLOBAL_STYLES, /\.pixel-flame-shape\s*\{[^}]*max-height:\s*42px/s)
+})
+
+test('puts the selected flame artwork behind the preview head', () => {
+  const html = renderToStaticMarkup(createElement(PixelSidebarPreview, { flameShapeIndex: 2 }))
+  const flameRule = GLOBAL_STYLES.match(/\.pixel-sidebar-character-flame\s*\{([^}]*)\}/s)?.[1] ?? ''
+
+  assert.match(html, /class="pixel-sidebar-character-flame"/)
+  assert.match(html, /data-flame-src="\/media\/flame-shape-03\.png"/)
+  assert.match(html, /--character-flame-color:#00B9F6/)
+  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-flame\s*\{[^}]*position:\s*absolute/s)
+  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-flame\s*\{[^}]*z-index:\s*0/s)
+  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-flame\s*\{[^}]*height:\s*84px/s)
+  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-flame\s*\{[^}]*max-width:\s*84px/s)
+  assert.match(flameRule, /mask-image:/)
+  assert.match(flameRule, /bottom:\s*52px/)
+  assert.doesNotMatch(flameRule, /top:/)
 })

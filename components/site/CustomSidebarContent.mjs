@@ -1,7 +1,12 @@
 'use client'
 
 import { createElement, useState } from 'react'
-import { MATCH_COLOR_TONES, SHOE_TONES } from '../../lib/character-customization.mjs'
+import { assetPath } from '../../lib/asset-path.mjs'
+import {
+  FLAME_COLOR_TONES,
+  MATCH_COLOR_TONES,
+  SHOE_TONES,
+} from '../../lib/character-customization.mjs'
 
 const SPOTS = [
   { id: 'spot-01', label: 'spot 01', tone: '#282828', union: 'union-one' },
@@ -15,7 +20,7 @@ const CUSTOM_SECTIONS = [
   { key: 'match-color', label: '성냥색', itemCount: 4 },
   { key: 'expression', label: '표정', itemCount: 6 },
   { key: 'flame-color', label: '불 색', itemCount: 4 },
-  { key: 'flame-shape', label: '불 형태', itemCount: 6 },
+  { key: 'flame-shape', label: '불 형태', itemCount: 5 },
   { key: 'shoes', label: '신발', itemCount: 4 },
 ]
 
@@ -103,10 +108,14 @@ function PatternSetting({ label, value, max = 10 }) {
   )
 }
 
-function PixelSidebarPreview({ matchColorIndex, shoeIndex }) {
+export function PixelSidebarPreview({ matchColorIndex, shoeIndex, flameColorIndex, flameShapeIndex }) {
   const tools = ['◡', '◩', '◒', '▰']
   const matchTone = MATCH_COLOR_TONES[Number.isInteger(matchColorIndex) ? matchColorIndex : 0]
   const shoeTone = SHOE_TONES[Number.isInteger(shoeIndex) ? shoeIndex : 0]
+  const flameTone = FLAME_COLOR_TONES[Number.isInteger(flameColorIndex) ? flameColorIndex : 0]
+  const flameShapeSrc = Number.isInteger(flameShapeIndex)
+    ? assetPath(`media/flame-shape-${String(flameShapeIndex + 1).padStart(2, '0')}.png`)
+    : null
 
   return createElement(
     'section',
@@ -127,6 +136,17 @@ function PixelSidebarPreview({ matchColorIndex, shoeIndex }) {
           'aria-hidden': 'true',
           style: { '--character-tone': matchTone, '--shoe-tone': shoeTone },
         },
+        flameShapeSrc
+          ? createElement('span', {
+              className: 'pixel-sidebar-character-flame',
+              'data-flame-src': flameShapeSrc,
+              'aria-hidden': 'true',
+              style: {
+                '--character-flame-color': flameTone,
+                '--character-flame-image': `url(${flameShapeSrc})`,
+              },
+            })
+          : null,
         createElement('i', { className: 'pixel-sidebar-character-head' }),
         createElement('i', { className: 'pixel-sidebar-character-body' }),
         Number.isInteger(shoeIndex)
@@ -210,22 +230,35 @@ function PixelCustomRow({ section, selectedIndex, onSelect }) {
         },
         ...Array.from({ length: section.itemCount }, (_, itemIndex) => {
           const isSelected = selectedIndex === itemIndex
+          const isFlameShape = section.key === 'flame-shape'
           const style = {
             flexBasis: swatchBasis,
             ...(section.key === 'shoes' ? { '--shoe-tone': SHOE_TONES[itemIndex] } : {}),
             ...(section.key === 'match-color' ? { '--match-tone': MATCH_COLOR_TONES[itemIndex] } : {}),
+            ...(section.key === 'flame-color' ? { '--flame-tone': FLAME_COLOR_TONES[itemIndex] } : {}),
           }
 
-          return createElement('button', {
-            key: `${section.key}-${itemIndex}`,
-            type: 'button',
-            className: `pixel-custom-swatch${section.key === 'shoes' ? ' pixel-shoe-swatch' : ''}${isSelected ? ' is-selected' : ''}`,
-            'data-item-index': itemIndex + 1,
-            'aria-label': `${section.label} ${itemIndex + 1}번`,
-            'aria-pressed': isSelected,
-            onClick: () => onSelect(section.key, itemIndex),
-            style,
-          })
+          return createElement(
+            'button',
+            {
+              key: `${section.key}-${itemIndex}`,
+              type: 'button',
+              className: `pixel-custom-swatch${section.key === 'shoes' ? ' pixel-shoe-swatch' : ''}${isFlameShape ? ' pixel-flame-swatch' : ''}${isSelected ? ' is-selected' : ''}`,
+              'data-item-index': itemIndex + 1,
+              'aria-label': `${section.label} ${itemIndex + 1}번`,
+              'aria-pressed': isSelected,
+              onClick: () => onSelect(section.key, itemIndex),
+              style,
+            },
+            isFlameShape
+              ? createElement('img', {
+                  className: 'pixel-flame-shape',
+                  src: assetPath(`media/flame-shape-${String(itemIndex + 1).padStart(2, '0')}.png`),
+                  alt: '',
+                  draggable: false,
+                })
+              : null
+          )
         })
       )
     )
@@ -251,6 +284,8 @@ export function CustomSidebarContent({ onInput }) {
     createElement(PixelSidebarPreview, {
       matchColorIndex: selectedOptions['match-color'],
       shoeIndex: selectedOptions.shoes,
+      flameColorIndex: selectedOptions['flame-color'],
+      flameShapeIndex: selectedOptions['flame-shape'],
     }),
     createElement(
       'div',

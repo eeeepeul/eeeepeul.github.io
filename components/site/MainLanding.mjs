@@ -2,6 +2,7 @@ import { createElement } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
 import { FigmaHomeScene } from './FigmaHomeScene.mjs'
 import { FigmaHomeSidebarContent } from './FigmaHomeSidebarContent.mjs'
+import { AttentionHeatmap } from './AttentionHeatmap.mjs'
 import { LandingFrame } from './LandingFrame.mjs'
 
 export function MainLanding() {
@@ -15,6 +16,7 @@ export function MainLanding() {
       panel: createElement(FigmaHomeSidebarContent),
       panelLabel: '홈 정보 메뉴',
       playfield: createElement(FigmaHomeScene),
+      sidebarFooter: createElement(AttentionHeatmap),
     },
     createElement('a', {
       className: 'landing-enter-link',

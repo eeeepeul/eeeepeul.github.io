@@ -12,6 +12,7 @@ export function LandingFrame({
   panelLabel = '빈 메인 패널',
   playfield,
   navigationCurrent = '',
+  sidebarFooter,
 }) {
   return createElement(
     'main',
@@ -33,6 +34,7 @@ export function LandingFrame({
       {
         className: 'landing-panel',
         label: panelLabel,
+        footer: sidebarFooter,
       },
       panel
     )

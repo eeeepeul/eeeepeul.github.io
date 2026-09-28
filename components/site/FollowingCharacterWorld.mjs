@@ -2,7 +2,11 @@
 
 import { createElement, useEffect, useRef } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
-import { MATCH_COLOR_FILTERS, SHOE_TONES } from '../../lib/character-customization.mjs'
+import {
+  FLAME_COLOR_TONES,
+  MATCH_COLOR_FILTERS,
+  SHOE_TONES,
+} from '../../lib/character-customization.mjs'
 import { HOUSE_INTERIOR_MAP } from '../../lib/house-interior-map.mjs'
 import {
   advanceWanderState,
@@ -126,10 +130,14 @@ export function FollowingCharacterWorld({
     characterIds.map((characterId) => {
       const customization = characterCustomizations[characterId]
       const matchColorIndex = customization?.['match-color']
+      const flameColorIndex = customization?.['flame-color']
+      const flameShapeIndex = customization?.['flame-shape']
       const shoeIndex = customization?.shoes
       const hasMatchColor = Number.isInteger(matchColorIndex)
+      const hasFlameShape = Number.isInteger(flameShapeIndex)
+      const hasFlameColor = Number.isInteger(flameColorIndex)
       const hasShoe = Number.isInteger(shoeIndex)
-      const isCustomized = hasMatchColor || hasShoe
+      const isCustomized = hasMatchColor || hasFlameShape || hasShoe
       const style = isCustomized
         ? {
             transform: 'translate3d(-50%, -50%, 0)',
@@ -137,6 +145,22 @@ export function FollowingCharacterWorld({
             ...(hasShoe ? { '--character-shoe-tone': SHOE_TONES[shoeIndex] } : {}),
           }
         : undefined
+
+      const flameSrc = hasFlameShape
+        ? assetPath(`media/flame-shape-${String(flameShapeIndex + 1).padStart(2, '0')}.png`)
+        : null
+      const flame = flameSrc
+        ? createElement('span', {
+            className: 'wandering-character-flame',
+            'data-flame-src': flameSrc,
+            'aria-hidden': 'true',
+            style: {
+              '--character-flame-color':
+                FLAME_COLOR_TONES[hasFlameColor ? flameColorIndex : 0] ?? FLAME_COLOR_TONES[0],
+              '--character-flame-image': `url(${flameSrc})`,
+            },
+          })
+        : null
 
       const image = createElement('img', {
         className: 'wandering-character',
@@ -166,9 +190,10 @@ export function FollowingCharacterWorld({
             if (node) characterNodesRef.current.set(characterId, node)
             else characterNodesRef.current.delete(characterId)
           },
-          className: `wandering-character-entity${hasShoe ? ' has-shoe' : ''}`,
+          className: `wandering-character-entity${hasFlameShape ? ' has-flame' : ''}${hasShoe ? ' has-shoe' : ''}`,
           style,
         },
+        flame,
         image,
         hasShoe
           ? createElement('i', { className: 'wandering-character-shoe', 'aria-hidden': 'true' })
