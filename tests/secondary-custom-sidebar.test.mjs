@@ -201,19 +201,23 @@ test('uses the supplied shoe silhouette for the preview and shoe swatches', () =
   const sidebar = renderToStaticMarkup(createElement(CustomSidebarContent))
 
   assert.match(html, /class="pixel-sidebar-character-shoe"/)
-  assert.match(html, /data-shoe-src="\/media\/custom-shoe\.png"/)
-  assert.match(html, /--character-shoe-image:url\(\/media\/custom-shoe\.png\)/)
-  assert.match(sidebar, /--shoe-image:url\(\/media\/custom-shoe\.png\)/)
+  assert.match(html, /data-shoe-src="\/media\/custom-shoe-03\.png"/)
+  assert.match(html, /--character-shoe-image:url\(\/media\/custom-shoe-03\.png\)/)
+  for (const index of [1, 2, 3, 4]) {
+    assert.match(sidebar, new RegExp(`--shoe-image:url\\(/media/custom-shoe-0${index}\\.png\\)`))
+  }
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-shoe\s*\{[^}]*mask-image:\s*var\(--character-shoe-image\)/s)
   assert.match(GLOBAL_STYLES, /\.pixel-shoe-swatch::before\s*\{[^}]*mask-image:\s*var\(--shoe-image\)/s)
 })
 
-test('renders the supplied shoe silhouette in white to match the reference flame set', () => {
+test('renders each supplied shoe tone in the matching shoe swatch', () => {
   const html = renderToStaticMarkup(createElement(PixelSidebarPreview, { shoeIndex: 0 }))
   const sidebar = renderToStaticMarkup(createElement(CustomSidebarContent))
 
-  assert.match(html, /--shoe-tone:#FFFFFF/)
-  assert.equal((sidebar.match(/--shoe-tone:#FFFFFF/g) ?? []).length, 5)
+  assert.match(html, /--shoe-tone:#ED361E/)
+  for (const tone of ['#ED361E', '#90EC62', '#313D77', '#222222']) {
+    assert.match(sidebar, new RegExp(`--shoe-tone:${tone}`))
+  }
   assert.match(
     GLOBAL_STYLES,
     /\.pixel-sidebar-character-shoe\s*\{[^}]*bottom:\s*-1px;[^}]*z-index:\s*3/s

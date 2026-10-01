@@ -6,6 +6,7 @@ import {
   FLAME_COLOR_TONES,
   MATCH_BODY_TONE,
   MATCH_COLOR_TONES,
+  SHOE_IMAGES,
   SHOE_TONES,
 } from '../../lib/character-customization.mjs'
 
@@ -20,7 +21,7 @@ const CUSTOM_PAGE_SIZE = 4
 const MATCH_CHARACTER_SRC = assetPath('media/match-character.svg')
 const MATCH_CHARACTER_HEAD_SRC = assetPath('media/match-character-head.svg')
 const MATCH_CHARACTER_HEAD_AVATAR_SRC = assetPath('media/match-character-head-avatar.svg')
-const CUSTOM_SHOE_SRC = assetPath('media/custom-shoe.png')
+const CUSTOM_SHOE_SRCS = SHOE_IMAGES.map((source) => assetPath(source))
 const CUSTOM_SECTIONS = [
   { key: 'match-color', label: '성냥색', itemCount: 4 },
   { key: 'expression', label: '표정', itemCount: 6 },
@@ -122,6 +123,7 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
   const expressionIsCompact = expressionIndex === 0
   const expressionFillSrc = expressionIndex === 1 ? assetPath('media/expression-02-fill.svg') : null
   const shoeTone = SHOE_TONES[Number.isInteger(shoeIndex) ? shoeIndex : 0]
+  const shoeSrc = CUSTOM_SHOE_SRCS[Number.isInteger(shoeIndex) ? shoeIndex : 0]
   const flameTone = FLAME_COLOR_TONES[Number.isInteger(flameColorIndex) ? flameColorIndex : 0]
   const flameShapeSrc = Number.isInteger(flameShapeIndex)
     ? assetPath(`media/flame-shape-${String(flameShapeIndex + 1).padStart(2, '0')}.png`)
@@ -191,8 +193,8 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
         Number.isInteger(shoeIndex)
           ? createElement('i', {
               className: 'pixel-sidebar-character-shoe',
-              'data-shoe-src': CUSTOM_SHOE_SRC,
-              style: { '--character-shoe-image': `url(${CUSTOM_SHOE_SRC})` },
+              'data-shoe-src': shoeSrc,
+              style: { '--character-shoe-image': `url(${shoeSrc})` },
             })
           : null
       ),
@@ -307,7 +309,7 @@ function PixelCustomRow({ section, selectedIndex, onSelect }) {
           const style = {
             flexBasis: swatchBasis,
             ...(section.key === 'shoes'
-              ? { '--shoe-tone': SHOE_TONES[itemIndex], '--shoe-image': `url(${CUSTOM_SHOE_SRC})` }
+              ? { '--shoe-tone': SHOE_TONES[itemIndex], '--shoe-image': `url(${CUSTOM_SHOE_SRCS[itemIndex]})` }
               : {}),
             ...(section.key === 'match-color' ? { '--match-tone': MATCH_COLOR_TONES[itemIndex] } : {}),
             ...(section.key === 'flame-color' ? { '--flame-tone': FLAME_COLOR_TONES[itemIndex] } : {}),

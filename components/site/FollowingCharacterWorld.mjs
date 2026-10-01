@@ -5,6 +5,7 @@ import { assetPath } from '../../lib/asset-path.mjs'
 import {
   FLAME_COLOR_TONES,
   MATCH_COLOR_TONES,
+  SHOE_IMAGES,
   SHOE_TONES,
 } from '../../lib/character-customization.mjs'
 import { HOUSE_INTERIOR_MAP } from '../../lib/house-interior-map.mjs'
@@ -17,7 +18,7 @@ import {
 const LIVING_ROOM_CAMERA_FOCUS = { x: 31, y: 24 }
 const CUSTOM_MATCH_CHARACTER_SRC = assetPath('media/match-character.svg')
 const CUSTOM_MATCH_HEAD_SRC = assetPath('media/match-character-head.svg')
-const CUSTOM_SHOE_SRC = assetPath('media/custom-shoe.png')
+const CUSTOM_SHOE_SRCS = SHOE_IMAGES.map((source) => assetPath(source))
 const DEFAULT_CHARACTER_CELLS = [
   { x: 31, y: 27 },
   { x: 31, y: 35 },
@@ -140,6 +141,7 @@ export function FollowingCharacterWorld({
       const hasFlameShape = Number.isInteger(flameShapeIndex)
       const hasFlameColor = Number.isInteger(flameColorIndex)
       const hasShoe = Number.isInteger(shoeIndex)
+      const shoeSrc = CUSTOM_SHOE_SRCS[hasShoe ? shoeIndex : 0]
       const isCustomized = hasMatchColor || hasFlameShape || hasShoe
       const style = isCustomized
         ? {
@@ -212,8 +214,8 @@ export function FollowingCharacterWorld({
           ? createElement('i', {
               className: 'wandering-character-shoe',
               'aria-hidden': 'true',
-              'data-shoe-src': CUSTOM_SHOE_SRC,
-              style: { '--character-shoe-image': `url(${CUSTOM_SHOE_SRC})` },
+              'data-shoe-src': shoeSrc,
+              style: { '--character-shoe-image': `url(${shoeSrc})` },
             })
           : null
       )
