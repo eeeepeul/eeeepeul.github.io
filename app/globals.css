@@ -4365,30 +4365,20 @@ button:focus-visible,
   -webkit-user-drag: none;
 }
 
-.pixel-sidebar-character-head,
-.pixel-sidebar-character-body {
+.pixel-sidebar-character-silhouette {
   position: absolute;
-  display: block;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.pixel-sidebar-character-head {
-  top: 0;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--character-tone, #8f8f8f);
-  z-index: 2;
-}
-
-.pixel-sidebar-character-body {
-  top: 39px;
-  width: 27px;
-  height: 61px;
-  border-radius: 4px;
-  background: var(--character-tone, #8f8f8f);
+  inset: 0;
   z-index: 1;
+  display: block;
+  background: var(--character-tone, #8f8f8f);
+  -webkit-mask-image: var(--match-character-image);
+  mask-image: var(--match-character-image);
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 }
 
 .pixel-sidebar-character-shoe {

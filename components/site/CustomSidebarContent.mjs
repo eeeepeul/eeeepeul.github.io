@@ -16,6 +16,7 @@ const SPOTS = [
 ]
 
 const CUSTOM_PAGE_SIZE = 4
+const MATCH_CHARACTER_SRC = assetPath('media/match-character.svg')
 const CUSTOM_SECTIONS = [
   { key: 'match-color', label: '성냥색', itemCount: 4 },
   { key: 'expression', label: '표정', itemCount: 6 },
@@ -147,8 +148,11 @@ export function PixelSidebarPreview({ matchColorIndex, shoeIndex, flameColorInde
               },
             })
           : null,
-        createElement('i', { className: 'pixel-sidebar-character-head' }),
-        createElement('i', { className: 'pixel-sidebar-character-body' }),
+        createElement('i', {
+          className: 'pixel-sidebar-character-silhouette',
+          'data-silhouette-src': MATCH_CHARACTER_SRC,
+          style: { '--match-character-image': `url(${MATCH_CHARACTER_SRC})` },
+        }),
         Number.isInteger(shoeIndex)
           ? createElement('i', { className: 'pixel-sidebar-character-shoe' })
           : null

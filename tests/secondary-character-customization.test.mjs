@@ -58,4 +58,8 @@ test('renders the saved match color and shoe on the added character', () => {
   assert.match(html, /--character-flame-color:#C50011/)
   assert.match(html, /--character-shoe-tone:/)
   assert.match(html, /class="wandering-character-shoe"/)
+  assert.match(
+    html,
+    /<img class="wandering-character" src="\/media\/match-character\.svg"[^>]*data-character-id="character-7"/
+  )
 })

@@ -80,3 +80,13 @@ test('puts the selected flame artwork behind the preview head', () => {
   assert.match(flameRule, /bottom:\s*52px/)
   assert.doesNotMatch(flameRule, /top:/)
 })
+
+test('renders the approved slender match silhouette as one preview shape', () => {
+  const html = renderToStaticMarkup(createElement(PixelSidebarPreview, { matchColorIndex: 2 }))
+
+  assert.match(html, /class="pixel-sidebar-character-silhouette"/)
+  assert.match(html, /data-silhouette-src="\/media\/match-character\.svg"/)
+  assert.match(html, /--match-character-image:url\(\/media\/match-character\.svg\)/)
+  assert.match(html, /--character-tone:#858585/)
+  assert.doesNotMatch(html, /pixel-sidebar-character-head|pixel-sidebar-character-body/)
+})

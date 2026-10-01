@@ -15,6 +15,7 @@ import {
 } from '../../lib/house-interior-navigation.mjs'
 
 const LIVING_ROOM_CAMERA_FOCUS = { x: 31, y: 24 }
+const CUSTOM_MATCH_CHARACTER_SRC = assetPath('media/match-character.svg')
 const DEFAULT_CHARACTER_CELLS = [
   { x: 31, y: 27 },
   { x: 31, y: 35 },
@@ -164,7 +165,7 @@ export function FollowingCharacterWorld({
 
       const image = createElement('img', {
         className: 'wandering-character',
-        src: assetPath('media/page3-character.png'),
+        src: isCustomized ? CUSTOM_MATCH_CHARACTER_SRC : assetPath('media/page3-character.png'),
         alt: '',
         draggable: false,
         'data-character-id': characterId,
