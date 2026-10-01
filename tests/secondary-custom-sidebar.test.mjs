@@ -112,6 +112,21 @@ test('renders the approved slender match body with a separate rounded head layer
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-head\s*\{[^}]*mask-image:\s*var\(--match-character-head-image\)/s)
 })
 
+test('puts the selected expression artwork inside both match heads', () => {
+  const html = renderToStaticMarkup(createElement(PixelSidebarPreview, { expressionIndex: 4 }))
+
+  assert.match(html, /class="pixel-sidebar-character-expression"[^>]*data-expression-src="\/media\/expression-05\.png"/)
+  assert.match(html, /class="pixel-sidebar-avatar-expression"[^>]*data-expression-src="\/media\/expression-05\.png"/)
+  assert.match(
+    GLOBAL_STYLES,
+    /\.pixel-sidebar-character-expression\s*\{[^}]*position:\s*absolute;[^}]*z-index:\s*3;[^}]*object-fit:\s*contain/s
+  )
+  assert.match(
+    GLOBAL_STYLES,
+    /\.pixel-sidebar-avatar-expression\s*\{[^}]*position:\s*absolute;[^}]*z-index:\s*3;[^}]*object-fit:\s*contain/s
+  )
+})
+
 test('keeps match body peach while match-color swatches recolor only the rounded head', () => {
   const html = renderToStaticMarkup(createElement(CustomSidebarContent))
 

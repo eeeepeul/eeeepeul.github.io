@@ -113,9 +113,12 @@ function PatternSetting({ label, value, max = 10 }) {
   )
 }
 
-export function PixelSidebarPreview({ matchColorIndex, shoeIndex, flameColorIndex, flameShapeIndex }) {
+export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeIndex, flameColorIndex, flameShapeIndex }) {
   const tools = ['◡', '◩', '◒', '▰']
   const matchTone = MATCH_COLOR_TONES[Number.isInteger(matchColorIndex) ? matchColorIndex : 0]
+  const expressionSrc = Number.isInteger(expressionIndex)
+    ? assetPath(`media/expression-${String(expressionIndex + 1).padStart(2, '0')}.png`)
+    : null
   const shoeTone = SHOE_TONES[Number.isInteger(shoeIndex) ? shoeIndex : 0]
   const flameTone = FLAME_COLOR_TONES[Number.isInteger(flameColorIndex) ? flameColorIndex : 0]
   const flameShapeSrc = Number.isInteger(flameShapeIndex)
@@ -165,6 +168,18 @@ export function PixelSidebarPreview({ matchColorIndex, shoeIndex, flameColorInde
             '--match-character-head-image': `url(${MATCH_CHARACTER_HEAD_SRC})`,
           },
         }),
+        expressionSrc
+          ? createElement('img', {
+              className: 'pixel-sidebar-character-expression',
+              src: expressionSrc,
+              'data-expression-src': expressionSrc,
+              alt: '',
+              draggable: false,
+              style: {
+                '--character-expression-mask': `url(${MATCH_CHARACTER_HEAD_AVATAR_SRC})`,
+              },
+            })
+          : null,
         Number.isInteger(shoeIndex)
           ? createElement('i', {
               className: 'pixel-sidebar-character-shoe',
@@ -193,6 +208,18 @@ export function PixelSidebarPreview({ matchColorIndex, shoeIndex, flameColorInde
           className: 'pixel-sidebar-avatar-face',
           'data-avatar-head-src': MATCH_CHARACTER_HEAD_AVATAR_SRC,
         }),
+        expressionSrc
+          ? createElement('img', {
+              className: 'pixel-sidebar-avatar-expression',
+              src: expressionSrc,
+              'data-expression-src': expressionSrc,
+              alt: '',
+              draggable: false,
+              style: {
+                '--avatar-expression-mask': `url(${MATCH_CHARACTER_HEAD_AVATAR_SRC})`,
+              },
+            })
+          : null,
         createElement('i', { className: 'pixel-sidebar-avatar-body' })
       )
     )
@@ -324,6 +351,7 @@ export function CustomSidebarContent({ onInput }) {
     ),
     createElement(PixelSidebarPreview, {
       matchColorIndex: selectedOptions['match-color'],
+      expressionIndex: selectedOptions.expression,
       shoeIndex: selectedOptions.shoes,
       flameColorIndex: selectedOptions['flame-color'],
       flameShapeIndex: selectedOptions['flame-shape'],
