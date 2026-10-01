@@ -90,3 +90,15 @@ test('renders the approved slender match silhouette as one preview shape', () =>
   assert.match(html, /--character-tone:#858585/)
   assert.doesNotMatch(html, /pixel-sidebar-character-head|pixel-sidebar-character-body/)
 })
+
+test('uses the supplied shoe silhouette for the preview and shoe swatches', () => {
+  const html = renderToStaticMarkup(createElement(PixelSidebarPreview, { shoeIndex: 2 }))
+  const sidebar = renderToStaticMarkup(createElement(CustomSidebarContent))
+
+  assert.match(html, /class="pixel-sidebar-character-shoe"/)
+  assert.match(html, /data-shoe-src="\/media\/custom-shoe\.png"/)
+  assert.match(html, /--character-shoe-image:url\(\/media\/custom-shoe\.png\)/)
+  assert.match(sidebar, /--shoe-image:url\(\/media\/custom-shoe\.png\)/)
+  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-shoe\s*\{[^}]*mask-image:\s*var\(--character-shoe-image\)/s)
+  assert.match(GLOBAL_STYLES, /\.pixel-shoe-swatch::before\s*\{[^}]*mask-image:\s*var\(--shoe-image\)/s)
+})

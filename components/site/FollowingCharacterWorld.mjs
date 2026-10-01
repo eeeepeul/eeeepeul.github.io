@@ -16,6 +16,7 @@ import {
 
 const LIVING_ROOM_CAMERA_FOCUS = { x: 31, y: 24 }
 const CUSTOM_MATCH_CHARACTER_SRC = assetPath('media/match-character.svg')
+const CUSTOM_SHOE_SRC = assetPath('media/custom-shoe.png')
 const DEFAULT_CHARACTER_CELLS = [
   { x: 31, y: 27 },
   { x: 31, y: 35 },
@@ -197,7 +198,12 @@ export function FollowingCharacterWorld({
         flame,
         image,
         hasShoe
-          ? createElement('i', { className: 'wandering-character-shoe', 'aria-hidden': 'true' })
+          ? createElement('i', {
+              className: 'wandering-character-shoe',
+              'aria-hidden': 'true',
+              'data-shoe-src': CUSTOM_SHOE_SRC,
+              style: { '--character-shoe-image': `url(${CUSTOM_SHOE_SRC})` },
+            })
           : null
       )
     })

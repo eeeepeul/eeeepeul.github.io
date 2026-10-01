@@ -17,6 +17,7 @@ const SPOTS = [
 
 const CUSTOM_PAGE_SIZE = 4
 const MATCH_CHARACTER_SRC = assetPath('media/match-character.svg')
+const CUSTOM_SHOE_SRC = assetPath('media/custom-shoe.png')
 const CUSTOM_SECTIONS = [
   { key: 'match-color', label: '성냥색', itemCount: 4 },
   { key: 'expression', label: '표정', itemCount: 6 },
@@ -154,7 +155,11 @@ export function PixelSidebarPreview({ matchColorIndex, shoeIndex, flameColorInde
           style: { '--match-character-image': `url(${MATCH_CHARACTER_SRC})` },
         }),
         Number.isInteger(shoeIndex)
-          ? createElement('i', { className: 'pixel-sidebar-character-shoe' })
+          ? createElement('i', {
+              className: 'pixel-sidebar-character-shoe',
+              'data-shoe-src': CUSTOM_SHOE_SRC,
+              style: { '--character-shoe-image': `url(${CUSTOM_SHOE_SRC})` },
+            })
           : null
       ),
       createElement(
@@ -237,7 +242,9 @@ function PixelCustomRow({ section, selectedIndex, onSelect }) {
           const isFlameShape = section.key === 'flame-shape'
           const style = {
             flexBasis: swatchBasis,
-            ...(section.key === 'shoes' ? { '--shoe-tone': SHOE_TONES[itemIndex] } : {}),
+            ...(section.key === 'shoes'
+              ? { '--shoe-tone': SHOE_TONES[itemIndex], '--shoe-image': `url(${CUSTOM_SHOE_SRC})` }
+              : {}),
             ...(section.key === 'match-color' ? { '--match-tone': MATCH_COLOR_TONES[itemIndex] } : {}),
             ...(section.key === 'flame-color' ? { '--flame-tone': FLAME_COLOR_TONES[itemIndex] } : {}),
           }

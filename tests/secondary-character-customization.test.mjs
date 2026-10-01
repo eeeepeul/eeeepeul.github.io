@@ -38,6 +38,7 @@ test('keeps custom shoe and color layers attached to the moving character', () =
   assert.match(css, /\.wandering-character-flame\s*\{[^}]*height:\s*84%/s)
   assert.match(css, /\.wandering-character-flame\s*\{[^}]*mask-image:/s)
   assert.match(css, /\.wandering-character-shoe\s*\{[^}]*position:\s*absolute;/s)
+  assert.match(css, /\.wandering-character-shoe\s*\{[^}]*mask-image:\s*var\(--character-shoe-image\)/s)
 })
 
 test('renders the saved match color and shoe on the added character', () => {
@@ -58,6 +59,8 @@ test('renders the saved match color and shoe on the added character', () => {
   assert.match(html, /--character-flame-color:#C50011/)
   assert.match(html, /--character-shoe-tone:/)
   assert.match(html, /class="wandering-character-shoe"/)
+  assert.match(html, /data-shoe-src="\/media\/custom-shoe\.png"/)
+  assert.match(html, /--character-shoe-image:url\(\/media\/custom-shoe\.png\)/)
   assert.match(
     html,
     /<img class="wandering-character" src="\/media\/match-character\.svg"[^>]*data-character-id="character-7"/
