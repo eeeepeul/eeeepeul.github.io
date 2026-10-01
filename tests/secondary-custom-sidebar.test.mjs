@@ -103,6 +103,16 @@ test('keeps match body peach while match-color swatches recolor only the rounded
   assert.match(html, /--character-tone:#E9C1A0/)
 })
 
+test('enlarges the current match head in the avatar card with the selected head and body colors', () => {
+  const html = renderToStaticMarkup(createElement(PixelSidebarPreview, { matchColorIndex: 1 }))
+
+  assert.match(html, /class="pixel-sidebar-avatar-small"[^>]*--avatar-head-tone:#D90000/)
+  assert.match(html, /--avatar-body-tone:#E9C1A0/)
+  assert.match(html, /class="pixel-sidebar-avatar-face"[^>]*data-avatar-head-src="\/media\/match-character-head-avatar\.svg"/)
+  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-avatar-face\s*\{[^}]*mask-image:\s*var\(--avatar-head-image\)/s)
+  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-avatar-body\s*\{[^}]*background:\s*var\(--avatar-body-tone/s)
+})
+
 test('uses the supplied shoe silhouette for the preview and shoe swatches', () => {
   const html = renderToStaticMarkup(createElement(PixelSidebarPreview, { shoeIndex: 2 }))
   const sidebar = renderToStaticMarkup(createElement(CustomSidebarContent))

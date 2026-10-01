@@ -19,6 +19,7 @@ const SPOTS = [
 const CUSTOM_PAGE_SIZE = 4
 const MATCH_CHARACTER_SRC = assetPath('media/match-character.svg')
 const MATCH_CHARACTER_HEAD_SRC = assetPath('media/match-character-head.svg')
+const MATCH_CHARACTER_HEAD_AVATAR_SRC = assetPath('media/match-character-head-avatar.svg')
 const CUSTOM_SHOE_SRC = assetPath('media/custom-shoe.png')
 const CUSTOM_SECTIONS = [
   { key: 'match-color', label: '성냥색', itemCount: 4 },
@@ -179,8 +180,19 @@ export function PixelSidebarPreview({ matchColorIndex, shoeIndex, flameColorInde
       ),
       createElement(
         'span',
-        { className: 'pixel-sidebar-avatar-small', 'aria-hidden': 'true' },
-        createElement('i', { className: 'pixel-sidebar-avatar-face' }),
+        {
+          className: 'pixel-sidebar-avatar-small',
+          'aria-hidden': 'true',
+          style: {
+            '--avatar-head-tone': matchTone,
+            '--avatar-body-tone': MATCH_BODY_TONE,
+            '--avatar-head-image': `url(${MATCH_CHARACTER_HEAD_AVATAR_SRC})`,
+          },
+        },
+        createElement('i', {
+          className: 'pixel-sidebar-avatar-face',
+          'data-avatar-head-src': MATCH_CHARACTER_HEAD_AVATAR_SRC,
+        }),
         createElement('i', { className: 'pixel-sidebar-avatar-body' })
       )
     )

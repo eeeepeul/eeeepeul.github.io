@@ -4460,11 +4460,18 @@ button:focus-visible,
   position: relative;
   z-index: 2;
   display: block;
-  width: 50px;
-  height: 50px;
+  width: 58px;
+  height: 60px;
   transform: none;
-  border-radius: 50%;
-  background: #8f8f8f;
+  background: var(--avatar-head-tone, #DBDCDC);
+  -webkit-mask-image: var(--avatar-head-image);
+  mask-image: var(--avatar-head-image);
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 }
 
 .pixel-sidebar-avatar-body {
@@ -4477,7 +4484,7 @@ button:focus-visible,
   height: 18px;
   transform: translateX(-50%);
   border-radius: 0;
-  background: #dddddd;
+  background: var(--avatar-body-tone, #E9C1A0);
 }
 
 .pixel-sidebar-tool-stack {
