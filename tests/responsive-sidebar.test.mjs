@@ -86,7 +86,7 @@ test('the sidebar stays right anchored while expanding from the compact control'
 test('sidebar contents wait for the panel to expand before fading in', () => {
   assert.match(
     css,
-    /\.color-panel\.sidebar-panel\.is-open\s+\.sidebar-wordmark,[\s\S]*\.color-panel\.sidebar-panel\.is-open\s+\.sidebar-content,[\s\S]*\.color-panel\.sidebar-panel\.is-open\s+\.sidebar-footer-mark\s*\{[^}]*animation:\s*sidebar-panel-content-reveal\s+360ms/s
+    /\.color-panel\.sidebar-panel\.is-open\s+\.sidebar-wordmark,[\s\S]*\.color-panel\.sidebar-panel\.is-open\s+\.sidebar-content,[\s\S]*\.color-panel\.sidebar-panel\.is-open\s+\.sidebar-footer-mark,[\s\S]*\.color-panel\.sidebar-panel\.is-open\s+\.sidebar-footer-content\s*\{[^}]*animation:\s*sidebar-panel-content-reveal\s+360ms/s
   )
   assert.match(
     css,

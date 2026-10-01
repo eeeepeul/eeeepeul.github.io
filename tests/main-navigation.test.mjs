@@ -48,7 +48,10 @@ test('renders a silent square link to the CCTV page beside the Figma home panel'
   assert.doesNotMatch(html, /figma-home-sidebar-artwork|figma-home-sidebar\.png/)
   assert.match(html, /class="house-mark house-mark--figma"/)
   assert.match(html, /src="\/media\/figma-home-house\.svg"/)
-  assert.match(html, /<img class="sidebar-footer-mark"[^>]*alt=""/)
+  assert.match(
+    html,
+    /<div class="sidebar-footer-content"><section class="attention-heatmap" aria-label="Attention heatmap">/
+  )
   assert.doesNotMatch(html, /character-spawn-button|palette-presets|settings-panel/)
 })
 
