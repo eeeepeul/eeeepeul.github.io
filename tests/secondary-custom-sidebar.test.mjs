@@ -139,6 +139,23 @@ test('keeps the round-eyed expression uncut and fills its eye interiors white', 
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-avatar-expression-fill\s*\{[^}]*z-index:\s*3/s)
 })
 
+test('shrinks only the first expression inside the match heads', () => {
+  const compactHtml = renderToStaticMarkup(createElement(PixelSidebarPreview, { expressionIndex: 0 }))
+  const regularHtml = renderToStaticMarkup(createElement(PixelSidebarPreview, { expressionIndex: 4 }))
+
+  assert.match(compactHtml, /class="pixel-sidebar-character-expression pixel-sidebar-expression-compact"/)
+  assert.match(compactHtml, /class="pixel-sidebar-avatar-expression pixel-sidebar-expression-compact"/)
+  assert.doesNotMatch(regularHtml, /pixel-sidebar-expression-compact/)
+  assert.match(
+    GLOBAL_STYLES,
+    /\.pixel-sidebar-character-expression\.pixel-sidebar-expression-compact\s*\{[^}]*top:\s*2px;[^}]*width:\s*14px;[^}]*height:\s*18px/s
+  )
+  assert.match(
+    GLOBAL_STYLES,
+    /\.pixel-sidebar-avatar-expression\.pixel-sidebar-expression-compact\s*\{[^}]*top:\s*15px;[^}]*width:\s*20px;[^}]*height:\s*18px/s
+  )
+})
+
 test('keeps match body peach while match-color swatches recolor only the rounded head', () => {
   const html = renderToStaticMarkup(createElement(CustomSidebarContent))
 
@@ -177,4 +194,16 @@ test('uses the supplied shoe silhouette for the preview and shoe swatches', () =
   assert.match(sidebar, /--shoe-image:url\(\/media\/custom-shoe\.png\)/)
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-shoe\s*\{[^}]*mask-image:\s*var\(--character-shoe-image\)/s)
   assert.match(GLOBAL_STYLES, /\.pixel-shoe-swatch::before\s*\{[^}]*mask-image:\s*var\(--shoe-image\)/s)
+})
+
+test('renders the supplied shoe silhouette in white to match the reference flame set', () => {
+  const html = renderToStaticMarkup(createElement(PixelSidebarPreview, { shoeIndex: 0 }))
+  const sidebar = renderToStaticMarkup(createElement(CustomSidebarContent))
+
+  assert.match(html, /--shoe-tone:#FFFFFF/)
+  assert.equal((sidebar.match(/--shoe-tone:#FFFFFF/g) ?? []).length, 5)
+  assert.match(
+    GLOBAL_STYLES,
+    /\.pixel-sidebar-character-shoe\s*\{[^}]*bottom:\s*-1px;[^}]*z-index:\s*3/s
+  )
 })

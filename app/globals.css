@@ -4439,6 +4439,12 @@ button:focus-visible,
   -webkit-user-drag: none;
 }
 
+.pixel-sidebar-character-expression.pixel-sidebar-expression-compact {
+  top: 2px;
+  width: 14px;
+  height: 18px;
+}
+
 .pixel-sidebar-character-expression-fill {
   position: absolute;
   top: 1px;
@@ -4522,6 +4528,12 @@ button:focus-visible,
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
+}
+
+.pixel-sidebar-avatar-expression.pixel-sidebar-expression-compact {
+  top: 15px;
+  width: 20px;
+  height: 18px;
 }
 
 .pixel-sidebar-avatar-expression-fill {

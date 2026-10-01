@@ -119,6 +119,7 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
   const expressionSrc = Number.isInteger(expressionIndex)
     ? assetPath(`media/expression-${String(expressionIndex + 1).padStart(2, '0')}.png`)
     : null
+  const expressionIsCompact = expressionIndex === 0
   const expressionFillSrc = expressionIndex === 1 ? assetPath('media/expression-02-fill.svg') : null
   const shoeTone = SHOE_TONES[Number.isInteger(shoeIndex) ? shoeIndex : 0]
   const flameTone = FLAME_COLOR_TONES[Number.isInteger(flameColorIndex) ? flameColorIndex : 0]
@@ -180,7 +181,7 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
           : null,
         expressionSrc
           ? createElement('img', {
-              className: 'pixel-sidebar-character-expression',
+              className: `pixel-sidebar-character-expression${expressionIsCompact ? ' pixel-sidebar-expression-compact' : ''}`,
               src: expressionSrc,
               'data-expression-src': expressionSrc,
               alt: '',
@@ -226,7 +227,7 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
           : null,
         expressionSrc
           ? createElement('img', {
-              className: 'pixel-sidebar-avatar-expression',
+              className: `pixel-sidebar-avatar-expression${expressionIsCompact ? ' pixel-sidebar-expression-compact' : ''}`,
               src: expressionSrc,
               'data-expression-src': expressionSrc,
               alt: '',
