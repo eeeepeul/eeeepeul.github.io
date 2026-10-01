@@ -4457,12 +4457,14 @@ button:focus-visible,
 }
 
 .pixel-sidebar-avatar-face {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 50%;
   z-index: 2;
   display: block;
   width: 58px;
-  height: 60px;
-  transform: none;
+  height: 48px;
+  transform: translateX(-50%);
   background: var(--avatar-head-tone, #DBDCDC);
   -webkit-mask-image: var(--avatar-head-image);
   mask-image: var(--avatar-head-image);
@@ -4470,8 +4472,8 @@ button:focus-visible,
   mask-position: center;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
-  -webkit-mask-size: contain;
-  mask-size: contain;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
 }
 
 .pixel-sidebar-avatar-body {
