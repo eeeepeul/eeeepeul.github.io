@@ -4473,10 +4473,10 @@ button:focus-visible,
 .pixel-sidebar-character-shoe {
   position: absolute;
   left: 50%;
-  bottom: -14px;
+  bottom: -21px;
   z-index: 3;
-  width: 17px;
-  height: 14px;
+  width: 35px;
+  height: 31px;
   display: block;
   transform: translateX(-50%);
   background: var(--shoe-tone, #5f5f5f);
