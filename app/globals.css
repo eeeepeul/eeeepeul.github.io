@@ -838,10 +838,10 @@ button:focus-visible,
 .wandering-character-shoe {
   position: absolute;
   left: 50%;
-  bottom: -10%;
+  bottom: -21%;
   z-index: 2;
-  width: 35%;
-  height: 14%;
+  width: 73%;
+  height: 31%;
   display: block;
   transform: translateX(-50%);
   background: var(--character-shoe-tone, #5f5f5f);
