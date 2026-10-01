@@ -4373,9 +4373,9 @@ button:focus-visible,
   left: 50%;
   z-index: 0;
   display: block;
-  width: 96px;
-  height: 96px;
-  max-width: 96px;
+  width: 60px;
+  height: 60px;
+  max-width: 60px;
   transform: translateX(-50%);
   background: var(--character-flame-color, #00b9f6);
   -webkit-mask-image: var(--character-flame-image);
