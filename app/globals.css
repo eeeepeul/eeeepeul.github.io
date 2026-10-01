@@ -817,9 +817,9 @@ button:focus-visible,
   left: 50%;
   z-index: 0;
   display: block;
-  width: 180%;
-  height: 84%;
-  max-width: 180%;
+  width: 68%;
+  height: 58%;
+  max-width: 68%;
   transform: translateX(-50%);
   background: var(--character-flame-color, #00b9f6);
   -webkit-mask-image: var(--character-flame-image);
