@@ -40,7 +40,7 @@ test('keeps custom shoe and color layers attached to the moving character', () =
   assert.match(css, /\.wandering-character-flame\s*\{[^}]*height:\s*58%/s)
   assert.match(css, /\.wandering-character-flame\s*\{[^}]*mask-image:/s)
   assert.match(css, /\.wandering-character-shoe\s*\{[^}]*position:\s*absolute;/s)
-  assert.match(css, /\.wandering-character-shoe\s*\{[^}]*bottom:\s*-21%;[^}]*width:\s*73%;[^}]*height:\s*31%/s)
+  assert.match(css, /\.wandering-character-shoe\s*\{[^}]*bottom:\s*-14%;[^}]*width:\s*73%;[^}]*height:\s*31%/s)
   assert.match(css, /\.wandering-character-shoe\s*\{[^}]*mask-image:\s*var\(--character-shoe-image\)/s)
   assert.match(css, /\.wandering-character-head\s*\{[^}]*mask-image:\s*var\(--character-head-image\)/s)
 })
