@@ -81,14 +81,26 @@ test('puts the selected flame artwork behind the preview head', () => {
   assert.doesNotMatch(flameRule, /top:/)
 })
 
-test('renders the approved slender match silhouette as one preview shape', () => {
+test('renders the approved slender match body with a separate rounded head layer', () => {
   const html = renderToStaticMarkup(createElement(PixelSidebarPreview, { matchColorIndex: 2 }))
 
   assert.match(html, /class="pixel-sidebar-character-silhouette"/)
   assert.match(html, /data-silhouette-src="\/media\/match-character\.svg"/)
   assert.match(html, /--match-character-image:url\(\/media\/match-character\.svg\)/)
-  assert.match(html, /--character-tone:#858585/)
-  assert.doesNotMatch(html, /pixel-sidebar-character-head|pixel-sidebar-character-body/)
+  assert.match(html, /--character-tone:#E9C1A0/)
+  assert.match(html, /class="pixel-sidebar-character-head"/)
+  assert.match(html, /data-head-src="\/media\/match-character-head\.svg"/)
+  assert.match(html, /--character-head-tone:#7B4D31/)
+  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-head\s*\{[^}]*mask-image:\s*var\(--match-character-head-image\)/s)
+})
+
+test('keeps match body peach while match-color swatches recolor only the rounded head', () => {
+  const html = renderToStaticMarkup(createElement(CustomSidebarContent))
+
+  for (const tone of ['#DBDCDC', '#D90000', '#7B4D31', '#88DCD3']) {
+    assert.match(html, new RegExp(`--match-tone:${tone}`))
+  }
+  assert.match(html, /--character-tone:#E9C1A0/)
 })
 
 test('uses the supplied shoe silhouette for the preview and shoe swatches', () => {

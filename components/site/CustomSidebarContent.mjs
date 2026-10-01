@@ -4,6 +4,7 @@ import { createElement, useState } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
 import {
   FLAME_COLOR_TONES,
+  MATCH_BODY_TONE,
   MATCH_COLOR_TONES,
   SHOE_TONES,
 } from '../../lib/character-customization.mjs'
@@ -17,6 +18,7 @@ const SPOTS = [
 
 const CUSTOM_PAGE_SIZE = 4
 const MATCH_CHARACTER_SRC = assetPath('media/match-character.svg')
+const MATCH_CHARACTER_HEAD_SRC = assetPath('media/match-character-head.svg')
 const CUSTOM_SHOE_SRC = assetPath('media/custom-shoe.png')
 const CUSTOM_SECTIONS = [
   { key: 'match-color', label: '성냥색', itemCount: 4 },
@@ -136,7 +138,7 @@ export function PixelSidebarPreview({ matchColorIndex, shoeIndex, flameColorInde
         {
           className: 'pixel-sidebar-character',
           'aria-hidden': 'true',
-          style: { '--character-tone': matchTone, '--shoe-tone': shoeTone },
+          style: { '--character-tone': MATCH_BODY_TONE, '--shoe-tone': shoeTone },
         },
         flameShapeSrc
           ? createElement('span', {
@@ -153,6 +155,14 @@ export function PixelSidebarPreview({ matchColorIndex, shoeIndex, flameColorInde
           className: 'pixel-sidebar-character-silhouette',
           'data-silhouette-src': MATCH_CHARACTER_SRC,
           style: { '--match-character-image': `url(${MATCH_CHARACTER_SRC})` },
+        }),
+        createElement('i', {
+          className: 'pixel-sidebar-character-head',
+          'data-head-src': MATCH_CHARACTER_HEAD_SRC,
+          style: {
+            '--character-head-tone': matchTone,
+            '--match-character-head-image': `url(${MATCH_CHARACTER_HEAD_SRC})`,
+          },
         }),
         Number.isInteger(shoeIndex)
           ? createElement('i', {

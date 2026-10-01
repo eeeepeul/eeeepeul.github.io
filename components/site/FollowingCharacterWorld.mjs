@@ -4,7 +4,7 @@ import { createElement, useEffect, useRef } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
 import {
   FLAME_COLOR_TONES,
-  MATCH_COLOR_FILTERS,
+  MATCH_COLOR_TONES,
   SHOE_TONES,
 } from '../../lib/character-customization.mjs'
 import { HOUSE_INTERIOR_MAP } from '../../lib/house-interior-map.mjs'
@@ -16,6 +16,7 @@ import {
 
 const LIVING_ROOM_CAMERA_FOCUS = { x: 31, y: 24 }
 const CUSTOM_MATCH_CHARACTER_SRC = assetPath('media/match-character.svg')
+const CUSTOM_MATCH_HEAD_SRC = assetPath('media/match-character-head.svg')
 const CUSTOM_SHOE_SRC = assetPath('media/custom-shoe.png')
 const DEFAULT_CHARACTER_CELLS = [
   { x: 31, y: 27 },
@@ -143,7 +144,6 @@ export function FollowingCharacterWorld({
       const style = isCustomized
         ? {
             transform: 'translate3d(-50%, -50%, 0)',
-            ...(hasMatchColor ? { '--character-filter': MATCH_COLOR_FILTERS[matchColorIndex] } : {}),
             ...(hasShoe ? { '--character-shoe-tone': SHOE_TONES[shoeIndex] } : {}),
           }
         : undefined
@@ -172,6 +172,16 @@ export function FollowingCharacterWorld({
         'data-character-id': characterId,
         'data-character-role': characterId === activeCharacterId ? 'player' : 'npc',
       })
+      const head = createElement('i', {
+        className: 'wandering-character-head',
+        'aria-hidden': 'true',
+        'data-head-src': CUSTOM_MATCH_HEAD_SRC,
+        style: {
+          '--character-head-tone':
+            MATCH_COLOR_TONES[hasMatchColor ? matchColorIndex : 0] ?? MATCH_COLOR_TONES[0],
+          '--character-head-image': `url(${CUSTOM_MATCH_HEAD_SRC})`,
+        },
+      })
 
       if (!isCustomized) {
         return createElement('img', {
@@ -197,6 +207,7 @@ export function FollowingCharacterWorld({
         },
         flame,
         image,
+        head,
         hasShoe
           ? createElement('i', {
               className: 'wandering-character-shoe',

@@ -792,6 +792,25 @@ button:focus-visible,
   filter: var(--character-filter, drop-shadow(0 4px 6px rgba(23, 22, 27, 0.12)));
 }
 
+.wandering-character-head {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  background: var(--character-head-tone, #DBDCDC);
+  -webkit-mask-image: var(--character-head-image);
+  mask-image: var(--character-head-image);
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 .wandering-character-flame {
   position: absolute;
   bottom: 52%;
@@ -4380,6 +4399,22 @@ button:focus-visible,
   background: var(--character-tone, #8f8f8f);
   -webkit-mask-image: var(--match-character-image);
   mask-image: var(--match-character-image);
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.pixel-sidebar-character-head {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  background: var(--character-head-tone, #DBDCDC);
+  -webkit-mask-image: var(--match-character-head-image);
+  mask-image: var(--match-character-head-image);
   -webkit-mask-position: center;
   mask-position: center;
   -webkit-mask-repeat: no-repeat;

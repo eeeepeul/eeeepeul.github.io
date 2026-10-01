@@ -14,12 +14,13 @@ const worldSource = readFileSync(
   'utf8'
 )
 const css = readFileSync(new URL('../app/globals.css', import.meta.url), 'utf8')
+const matchCharacter = readFileSync(new URL('../public/media/match-character.svg', import.meta.url), 'utf8')
 
 test('passes saved custom selections into the character rendered after input', () => {
   assert.match(worldSource, /characterCustomizations/)
   assert.match(worldSource, /FollowingCharacterWorld,\s*\{[^}]*characterCustomizations/s)
   assert.match(source, /characterCustomizations/)
-  assert.match(source, /MATCH_COLOR_FILTERS/)
+  assert.match(source, /MATCH_COLOR_TONES/)
   assert.match(source, /FLAME_COLOR_TONES/)
   assert.match(source, /SHOE_TONES/)
   assert.match(source, /wandering-character-entity/)
@@ -39,6 +40,7 @@ test('keeps custom shoe and color layers attached to the moving character', () =
   assert.match(css, /\.wandering-character-flame\s*\{[^}]*mask-image:/s)
   assert.match(css, /\.wandering-character-shoe\s*\{[^}]*position:\s*absolute;/s)
   assert.match(css, /\.wandering-character-shoe\s*\{[^}]*mask-image:\s*var\(--character-shoe-image\)/s)
+  assert.match(css, /\.wandering-character-head\s*\{[^}]*mask-image:\s*var\(--character-head-image\)/s)
 })
 
 test('renders the saved match color and shoe on the added character', () => {
@@ -53,7 +55,7 @@ test('renders the saved match color and shoe on the added character', () => {
   )
 
   assert.match(html, /class="wandering-character-entity has-flame has-shoe"/)
-  assert.match(html, /--character-filter:/)
+  assert.match(html, /--character-head-tone:#7B4D31/)
   assert.match(html, /class="wandering-character-flame"/)
   assert.match(html, /data-flame-src="\/media\/flame-shape-03\.png"/)
   assert.match(html, /--character-flame-color:#C50011/)
@@ -61,8 +63,15 @@ test('renders the saved match color and shoe on the added character', () => {
   assert.match(html, /class="wandering-character-shoe"/)
   assert.match(html, /data-shoe-src="\/media\/custom-shoe\.png"/)
   assert.match(html, /--character-shoe-image:url\(\/media\/custom-shoe\.png\)/)
+  assert.match(html, /class="wandering-character-head"/)
+  assert.match(html, /data-head-src="\/media\/match-character-head\.svg"/)
+  assert.match(html, /--character-head-image:url\(\/media\/match-character-head\.svg\)/)
   assert.match(
     html,
     /<img class="wandering-character" src="\/media\/match-character\.svg"[^>]*data-character-id="character-7"/
   )
+})
+
+test('uses the peach match body asset beneath the separate head color layer', () => {
+  assert.match(matchCharacter, /fill="#E9C1A0"/)
 })
