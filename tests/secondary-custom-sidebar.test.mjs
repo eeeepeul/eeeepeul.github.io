@@ -105,7 +105,7 @@ test('renders the approved slender match body with a separate rounded head layer
   assert.match(html, /class="pixel-sidebar-character-silhouette"/)
   assert.match(html, /data-silhouette-src="\/media\/match-character\.svg"/)
   assert.match(html, /--match-character-image:url\(\/media\/match-character\.svg\)/)
-  assert.match(html, /--character-tone:#E9C1A0/)
+  assert.match(html, /--character-tone:#E3C2A4/)
   assert.match(html, /class="pixel-sidebar-character-head"/)
   assert.match(html, /data-head-src="\/media\/match-character-head\.svg"/)
   assert.match(html, /--character-head-tone:#7B4D31/)
@@ -163,17 +163,17 @@ test('shrinks only the first expression inside the match heads', () => {
 test('keeps match body peach while match-color swatches recolor only the rounded head', () => {
   const html = renderToStaticMarkup(createElement(CustomSidebarContent))
 
-  for (const tone of ['#DBDCDC', '#D90000', '#7B4D31', '#88DCD3']) {
+  for (const tone of ['#DBDCDC', '#D90000', '#7B4D31', '#9BDAD3']) {
     assert.match(html, new RegExp(`--match-tone:${tone}`))
   }
-  assert.match(html, /--character-tone:#E9C1A0/)
+  assert.match(html, /--character-tone:#E3C2A4/)
 })
 
 test('enlarges the current match head in the avatar card with the selected head and body colors', () => {
   const html = renderToStaticMarkup(createElement(PixelSidebarPreview, { matchColorIndex: 1 }))
 
   assert.match(html, /class="pixel-sidebar-avatar-small"[^>]*--avatar-head-tone:#D90000/)
-  assert.match(html, /--avatar-body-tone:#E9C1A0/)
+  assert.match(html, /--avatar-body-tone:#E3C2A4/)
   assert.match(html, /class="pixel-sidebar-avatar-face"[^>]*data-avatar-head-src="\/media\/match-character-head-avatar\.svg"/)
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-avatar-face\s*\{[^}]*mask-image:\s*var\(--avatar-head-image\)/s)
   assert.match(

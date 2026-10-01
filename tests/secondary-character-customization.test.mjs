@@ -74,5 +74,5 @@ test('renders the saved match color and shoe on the added character', () => {
 })
 
 test('uses the peach match body asset beneath the separate head color layer', () => {
-  assert.match(matchCharacter, /fill="#E9C1A0"/)
+  assert.match(matchCharacter, /fill="#E3C2A4"/)
 })

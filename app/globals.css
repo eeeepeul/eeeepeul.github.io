@@ -4572,7 +4572,7 @@ button:focus-visible,
   transform: translateX(-50%);
   border-radius: 0;
   clip-path: polygon(0.5px 0, calc(100% - 0.5px) 0, 100% 100%, 0 100%);
-  background: var(--avatar-body-tone, #E9C1A0);
+  background: var(--avatar-body-tone, #E3C2A4);
 }
 
 .pixel-sidebar-tool-stack {
