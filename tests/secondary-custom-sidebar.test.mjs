@@ -130,10 +130,10 @@ test('enlarges the current match head in the avatar card with the selected head 
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-avatar-face\s*\{[^}]*mask-image:\s*var\(--avatar-head-image\)/s)
   assert.match(
     GLOBAL_STYLES,
-    /\.pixel-sidebar-avatar-face\s*\{[^}]*position:\s*absolute;[^}]*top:\s*5px;[^}]*width:\s*29px;[^}]*height:\s*32px/s
+    /\.pixel-sidebar-avatar-face\s*\{[^}]*position:\s*absolute;[^}]*top:\s*7px;[^}]*width:\s*33px;[^}]*height:\s*35px/s
   )
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-avatar-body\s*\{[^}]*background:\s*var\(--avatar-body-tone/s)
-  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-avatar-body\s*\{[^}]*width:\s*16px;[^}]*height:\s*29px/s)
+  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-avatar-body\s*\{[^}]*width:\s*18px;[^}]*height:\s*29px/s)
   assert.match(
     GLOBAL_STYLES,
     /\.pixel-sidebar-avatar-body\s*\{[^}]*clip-path:\s*polygon\(0\.5px\s+0,\s*calc\(100%\s*-\s*0\.5px\)\s+0,\s*100%\s+100%,\s*0\s+100%\)/s
