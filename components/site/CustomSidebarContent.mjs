@@ -119,6 +119,7 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
   const expressionSrc = Number.isInteger(expressionIndex)
     ? assetPath(`media/expression-${String(expressionIndex + 1).padStart(2, '0')}.png`)
     : null
+  const expressionFillSrc = expressionIndex === 1 ? assetPath('media/expression-02-fill.svg') : null
   const shoeTone = SHOE_TONES[Number.isInteger(shoeIndex) ? shoeIndex : 0]
   const flameTone = FLAME_COLOR_TONES[Number.isInteger(flameColorIndex) ? flameColorIndex : 0]
   const flameShapeSrc = Number.isInteger(flameShapeIndex)
@@ -168,6 +169,15 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
             '--match-character-head-image': `url(${MATCH_CHARACTER_HEAD_SRC})`,
           },
         }),
+        expressionFillSrc
+          ? createElement('img', {
+              className: 'pixel-sidebar-character-expression-fill',
+              src: expressionFillSrc,
+              'data-expression-fill-src': expressionFillSrc,
+              alt: '',
+              draggable: false,
+            })
+          : null,
         expressionSrc
           ? createElement('img', {
               className: 'pixel-sidebar-character-expression',
@@ -175,9 +185,6 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
               'data-expression-src': expressionSrc,
               alt: '',
               draggable: false,
-              style: {
-                '--character-expression-mask': `url(${MATCH_CHARACTER_HEAD_AVATAR_SRC})`,
-              },
             })
           : null,
         Number.isInteger(shoeIndex)
@@ -208,6 +215,15 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
           className: 'pixel-sidebar-avatar-face',
           'data-avatar-head-src': MATCH_CHARACTER_HEAD_AVATAR_SRC,
         }),
+        expressionFillSrc
+          ? createElement('img', {
+              className: 'pixel-sidebar-avatar-expression-fill',
+              src: expressionFillSrc,
+              'data-expression-fill-src': expressionFillSrc,
+              alt: '',
+              draggable: false,
+            })
+          : null,
         expressionSrc
           ? createElement('img', {
               className: 'pixel-sidebar-avatar-expression',
@@ -215,9 +231,6 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
               'data-expression-src': expressionSrc,
               alt: '',
               draggable: false,
-              style: {
-                '--avatar-expression-mask': `url(${MATCH_CHARACTER_HEAD_AVATAR_SRC})`,
-              },
             })
           : null,
         createElement('i', { className: 'pixel-sidebar-avatar-body' })

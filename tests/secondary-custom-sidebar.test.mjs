@@ -127,6 +127,17 @@ test('puts the selected expression artwork inside both match heads', () => {
   )
 })
 
+test('keeps the round-eyed expression uncut and fills its eye interiors white', () => {
+  const html = renderToStaticMarkup(createElement(PixelSidebarPreview, { expressionIndex: 1 }))
+
+  assert.match(html, /class="pixel-sidebar-character-expression-fill"[^>]*data-expression-fill-src="\/media\/expression-02-fill\.svg"/)
+  assert.match(html, /class="pixel-sidebar-avatar-expression-fill"[^>]*data-expression-fill-src="\/media\/expression-02-fill\.svg"/)
+  assert.doesNotMatch(GLOBAL_STYLES, /\.pixel-sidebar-character-expression\s*\{[^}]*mask-image:/s)
+  assert.doesNotMatch(GLOBAL_STYLES, /\.pixel-sidebar-avatar-expression\s*\{[^}]*mask-image:/s)
+  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-expression-fill\s*\{[^}]*z-index:\s*3/s)
+  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-avatar-expression-fill\s*\{[^}]*z-index:\s*3/s)
+})
+
 test('keeps match body peach while match-color swatches recolor only the rounded head', () => {
   const html = renderToStaticMarkup(createElement(CustomSidebarContent))
 

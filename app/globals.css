@@ -4434,14 +4434,22 @@ button:focus-visible,
   transform: translateX(-50%);
   object-fit: contain;
   object-position: center;
-  -webkit-mask-image: var(--character-expression-mask);
-  mask-image: var(--character-expression-mask);
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.pixel-sidebar-character-expression-fill {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 3;
+  display: block;
+  width: 18px;
+  height: 22px;
+  transform: translateX(-50%);
+  object-fit: contain;
+  object-position: center;
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
@@ -4511,14 +4519,22 @@ button:focus-visible,
   transform: translateX(-50%);
   object-fit: contain;
   object-position: center;
-  -webkit-mask-image: var(--avatar-expression-mask);
-  mask-image: var(--avatar-expression-mask);
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.pixel-sidebar-avatar-expression-fill {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  z-index: 3;
+  display: block;
+  width: 25px;
+  height: 24px;
+  transform: translateX(-50%);
+  object-fit: contain;
+  object-position: center;
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
