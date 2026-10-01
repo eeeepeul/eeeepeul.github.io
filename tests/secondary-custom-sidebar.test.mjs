@@ -110,6 +110,10 @@ test('renders the approved slender match body with a separate rounded head layer
   assert.match(html, /data-head-src="\/media\/match-character-head\.svg"/)
   assert.match(html, /--character-head-tone:#7B4D31/)
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-head\s*\{[^}]*mask-image:\s*var\(--match-character-head-image\)/s)
+  assert.match(
+    GLOBAL_STYLES,
+    /\.pixel-sidebar-character\s*>\s*\.pixel-sidebar-character-silhouette\s*\{[^}]*width:\s*42px;[^}]*left:\s*50%;[^}]*transform:\s*translateX\(-50%\)/s
+  )
 })
 
 test('puts the selected expression artwork inside both match heads', () => {

@@ -4407,6 +4407,15 @@ button:focus-visible,
   mask-size: contain;
 }
 
+.pixel-sidebar-character > .pixel-sidebar-character-silhouette {
+  top: 0;
+  right: auto;
+  bottom: 0;
+  width: 42px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .pixel-sidebar-character-head {
   position: absolute;
   inset: 0;
