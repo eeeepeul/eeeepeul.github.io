@@ -119,12 +119,13 @@ test('puts the selected expression artwork inside both match heads', () => {
   assert.match(html, /class="pixel-sidebar-avatar-expression"[^>]*data-expression-src="\/media\/expression-05\.png"/)
   assert.match(
     GLOBAL_STYLES,
-    /\.pixel-sidebar-character-expression\s*\{[^}]*position:\s*absolute;[^}]*z-index:\s*3;[^}]*object-fit:\s*contain/s
+    /\.pixel-sidebar-character-expression\s*\{[^}]*position:\s*absolute;[^}]*top:\s*1px;[^}]*z-index:\s*3;[^}]*width:\s*16px;[^}]*height:\s*20px;[^}]*object-fit:\s*contain/s
   )
   assert.match(
     GLOBAL_STYLES,
-    /\.pixel-sidebar-avatar-expression\s*\{[^}]*position:\s*absolute;[^}]*z-index:\s*3;[^}]*object-fit:\s*contain/s
+    /\.pixel-sidebar-avatar-expression\s*\{[^}]*position:\s*absolute;[^}]*top:\s*13px;[^}]*z-index:\s*3;[^}]*width:\s*23px;[^}]*height:\s*22px;[^}]*object-fit:\s*contain/s
   )
+  assert.match(GLOBAL_STYLES, /\.pixel-expression-shape\s*\{[^}]*max-height:\s*38px/s)
 })
 
 test('keeps the round-eyed expression uncut and fills its eye interiors white', () => {
