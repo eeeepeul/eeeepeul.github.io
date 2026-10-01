@@ -4411,9 +4411,10 @@ button:focus-visible,
   top: 0;
   right: auto;
   bottom: 0;
-  width: 42px;
+  width: 48px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scaleX(.875);
+  clip-path: inset(22.5px 0 0);
 }
 
 .pixel-sidebar-character-head {
