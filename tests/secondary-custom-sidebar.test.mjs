@@ -112,7 +112,15 @@ test('renders the approved slender match body with a separate rounded head layer
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-head\s*\{[^}]*mask-image:\s*var\(--match-character-head-image\)/s)
   assert.match(
     GLOBAL_STYLES,
-    /\.pixel-sidebar-character\s*>\s*\.pixel-sidebar-character-silhouette\s*\{[^}]*width:\s*48px;[^}]*left:\s*50%;[^}]*transform:\s*translateX\(-50%\)\s*scaleX\(\.875\);[^}]*clip-path:\s*inset\(22\.5px\s+0\s+0\)/s
+    /\.pixel-sidebar-character\s*>\s*\.pixel-sidebar-character-silhouette\s*\{[^}]*width:\s*48px;[^}]*left:\s*50%;[^}]*transform:\s*translateX\(-50%\)/s
+  )
+  assert.doesNotMatch(
+    GLOBAL_STYLES,
+    /\.pixel-sidebar-character\s*>\s*\.pixel-sidebar-character-silhouette\s*\{[^}]*scaleX\(/s
+  )
+  assert.doesNotMatch(
+    GLOBAL_STYLES,
+    /\.pixel-sidebar-character\s*>\s*\.pixel-sidebar-character-silhouette\s*\{[^}]*clip-path:/s
   )
 })
 

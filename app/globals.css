@@ -4413,8 +4413,7 @@ button:focus-visible,
   bottom: 0;
   width: 48px;
   left: 50%;
-  transform: translateX(-50%) scaleX(.875);
-  clip-path: inset(22.5px 0 0);
+  transform: translateX(-50%);
 }
 
 .pixel-sidebar-character-head {
