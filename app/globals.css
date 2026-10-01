@@ -4458,12 +4458,12 @@ button:focus-visible,
 
 .pixel-sidebar-avatar-face {
   position: absolute;
-  top: 15px;
+  top: 5px;
   left: 50%;
   z-index: 2;
   display: block;
-  width: 24px;
-  height: 27px;
+  width: 29px;
+  height: 32px;
   transform: translateX(-50%);
   background: var(--avatar-head-tone, #DBDCDC);
   -webkit-mask-image: var(--avatar-head-image);
@@ -4482,8 +4482,8 @@ button:focus-visible,
   left: 50%;
   bottom: 0;
   display: block;
-  width: 13px;
-  height: 24px;
+  width: 16px;
+  height: 29px;
   transform: translateX(-50%);
   border-radius: 0;
   clip-path: polygon(0.5px 0, calc(100% - 0.5px) 0, 100% 100%, 0 100%);
