@@ -261,6 +261,7 @@ function PixelCustomRow({ section, selectedIndex, onSelect }) {
         },
         ...Array.from({ length: section.itemCount }, (_, itemIndex) => {
           const isSelected = selectedIndex === itemIndex
+          const isExpression = section.key === 'expression'
           const isFlameShape = section.key === 'flame-shape'
           const style = {
             flexBasis: swatchBasis,
@@ -276,14 +277,21 @@ function PixelCustomRow({ section, selectedIndex, onSelect }) {
             {
               key: `${section.key}-${itemIndex}`,
               type: 'button',
-              className: `pixel-custom-swatch${section.key === 'shoes' ? ' pixel-shoe-swatch' : ''}${isFlameShape ? ' pixel-flame-swatch' : ''}${isSelected ? ' is-selected' : ''}`,
+              className: `pixel-custom-swatch${section.key === 'shoes' ? ' pixel-shoe-swatch' : ''}${isExpression ? ' pixel-expression-swatch' : ''}${isFlameShape ? ' pixel-flame-swatch' : ''}${isSelected ? ' is-selected' : ''}`,
               'data-item-index': itemIndex + 1,
               'aria-label': `${section.label} ${itemIndex + 1}번`,
               'aria-pressed': isSelected,
               onClick: () => onSelect(section.key, itemIndex),
               style,
             },
-            isFlameShape
+            isExpression
+              ? createElement('img', {
+                  className: 'pixel-expression-shape',
+                  src: assetPath(`media/expression-${String(itemIndex + 1).padStart(2, '0')}.png`),
+                  alt: '',
+                  draggable: false,
+                })
+              : isFlameShape
               ? createElement('img', {
                   className: 'pixel-flame-shape',
                   src: assetPath(`media/flame-shape-${String(itemIndex + 1).padStart(2, '0')}.png`),

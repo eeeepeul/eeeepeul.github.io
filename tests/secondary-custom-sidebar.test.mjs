@@ -43,6 +43,24 @@ test('uses the requested flame color swatches in order', () => {
   )
 })
 
+test('renders the six supplied expression artworks in order', () => {
+  const html = renderToStaticMarkup(createElement(CustomSidebarContent))
+  const expressionSources = [...html.matchAll(/class="pixel-expression-shape" src="([^"]+)"/g)].map(
+    ([, source]) => source
+  )
+
+  assert.deepEqual(expressionSources, [
+    '/media/expression-01.png',
+    '/media/expression-02.png',
+    '/media/expression-03.png',
+    '/media/expression-04.png',
+    '/media/expression-05.png',
+    '/media/expression-06.png',
+  ])
+  assert.match(GLOBAL_STYLES, /\.pixel-expression-swatch\s*\{[^}]*display:\s*grid/s)
+  assert.match(GLOBAL_STYLES, /\.pixel-expression-shape\s*\{[^}]*object-fit:\s*contain/s)
+})
+
 test('keeps the input disabled until all custom sections are selected', async () => {
   const { hasCompleteCustomSelection } = await import('../components/site/CustomSidebarContent.mjs')
 
