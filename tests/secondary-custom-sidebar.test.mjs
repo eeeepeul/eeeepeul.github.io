@@ -220,6 +220,7 @@ test('renders each supplied shoe tone in the matching shoe swatch', () => {
   }
   assert.match(
     GLOBAL_STYLES,
-    /\.pixel-sidebar-character-shoe\s*\{[^}]*bottom:\s*-1px;[^}]*z-index:\s*3/s
+    /\.pixel-sidebar-character-shoe\s*\{[^}]*bottom:\s*-14px;[^}]*z-index:\s*3/s
   )
+  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-shoe\s*\{[^}]*width:\s*17px;[^}]*height:\s*14px/s)
 })

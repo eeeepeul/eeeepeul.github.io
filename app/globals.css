@@ -838,10 +838,10 @@ button:focus-visible,
 .wandering-character-shoe {
   position: absolute;
   left: 50%;
-  bottom: -1px;
+  bottom: -14%;
   z-index: 2;
-  width: 78%;
-  height: 12%;
+  width: 35%;
+  height: 14%;
   display: block;
   transform: translateX(-50%);
   background: var(--character-shoe-tone, #5f5f5f);
@@ -4473,10 +4473,10 @@ button:focus-visible,
 .pixel-sidebar-character-shoe {
   position: absolute;
   left: 50%;
-  bottom: -1px;
+  bottom: -14px;
   z-index: 3;
-  width: 37px;
-  height: 12px;
+  width: 17px;
+  height: 14px;
   display: block;
   transform: translateX(-50%);
   background: var(--shoe-tone, #5f5f5f);
