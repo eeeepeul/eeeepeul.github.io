@@ -2,6 +2,11 @@
 
 import { createElement, useEffect, useRef } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
+import {
+  FLAME_COLOR_TONES,
+  MATCH_COLOR_FILTERS,
+  SHOE_TONES,
+} from '../../lib/character-customization.mjs'
 import { HOUSE_INTERIOR_MAP } from '../../lib/house-interior-map.mjs'
 import {
   advanceWanderState,
@@ -44,6 +49,7 @@ const applyCamera = (cameraWorld, viewport, target, map) => {
 export function FollowingCharacterWorld({
   activeCharacterId,
   characterIds,
+  characterCustomizations = {},
   map = HOUSE_INTERIOR_MAP,
   cameraWorldRef,
   viewportRef,
@@ -121,13 +127,42 @@ export function FollowingCharacterWorld({
       className: `character-world${activeCharacterId ? ' is-following' : ''}`,
       'data-active-character': activeCharacterId ?? '',
     },
-    characterIds.map((characterId) =>
-      createElement('img', {
-        key: characterId,
-        ref: (node) => {
-          if (node) characterNodesRef.current.set(characterId, node)
-          else characterNodesRef.current.delete(characterId)
-        },
+    characterIds.map((characterId) => {
+      const customization = characterCustomizations[characterId]
+      const matchColorIndex = customization?.['match-color']
+      const flameColorIndex = customization?.['flame-color']
+      const flameShapeIndex = customization?.['flame-shape']
+      const shoeIndex = customization?.shoes
+      const hasMatchColor = Number.isInteger(matchColorIndex)
+      const hasFlameShape = Number.isInteger(flameShapeIndex)
+      const hasFlameColor = Number.isInteger(flameColorIndex)
+      const hasShoe = Number.isInteger(shoeIndex)
+      const isCustomized = hasMatchColor || hasFlameShape || hasShoe
+      const style = isCustomized
+        ? {
+            transform: 'translate3d(-50%, -50%, 0)',
+            ...(hasMatchColor ? { '--character-filter': MATCH_COLOR_FILTERS[matchColorIndex] } : {}),
+            ...(hasShoe ? { '--character-shoe-tone': SHOE_TONES[shoeIndex] } : {}),
+          }
+        : undefined
+
+      const flameSrc = hasFlameShape
+        ? assetPath(`media/flame-shape-${String(flameShapeIndex + 1).padStart(2, '0')}.png`)
+        : null
+      const flame = flameSrc
+        ? createElement('span', {
+            className: 'wandering-character-flame',
+            'data-flame-src': flameSrc,
+            'aria-hidden': 'true',
+            style: {
+              '--character-flame-color':
+                FLAME_COLOR_TONES[hasFlameColor ? flameColorIndex : 0] ?? FLAME_COLOR_TONES[0],
+              '--character-flame-image': `url(${flameSrc})`,
+            },
+          })
+        : null
+
+      const image = createElement('img', {
         className: 'wandering-character',
         src: assetPath('media/page3-character.png'),
         alt: '',
@@ -135,6 +170,35 @@ export function FollowingCharacterWorld({
         'data-character-id': characterId,
         'data-character-role': characterId === activeCharacterId ? 'player' : 'npc',
       })
-    )
+
+      if (!isCustomized) {
+        return createElement('img', {
+          key: characterId,
+          ref: (node) => {
+            if (node) characterNodesRef.current.set(characterId, node)
+            else characterNodesRef.current.delete(characterId)
+          },
+          ...image.props,
+        })
+      }
+
+      return createElement(
+        'span',
+        {
+          key: characterId,
+          ref: (node) => {
+            if (node) characterNodesRef.current.set(characterId, node)
+            else characterNodesRef.current.delete(characterId)
+          },
+          className: `wandering-character-entity${hasFlameShape ? ' has-flame' : ''}${hasShoe ? ' has-shoe' : ''}`,
+          style,
+        },
+        flame,
+        image,
+        hasShoe
+          ? createElement('i', { className: 'wandering-character-shoe', 'aria-hidden': 'true' })
+          : null
+      )
+    })
   )
 }

@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { createConfiguredVisitStore } from '../lib/supabase-browser.mjs'
+import {
+  createConfiguredCharacterStore,
+  createConfiguredVisitStore,
+} from '../lib/supabase-browser.mjs'
 
 test('keeps the page usable when public Supabase configuration is missing', () => {
   assert.equal(
@@ -36,4 +39,20 @@ test('creates the shared store with the public URL and publishable key only', ()
       },
     ],
   ])
+})
+
+test('creates a shared character store with the same public client configuration', () => {
+  const fakeClient = {
+    from() {},
+    channel() {},
+  }
+
+  const store = createConfiguredCharacterStore({
+    url: 'https://project.supabase.co',
+    publishableKey: 'sb_publishable_example',
+    createClientImpl: () => fakeClient,
+  })
+
+  assert.equal(typeof store.recordCharacter, 'function')
+  assert.equal(typeof store.loadCharacters, 'function')
 })

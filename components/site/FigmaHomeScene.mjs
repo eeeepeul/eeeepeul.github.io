@@ -1,5 +1,5 @@
 import { createElement } from 'react'
-import { assetPath } from '../../lib/asset-path.mjs'
+import { DeepZoomMap } from './DeepZoomMap.mjs'
 
 const TOP_LABELS = Array.from({ length: 18 }, (_, index) => index)
 const SIDE_LABELS = Array.from({ length: 12 }, (_, index) => index)
@@ -26,12 +26,7 @@ export function FigmaHomeScene() {
     createElement(
       'div',
       { className: 'figma-home-map-clip' },
-      createElement('img', {
-        className: 'figma-home-map',
-        src: assetPath('media/figma-home-map.png'),
-        alt: '',
-        draggable: false,
-      })
+      createElement('div', { className: 'figma-home-map' }, createElement(DeepZoomMap))
     )
   )
 }

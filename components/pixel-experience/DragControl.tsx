@@ -5,12 +5,11 @@ import { pointerPosition } from '../../lib/pixel-controls.mjs'
 
 type DragControlProps = {
   value: number
-  tiles: number
   onChange: (value: number) => void
   disabled?: boolean
 }
 
-export function DragControl({ value, tiles, onChange, disabled = false }: DragControlProps) {
+export function DragControl({ value, onChange, disabled = false }: DragControlProps) {
   const railRef = useRef<HTMLDivElement>(null)
 
   const updateFromPointer = useCallback(
@@ -24,19 +23,19 @@ export function DragControl({ value, tiles, onChange, disabled = false }: DragCo
   return (
     <div className="drag-control">
       <div className="drag-copy">
-        <span>PIXEL SIZE</span>
-        <output>{tiles} TILES / ROW</output>
+        <span>FLOW SCALE</span>
+        <output>{Math.round(value * 100)}%</output>
       </div>
       <div
         ref={railRef}
         className="drag-rail"
         role="slider"
         tabIndex={disabled ? -1 : 0}
-        aria-label="픽셀 크기"
+        aria-label="액상 흐름 크기"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(value * 100)}
-        aria-valuetext={`가로 ${tiles}개 타일`}
+        aria-valuetext={`흐름 크기 ${Math.round(value * 100)}퍼센트`}
         aria-disabled={disabled}
         onPointerDown={(event) => {
           if (disabled) return

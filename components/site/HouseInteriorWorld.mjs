@@ -10,7 +10,12 @@ import { HouseInteriorTilemap } from './HouseInteriorTilemap.mjs'
  * The character world remains a separate layer so the existing follow-camera
  * and character-add interaction continue to work unchanged.
  */
-export function HouseInteriorWorld({ activeCharacterId, characterIds, map = HOUSE_INTERIOR_MAP }) {
+export function HouseInteriorWorld({
+  activeCharacterId,
+  characterIds,
+  characterCustomizations = {},
+  map = HOUSE_INTERIOR_MAP,
+}) {
   const viewportRef = useRef(null)
   const cameraWorldRef = useRef(null)
 
@@ -39,6 +44,7 @@ export function HouseInteriorWorld({ activeCharacterId, characterIds, map = HOUS
           createElement(FollowingCharacterWorld, {
             activeCharacterId,
             characterIds,
+            characterCustomizations,
             map,
             cameraWorldRef,
             viewportRef,
