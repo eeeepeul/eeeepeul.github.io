@@ -131,6 +131,10 @@ test('enlarges the current match head in the avatar card with the selected head 
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-avatar-face\s*\{[^}]*position:\s*absolute;[^}]*top:\s*0;[^}]*height:\s*48px/s)
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-avatar-body\s*\{[^}]*background:\s*var\(--avatar-body-tone/s)
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-avatar-body\s*\{[^}]*height:\s*18px/s)
+  assert.match(
+    GLOBAL_STYLES,
+    /\.pixel-sidebar-avatar-body\s*\{[^}]*clip-path:\s*polygon\(2px\s+0,\s*calc\(100%\s*-\s*2px\)\s+0,\s*100%\s+100%,\s*0\s+100%\)/s
+  )
 })
 
 test('uses the supplied shoe silhouette for the preview and shoe swatches', () => {
