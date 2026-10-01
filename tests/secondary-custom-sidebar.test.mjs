@@ -133,7 +133,7 @@ test('enlarges the current match head in the avatar card with the selected head 
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-avatar-body\s*\{[^}]*height:\s*18px/s)
   assert.match(
     GLOBAL_STYLES,
-    /\.pixel-sidebar-avatar-body\s*\{[^}]*clip-path:\s*polygon\(2px\s+0,\s*calc\(100%\s*-\s*2px\)\s+0,\s*100%\s+100%,\s*0\s+100%\)/s
+    /\.pixel-sidebar-avatar-body\s*\{[^}]*clip-path:\s*polygon\(0\.5px\s+0,\s*calc\(100%\s*-\s*0\.5px\)\s+0,\s*100%\s+100%,\s*0\s+100%\)/s
   )
 })
 
