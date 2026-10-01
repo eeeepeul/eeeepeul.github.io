@@ -838,7 +838,7 @@ button:focus-visible,
 .wandering-character-shoe {
   position: absolute;
   left: 50%;
-  bottom: -14%;
+  bottom: -31%;
   z-index: 2;
   width: 73%;
   height: 31%;
@@ -4473,7 +4473,7 @@ button:focus-visible,
 .pixel-sidebar-character-shoe {
   position: absolute;
   left: 50%;
-  bottom: -14px;
+  bottom: -31px;
   z-index: 3;
   width: 35px;
   height: 31px;
