@@ -95,7 +95,7 @@ test('puts the selected flame artwork behind the preview head', () => {
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-flame\s*\{[^}]*height:\s*60px/s)
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-flame\s*\{[^}]*max-width:\s*60px/s)
   assert.match(flameRule, /mask-image:/)
-  assert.match(flameRule, /bottom:\s*52px/)
+  assert.match(flameRule, /bottom:\s*68px/)
   assert.doesNotMatch(flameRule, /top:/)
 })
 

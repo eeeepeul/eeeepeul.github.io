@@ -813,7 +813,7 @@ button:focus-visible,
 
 .wandering-character-flame {
   position: absolute;
-  bottom: 52%;
+  bottom: 69%;
   left: 50%;
   z-index: 0;
   display: block;
@@ -4369,7 +4369,7 @@ button:focus-visible,
 
 .pixel-sidebar-character-flame {
   position: absolute;
-  bottom: 52px;
+  bottom: 68px;
   left: 50%;
   z-index: 0;
   display: block;
