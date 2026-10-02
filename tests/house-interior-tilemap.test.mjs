@@ -46,3 +46,21 @@ test('keeps collision and spawn layers hidden from the visual preview', () => {
   assert.match(html, /data-layer="collision"[^>]*hidden/)
   assert.match(html, /data-layer="spawn_points"[^>]*hidden/)
 })
+
+test('renders a code-native pixel canvas instead of a background image', () => {
+  const html = renderToStaticMarkup(createElement(HouseInteriorTilemap))
+
+  assert.match(html, /class="house-interior-pixel-canvas"/)
+  assert.match(html, /data-pixel-width="256"/)
+  assert.match(html, /data-pixel-height="192"/)
+  assert.doesNotMatch(html, /house-interior-background-image/)
+  assert.doesNotMatch(html, /\/media\/house-interior-plan(?:-hd)?\.png/)
+})
+
+test('keeps collision metadata hidden beside the canvas', () => {
+  const html = renderToStaticMarkup(createElement(HouseInteriorTilemap))
+
+  assert.match(html, /data-layer="walls"/)
+  assert.match(html, /data-layer="collision"[^>]*hidden/)
+  assert.match(html, /data-layer="spawn_points"[^>]*hidden/)
+})

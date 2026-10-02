@@ -1,8 +1,17 @@
-import { createElement } from 'react'
+'use client'
+
+import { createElement, useEffect, useRef } from 'react'
 import {
   HOUSE_INTERIOR_LAYER_ORDER,
   HOUSE_INTERIOR_MAP,
 } from '../../lib/house-interior-map.mjs'
+import {
+  HOUSE_INTERIOR_PIXEL_HEIGHT,
+  HOUSE_INTERIOR_PIXEL_PALETTE,
+  HOUSE_INTERIOR_PIXEL_RUNS,
+  HOUSE_INTERIOR_PIXEL_WIDTH,
+  HOUSE_INTERIOR_WALL_THICKNESS,
+} from '../../lib/house-interior-pixel-art.mjs'
 
 const tileStyle = (tile, map) => ({
   left: `${(tile.x / map.width) * 100}%`,
@@ -99,7 +108,71 @@ const renderSpawnLayer = (map) =>
     )
   )
 
+const hasWallCell = (wallCells, x, y) => wallCells.has(`${x}:${y}`)
+
+const drawWallSegments = (context, map) => {
+  const scaleX = HOUSE_INTERIOR_PIXEL_WIDTH / map.width
+  const scaleY = HOUSE_INTERIOR_PIXEL_HEIGHT / map.height
+  const wallCells = new Set((map.layers.walls ?? []).map(({ x, y }) => `${x}:${y}`))
+  const thickness = HOUSE_INTERIOR_WALL_THICKNESS
+
+  context.fillStyle = HOUSE_INTERIOR_PIXEL_PALETTE.wall
+  ;(map.layers.walls ?? []).forEach(({ x, y }) => {
+    const left = x * scaleX
+    const top = y * scaleY
+    if (!hasWallCell(wallCells, x, y - 1)) {
+      context.fillRect(left, top, scaleX, thickness)
+    }
+    if (!hasWallCell(wallCells, x, y + 1)) {
+      context.fillRect(left, (y + 1) * scaleY - thickness, scaleX, thickness)
+    }
+    if (!hasWallCell(wallCells, x - 1, y)) {
+      context.fillRect(left, top, thickness, scaleY)
+    }
+    if (!hasWallCell(wallCells, x + 1, y)) {
+      context.fillRect((x + 1) * scaleX - thickness, top, thickness, scaleY)
+    }
+  })
+}
+
+export const drawPixelScene = (context, map = HOUSE_INTERIOR_MAP) => {
+  context.imageSmoothingEnabled = false
+  context.clearRect(0, 0, HOUSE_INTERIOR_PIXEL_WIDTH, HOUSE_INTERIOR_PIXEL_HEIGHT)
+  context.fillStyle = HOUSE_INTERIOR_PIXEL_PALETTE.white
+  context.fillRect(0, 0, HOUSE_INTERIOR_PIXEL_WIDTH, HOUSE_INTERIOR_PIXEL_HEIGHT)
+
+  HOUSE_INTERIOR_PIXEL_RUNS.forEach(({ color, x, y, length }) => {
+    context.fillStyle = HOUSE_INTERIOR_PIXEL_PALETTE[color]
+    context.fillRect(x, y, length, 1)
+  })
+
+  drawWallSegments(context, map)
+}
+
 export function HouseInteriorTilemap({ map = HOUSE_INTERIOR_MAP }) {
+  const canvasRef = useRef(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return undefined
+
+    const tilemap = canvas.closest('.house-interior-tilemap')
+    const draw = () => {
+      const context = canvas.getContext('2d')
+      if (!context) return
+      canvas.width = HOUSE_INTERIOR_PIXEL_WIDTH
+      canvas.height = HOUSE_INTERIOR_PIXEL_HEIGHT
+      drawPixelScene(context, map)
+      tilemap?.setAttribute('data-pixel-ready', 'true')
+    }
+
+    draw()
+    if (typeof ResizeObserver === 'undefined') return undefined
+    const observer = new ResizeObserver(draw)
+    observer.observe(canvas)
+    return () => observer.disconnect()
+  }, [map])
+
   const layers = [
     renderLayer('floor', createFloorTiles(map), map),
     renderLayer('walls', map.layers.walls ?? [], map),
@@ -121,6 +194,16 @@ export function HouseInteriorTilemap({ map = HOUSE_INTERIOR_MAP }) {
       'aria-label': '미발화하우스 실내 배경',
       role: 'img',
     },
+    createElement('canvas', {
+      ref: canvasRef,
+      className: 'house-interior-pixel-canvas',
+      width: HOUSE_INTERIOR_PIXEL_WIDTH,
+      height: HOUSE_INTERIOR_PIXEL_HEIGHT,
+      'data-pixel-width': HOUSE_INTERIOR_PIXEL_WIDTH,
+      'data-pixel-height': HOUSE_INTERIOR_PIXEL_HEIGHT,
+      draggable: false,
+      'aria-hidden': 'true',
+    }),
     layers
   )
 }
