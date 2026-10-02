@@ -20,8 +20,8 @@ import {
 test('exposes a bounded pixel canvas and approved palette', () => {
   assert.equal(HOUSE_INTERIOR_PIXEL_WIDTH, 256)
   assert.equal(HOUSE_INTERIOR_PIXEL_HEIGHT, 192)
-  assert.equal(HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH, 1024)
-  assert.equal(HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT, 768)
+  assert.equal(HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH, 1448)
+  assert.equal(HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT, 1086)
   assert.deepEqual(Object.keys(HOUSE_INTERIOR_PIXEL_PALETTE).sort(), [
     'blue',
     'coral',

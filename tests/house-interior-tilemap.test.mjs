@@ -57,8 +57,8 @@ test('renders a code-native pixel canvas instead of a background image', () => {
   const html = renderToStaticMarkup(createElement(HouseInteriorTilemap))
 
   assert.match(html, /class="house-interior-pixel-canvas"/)
-  assert.match(html, /width="1024"/)
-  assert.match(html, /height="768"/)
+  assert.match(html, /width="1448"/)
+  assert.match(html, /height="1086"/)
   assert.match(html, /data-pixel-width="256"/)
   assert.match(html, /data-pixel-height="192"/)
   assert.match(html, /data-pixel-scale="4"/)
@@ -113,6 +113,6 @@ test('draws fine source dots on a higher-resolution backing canvas', () => {
   drawPixelScene(context)
 
   assert.deepEqual(transforms[0], [1, 0, 0, 1, 0, 0])
-  assert.equal(HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH, 1024)
-  assert.equal(HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT, 768)
+  assert.equal(HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH, 1448)
+  assert.equal(HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT, 1086)
 })
