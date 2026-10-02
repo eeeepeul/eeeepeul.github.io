@@ -207,6 +207,7 @@ test('uses the supplied shoe silhouette for the preview and shoe swatches', () =
     assert.match(sidebar, new RegExp(`--shoe-image:url\\(/media/custom-shoe-0${index}\\.png\\)`))
   }
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-shoe\s*\{[^}]*mask-image:\s*var\(--character-shoe-image\)/s)
+  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-shoe\s*\{[^}]*mask-position:\s*center top;/s)
   assert.match(GLOBAL_STYLES, /\.pixel-shoe-swatch::before\s*\{[^}]*mask-image:\s*var\(--shoe-image\)/s)
 })
 
