@@ -362,7 +362,7 @@ function PixelCustomRow({ section, selectedIndex, onSelect }) {
             },
             isExpression
               ? createElement('img', {
-                  className: 'pixel-expression-shape',
+                  className: `pixel-expression-shape${itemIndex === 5 ? ' pixel-expression-shape-compact' : ''}`,
                   src: assetPath(`media/expression-${String(itemIndex + 1).padStart(2, '0')}.png`),
                   alt: '',
                   draggable: false,

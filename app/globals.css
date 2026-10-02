@@ -4765,6 +4765,10 @@ button:focus-visible,
   -webkit-user-drag: none;
 }
 
+.pixel-expression-shape.pixel-expression-shape-compact {
+  max-height: 32px;
+}
+
 .pixel-custom-row[data-custom-label='성냥색'] .pixel-custom-swatch {
   background: var(--match-tone, #ededed);
 }

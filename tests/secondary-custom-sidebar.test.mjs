@@ -49,7 +49,7 @@ test('uses the requested flame color swatches in order', () => {
 
 test('renders the six supplied expression artworks in order', () => {
   const html = renderToStaticMarkup(createElement(CustomSidebarContent))
-  const expressionSources = [...html.matchAll(/class="pixel-expression-shape" src="([^"]+)"/g)].map(
+  const expressionSources = [...html.matchAll(/class="pixel-expression-shape[^"]*" src="([^"]+)"/g)].map(
     ([, source]) => source
   )
 
@@ -63,6 +63,20 @@ test('renders the six supplied expression artworks in order', () => {
   ])
   assert.match(GLOBAL_STYLES, /\.pixel-expression-swatch\s*\{[^}]*display:\s*grid/s)
   assert.match(GLOBAL_STYLES, /\.pixel-expression-shape\s*\{[^}]*object-fit:\s*contain/s)
+})
+
+test('shrinks only the last expression artwork inside its selection button', () => {
+  const html = renderToStaticMarkup(createElement(CustomSidebarContent))
+
+  assert.match(
+    html,
+    /class="pixel-expression-shape pixel-expression-shape-compact" src="\/media\/expression-06\.png"/
+  )
+  assert.match(html, /class="pixel-expression-shape" src="\/media\/expression-05\.png"/)
+  assert.match(
+    GLOBAL_STYLES,
+    /\.pixel-expression-shape\.pixel-expression-shape-compact\s*\{[^}]*max-height:\s*32px/s
+  )
 })
 
 test('keeps the input disabled until all custom sections are selected', async () => {
