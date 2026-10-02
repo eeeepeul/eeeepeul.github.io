@@ -29,6 +29,7 @@ test('exposes a bounded pixel canvas and approved palette', () => {
   assert.ok(Object.isFrozen(HOUSE_INTERIOR_PIXEL_RUNS))
   assert.ok(Object.isFrozen(HOUSE_INTERIOR_PIXEL_SCENE))
   assert.ok(HOUSE_INTERIOR_WALL_THICKNESS > 0)
+  assert.ok(HOUSE_INTERIOR_WALL_THICKNESS <= 1)
   assert.ok(HOUSE_INTERIOR_WALL_THICKNESS < 16)
 })
 

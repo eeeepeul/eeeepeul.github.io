@@ -3,7 +3,11 @@ import assert from 'node:assert/strict'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 
-import { HouseInteriorTilemap } from '../components/site/HouseInteriorTilemap.mjs'
+import { HouseInteriorTilemap, drawPixelScene } from '../components/site/HouseInteriorTilemap.mjs'
+import {
+  HOUSE_INTERIOR_PIXEL_PALETTE,
+  HOUSE_INTERIOR_PIXEL_RUNS,
+} from '../lib/house-interior-pixel-art.mjs'
 
 test('renders a data-driven 64 by 48 tilemap with stable layer names', () => {
   const html = renderToStaticMarkup(createElement(HouseInteriorTilemap))
@@ -63,4 +67,27 @@ test('keeps collision metadata hidden beside the canvas', () => {
   assert.match(html, /data-layer="walls"/)
   assert.match(html, /data-layer="collision"[^>]*hidden/)
   assert.match(html, /data-layer="spawn_points"[^>]*hidden/)
+})
+
+test('does not redraw source blue pixels inside logical wall cells', () => {
+  const rectangles = []
+  const context = {
+    imageSmoothingEnabled: true,
+    fillStyle: '',
+    clearRect() {},
+    fillRect(x, y, width, height) {
+      rectangles.push({ color: this.fillStyle, x, y, width, height })
+    },
+  }
+
+  drawPixelScene(context)
+
+  const sourceBluePixels = HOUSE_INTERIOR_PIXEL_RUNS
+    .filter(({ color }) => color === 'blue')
+    .reduce((total, { length }) => total + length, 0)
+  const paintedSourceBluePixels = rectangles
+    .filter(({ color }) => color === HOUSE_INTERIOR_PIXEL_PALETTE.blue)
+    .reduce((total, { width, height }) => total + width * height, 0)
+
+  assert.ok(paintedSourceBluePixels < sourceBluePixels)
 })

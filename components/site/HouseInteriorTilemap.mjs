@@ -110,6 +110,56 @@ const renderSpawnLayer = (map) =>
 
 const hasWallCell = (wallCells, x, y) => wallCells.has(`${x}:${y}`)
 
+const createWallPixelMask = (map) => {
+  const scaleX = HOUSE_INTERIOR_PIXEL_WIDTH / map.width
+  const scaleY = HOUSE_INTERIOR_PIXEL_HEIGHT / map.height
+  const paddingX = Math.ceil(scaleX)
+  const paddingY = Math.ceil(scaleY)
+  const mask = new Set()
+
+  ;(map.layers.walls ?? []).forEach(({ x, y }) => {
+    const left = Math.max(0, Math.floor(x * scaleX - paddingX))
+    const top = Math.max(0, Math.floor(y * scaleY - paddingY))
+    const right = Math.min(
+      HOUSE_INTERIOR_PIXEL_WIDTH,
+      Math.ceil((x + 1) * scaleX + paddingX)
+    )
+    const bottom = Math.min(
+      HOUSE_INTERIOR_PIXEL_HEIGHT,
+      Math.ceil((y + 1) * scaleY + paddingY)
+    )
+    for (let pixelY = top; pixelY < bottom; pixelY += 1) {
+      for (let pixelX = left; pixelX < right; pixelX += 1) {
+        mask.add(`${pixelX}:${pixelY}`)
+      }
+    }
+  })
+
+  return mask
+}
+
+const drawPixelRuns = (context, map) => {
+  const wallPixelMask = createWallPixelMask(map)
+  HOUSE_INTERIOR_PIXEL_RUNS.forEach(({ color, x, y, length }) => {
+    context.fillStyle = HOUSE_INTERIOR_PIXEL_PALETTE[color]
+    if (color !== 'blue') {
+      context.fillRect(x, y, length, 1)
+      return
+    }
+
+    let segmentStart = null
+    for (let offset = 0; offset <= length; offset += 1) {
+      const isMasked =
+        offset === length || wallPixelMask.has(`${x + offset}:${y}`)
+      if (!isMasked && segmentStart === null) segmentStart = offset
+      if (isMasked && segmentStart !== null) {
+        context.fillRect(x + segmentStart, y, offset - segmentStart, 1)
+        segmentStart = null
+      }
+    }
+  })
+}
+
 const drawWallSegments = (context, map) => {
   const scaleX = HOUSE_INTERIOR_PIXEL_WIDTH / map.width
   const scaleY = HOUSE_INTERIOR_PIXEL_HEIGHT / map.height
@@ -120,16 +170,37 @@ const drawWallSegments = (context, map) => {
   ;(map.layers.walls ?? []).forEach(({ x, y }) => {
     const left = x * scaleX
     const top = y * scaleY
-    if (!hasWallCell(wallCells, x, y - 1)) {
+    const hasAbove = hasWallCell(wallCells, x, y - 1)
+    const hasBelow = hasWallCell(wallCells, x, y + 1)
+    const hasLeft = hasWallCell(wallCells, x - 1, y)
+    const hasRight = hasWallCell(wallCells, x + 1, y)
+    const isHorizontalSegment = (hasLeft || hasRight) && !hasAbove && !hasBelow
+    const isVerticalSegment = (hasAbove || hasBelow) && !hasLeft && !hasRight
+
+    if (isHorizontalSegment) {
+      context.fillRect(left, top, scaleX, thickness)
+      if (!hasLeft) context.fillRect(left, top, thickness, scaleY)
+      if (!hasRight) context.fillRect((x + 1) * scaleX - thickness, top, thickness, scaleY)
+      return
+    }
+
+    if (isVerticalSegment) {
+      context.fillRect(left, top, thickness, scaleY)
+      if (!hasAbove) context.fillRect(left, top, scaleX, thickness)
+      if (!hasBelow) context.fillRect(left, (y + 1) * scaleY - thickness, scaleX, thickness)
+      return
+    }
+
+    if (!hasAbove) {
       context.fillRect(left, top, scaleX, thickness)
     }
-    if (!hasWallCell(wallCells, x, y + 1)) {
+    if (!hasBelow) {
       context.fillRect(left, (y + 1) * scaleY - thickness, scaleX, thickness)
     }
-    if (!hasWallCell(wallCells, x - 1, y)) {
+    if (!hasLeft) {
       context.fillRect(left, top, thickness, scaleY)
     }
-    if (!hasWallCell(wallCells, x + 1, y)) {
+    if (!hasRight) {
       context.fillRect((x + 1) * scaleX - thickness, top, thickness, scaleY)
     }
   })
@@ -141,10 +212,7 @@ export const drawPixelScene = (context, map = HOUSE_INTERIOR_MAP) => {
   context.fillStyle = HOUSE_INTERIOR_PIXEL_PALETTE.white
   context.fillRect(0, 0, HOUSE_INTERIOR_PIXEL_WIDTH, HOUSE_INTERIOR_PIXEL_HEIGHT)
 
-  HOUSE_INTERIOR_PIXEL_RUNS.forEach(({ color, x, y, length }) => {
-    context.fillStyle = HOUSE_INTERIOR_PIXEL_PALETTE[color]
-    context.fillRect(x, y, length, 1)
-  })
+  drawPixelRuns(context, map)
 
   drawWallSegments(context, map)
 }
