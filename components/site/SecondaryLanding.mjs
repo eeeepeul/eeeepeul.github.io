@@ -5,6 +5,7 @@ import { assetPath } from '../../lib/asset-path.mjs'
 import {
   CHARACTER_WORLD_ID,
   SHARED_CHARACTER_EVENT,
+  createRandomCharacterCustomization,
   normalizeCharacterCustomization,
   startSharedCharacterFeed,
 } from '../../lib/shared-characters.mjs'
@@ -36,6 +37,18 @@ export function SecondaryLanding() {
   useEffect(() => {
     const view = new URLSearchParams(window.location.search).get('view')
     setIsCustomView(view === 'custom')
+  }, [])
+
+  useEffect(() => {
+    setCharacterCustomizations((currentCustomizations) => {
+      const nextCustomizations = { ...currentCustomizations }
+      INITIAL_CHARACTER_IDS.forEach((id) => {
+        if (!nextCustomizations[id]) {
+          nextCustomizations[id] = createRandomCharacterCustomization()
+        }
+      })
+      return nextCustomizations
+    })
   }, [])
 
   useEffect(() => {

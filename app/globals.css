@@ -811,16 +811,39 @@ button:focus-visible,
   -webkit-user-drag: none;
 }
 
+.wandering-character-expression,
+.wandering-character-expression-fill {
+  position: absolute;
+  top: 1%;
+  left: 50%;
+  z-index: 3;
+  display: block;
+  width: 33%;
+  height: 20%;
+  transform: translateX(-50%);
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.wandering-character-expression.wandering-character-expression-compact {
+  top: 2%;
+  width: 26%;
+  height: 16%;
+}
+
 .wandering-character-flame {
   position: absolute;
   bottom: 69%;
   left: 50%;
   z-index: 0;
   display: block;
-  width: 68%;
+  width: 125%;
   height: 58%;
-  max-width: 68%;
-  transform: translateX(-50%);
+  max-width: 125%;
+  transform: translateX(calc(-50% + var(--character-flame-offset-x, 0%)));
   background: var(--character-flame-color, #00b9f6);
   -webkit-mask-image: var(--character-flame-image);
   mask-image: var(--character-flame-image);
@@ -838,12 +861,12 @@ button:focus-visible,
 .wandering-character-shoe {
   position: absolute;
   left: 50%;
-  bottom: -26%;
+  bottom: -20%;
   z-index: 2;
-  width: 73%;
+  width: var(--character-shoe-width, 73%);
   height: 31%;
   display: block;
-  transform: translateX(-50%);
+  transform: translateX(calc(-50% + var(--character-shoe-offset-x, 0%)));
   background: var(--character-shoe-tone, #5f5f5f);
   -webkit-mask-image: var(--character-shoe-image);
   mask-image: var(--character-shoe-image);
@@ -4376,7 +4399,7 @@ button:focus-visible,
   width: 60px;
   height: 60px;
   max-width: 60px;
-  transform: translateX(-50%);
+  transform: translateX(calc(-50% + var(--character-flame-offset-x, 0%)));
   background: var(--character-flame-color, #00b9f6);
   -webkit-mask-image: var(--character-flame-image);
   mask-image: var(--character-flame-image);
@@ -4450,8 +4473,8 @@ button:focus-visible,
 
 .pixel-sidebar-character-expression.pixel-sidebar-expression-compact {
   top: 2px;
-  width: 14px;
-  height: 18px;
+  width: 12px;
+  height: 16px;
 }
 
 .pixel-sidebar-character-expression-fill {
@@ -4473,12 +4496,12 @@ button:focus-visible,
 .pixel-sidebar-character-shoe {
   position: absolute;
   left: 50%;
-  bottom: -27px;
+  bottom: -23px;
   z-index: 3;
-  width: 35px;
+  width: var(--character-shoe-width, 73%);
   height: 31px;
   display: block;
-  transform: translateX(-50%);
+  transform: translateX(calc(-50% + var(--character-shoe-offset-x, 0%)));
   background: var(--shoe-tone, #5f5f5f);
   -webkit-mask-image: var(--character-shoe-image);
   mask-image: var(--character-shoe-image);
@@ -4541,8 +4564,13 @@ button:focus-visible,
 
 .pixel-sidebar-avatar-expression.pixel-sidebar-expression-compact {
   top: 15px;
-  width: 20px;
-  height: 18px;
+  width: 18px;
+  height: 16px;
+}
+
+.pixel-sidebar-avatar-expression.pixel-sidebar-expression-compact.pixel-sidebar-expression-angry {
+  width: 23px;
+  height: 22px;
 }
 
 .pixel-sidebar-avatar-expression-fill {
@@ -4602,7 +4630,7 @@ button:focus-visible,
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  padding-bottom: 53px;
+  padding-bottom: 0;
   scrollbar-width: thin;
   scrollbar-color: #d4d4d4 transparent;
 }
@@ -4761,12 +4789,9 @@ button:focus-visible,
 }
 
 .pixel-sidebar-input {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 3;
-  flex: none;
+  position: relative;
+  z-index: 1;
+  flex: 0 0 43px;
   width: 100%;
   height: 43px;
   margin: 0;
@@ -4798,7 +4823,7 @@ button:focus-visible,
   color: #aaa;
   background: #f1f1f1;
   cursor: not-allowed;
-  opacity: 0.75;
+  opacity: 1;
 }
 
 

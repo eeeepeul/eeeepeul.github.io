@@ -3,11 +3,14 @@
 import { createElement, useState } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
 import {
+  FLAME_ATTACH_OFFSETS,
   FLAME_COLOR_TONES,
   MATCH_BODY_TONE,
   MATCH_COLOR_TONES,
+  SHOE_ATTACH_OFFSETS,
   SHOE_IMAGES,
   SHOE_TONES,
+  SHOE_WIDTHS,
 } from '../../lib/character-customization.mjs'
 
 const SPOTS = [
@@ -33,6 +36,29 @@ const CUSTOM_SECTIONS = [
 export function getCustomWindowStart(itemCount, page) {
   const maxStart = Math.max(0, itemCount - CUSTOM_PAGE_SIZE)
   return Math.min(maxStart, Math.max(0, page) * CUSTOM_PAGE_SIZE)
+}
+
+export function getCustomRowLayout(itemCount, page) {
+  const safeItemCount = Math.max(0, Number(itemCount) || 0)
+  const visibleItemCount = Math.min(CUSTOM_PAGE_SIZE, safeItemCount)
+  const firstItemIndex = getCustomWindowStart(safeItemCount, page)
+  const gapWidth = Math.max(0, visibleItemCount - 1) * 9
+  const trackPercent = visibleItemCount ? (firstItemIndex / visibleItemCount) * 100 : 0
+  const trackGapOffset = visibleItemCount
+    ? firstItemIndex * 9 - (firstItemIndex / visibleItemCount) * gapWidth
+    : 0
+  const trackOffset = firstItemIndex
+    ? `calc(-${trackPercent}% - ${trackGapOffset}px)`
+    : '0%'
+
+  return {
+    firstItemIndex,
+    trackWidth: '100%',
+    trackOffset,
+    swatchBasis: visibleItemCount
+      ? `calc((100% - ${gapWidth}px) / ${visibleItemCount})`
+      : '0px',
+  }
 }
 
 export function hasCompleteCustomSelection(selection = {}) {
@@ -120,7 +146,8 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
   const expressionSrc = Number.isInteger(expressionIndex)
     ? assetPath(`media/expression-${String(expressionIndex + 1).padStart(2, '0')}.png`)
     : null
-  const expressionIsCompact = expressionIndex === 0
+  const expressionIsCompact = expressionIndex === 0 || expressionIndex === 4 || expressionIndex === 5
+  const expressionAvatarIsAngry = expressionIndex === 4
   const expressionFillSrc = expressionIndex === 1 ? assetPath('media/expression-02-fill.svg') : null
   const shoeTone = SHOE_TONES[Number.isInteger(shoeIndex) ? shoeIndex : 0]
   const shoeSrc = CUSTOM_SHOE_SRCS[Number.isInteger(shoeIndex) ? shoeIndex : 0]
@@ -156,6 +183,7 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
               style: {
                 '--character-flame-color': flameTone,
                 '--character-flame-image': `url(${flameShapeSrc})`,
+                '--character-flame-offset-x': FLAME_ATTACH_OFFSETS[flameShapeIndex] ?? '0%',
               },
             })
           : null,
@@ -194,7 +222,12 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
           ? createElement('i', {
               className: 'pixel-sidebar-character-shoe',
               'data-shoe-src': shoeSrc,
-              style: { '--character-shoe-image': `url(${shoeSrc})` },
+              'data-shoe-index': String(shoeIndex),
+              style: {
+                '--character-shoe-image': `url(${shoeSrc})`,
+                '--character-shoe-offset-x': SHOE_ATTACH_OFFSETS[shoeIndex] ?? '0%',
+                '--character-shoe-width': SHOE_WIDTHS[shoeIndex] ?? '73%',
+              },
             })
           : null
       ),
@@ -229,7 +262,7 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
           : null,
         expressionSrc
           ? createElement('img', {
-              className: `pixel-sidebar-avatar-expression${expressionIsCompact ? ' pixel-sidebar-expression-compact' : ''}`,
+          className: `pixel-sidebar-avatar-expression${expressionIsCompact ? ' pixel-sidebar-expression-compact' : ''}${expressionAvatarIsAngry ? ' pixel-sidebar-expression-angry' : ''}`,
               src: expressionSrc,
               'data-expression-src': expressionSrc,
               alt: '',
@@ -245,10 +278,10 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
 function PixelCustomRow({ section, selectedIndex, onSelect }) {
   const [page, setPage] = useState(0)
   const pageCount = Math.ceil(section.itemCount / CUSTOM_PAGE_SIZE)
-  const firstItemIndex = getCustomWindowStart(section.itemCount, page)
-  const trackWidth = `${(section.itemCount / CUSTOM_PAGE_SIZE) * 100}%`
-  const trackOffset = `${(firstItemIndex / section.itemCount) * 100}%`
-  const swatchBasis = `calc((100% - ${(section.itemCount - 1) * 9}px) / ${section.itemCount})`
+  const { firstItemIndex, trackWidth, trackOffset, swatchBasis } = getCustomRowLayout(
+    section.itemCount,
+    page
+  )
 
   return createElement(
     'section',
@@ -300,7 +333,7 @@ function PixelCustomRow({ section, selectedIndex, onSelect }) {
         {
           className: 'pixel-custom-swatch-track',
           'data-page': page,
-          style: { width: trackWidth, transform: `translate3d(-${trackOffset}, 0, 0)` },
+          style: { width: trackWidth, transform: `translate3d(${trackOffset}, 0, 0)` },
         },
         ...Array.from({ length: section.itemCount }, (_, itemIndex) => {
           const isSelected = selectedIndex === itemIndex

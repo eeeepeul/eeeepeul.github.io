@@ -3,7 +3,11 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { CustomSidebarContent, PixelSidebarPreview } from '../components/site/CustomSidebarContent.mjs'
+import {
+  CustomSidebarContent,
+  PixelSidebarPreview,
+  getCustomRowLayout,
+} from '../components/site/CustomSidebarContent.mjs'
 
 const GLOBAL_STYLES = readFileSync(new URL('../app/globals.css', import.meta.url), 'utf8')
 
@@ -83,19 +87,58 @@ test('fits every flame shape inside its swatch without clipping the source artwo
   assert.match(GLOBAL_STYLES, /\.pixel-flame-shape\s*\{[^}]*max-height:\s*42px/s)
 })
 
+test('keeps four swatches visible when paging the five flame shapes', () => {
+  assert.deepEqual(getCustomRowLayout(5, 1), {
+    firstItemIndex: 1,
+    trackWidth: '100%',
+    trackOffset: 'calc(-25% - 2.25px)',
+    swatchBasis: 'calc((100% - 27px) / 4)',
+  })
+})
+
+test('pages six expressions by one full card-and-gap step per hidden card', () => {
+  assert.deepEqual(getCustomRowLayout(6, 1), {
+    firstItemIndex: 2,
+    trackWidth: '100%',
+    trackOffset: 'calc(-50% - 4.5px)',
+    swatchBasis: 'calc((100% - 27px) / 4)',
+  })
+})
+
+test('keeps the input button out of the scrollable swatch rows', () => {
+  const inputRule = GLOBAL_STYLES.match(/\.pixel-sidebar-input\s*\{([^}]*)\}/s)?.[1] ?? ''
+  const disabledInputRule = GLOBAL_STYLES.match(/\.pixel-sidebar-input:disabled\s*\{([^}]*)\}/s)?.[1] ?? ''
+
+  assert.doesNotMatch(inputRule, /position:\s*absolute/)
+  assert.match(inputRule, /position:\s*(?:relative|static)/)
+  assert.match(disabledInputRule, /opacity:\s*1(?:\.0+)?\b/)
+})
+
+test('removes the old overlay spacer below the last swatch row', () => {
+  const listRule = GLOBAL_STYLES.match(/\.pixel-sidebar-custom-list\s*\{([^}]*)\}/s)?.[1] ?? ''
+
+  assert.match(listRule, /padding-bottom:\s*0(?:px)?\b/)
+  assert.doesNotMatch(listRule, /padding-bottom:\s*53px/)
+})
+
 test('puts the selected flame artwork behind the preview head', () => {
   const html = renderToStaticMarkup(createElement(PixelSidebarPreview, { flameShapeIndex: 2 }))
+  const wideSwirlHtml = renderToStaticMarkup(createElement(PixelSidebarPreview, { flameShapeIndex: 3 }))
   const flameRule = GLOBAL_STYLES.match(/\.pixel-sidebar-character-flame\s*\{([^}]*)\}/s)?.[1] ?? ''
 
   assert.match(html, /class="pixel-sidebar-character-flame"/)
   assert.match(html, /data-flame-src="\/media\/flame-shape-03\.png"/)
   assert.match(html, /--character-flame-color:#00B9F6/)
+  assert.match(html, /--character-flame-offset-x:0%/)
+  assert.match(wideSwirlHtml, /data-flame-src="\/media\/flame-shape-04\.png"/)
+  assert.match(wideSwirlHtml, /--character-flame-offset-x:20%/)
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-flame\s*\{[^}]*position:\s*absolute/s)
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-flame\s*\{[^}]*z-index:\s*0/s)
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-flame\s*\{[^}]*height:\s*60px/s)
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-flame\s*\{[^}]*max-width:\s*60px/s)
   assert.match(flameRule, /mask-image:/)
   assert.match(flameRule, /bottom:\s*68px/)
+  assert.match(flameRule, /transform:\s*translateX\(calc\(-50%\s*\+\s*var\(--character-flame-offset-x/)
   assert.doesNotMatch(flameRule, /top:/)
 })
 
@@ -127,8 +170,8 @@ test('renders the approved slender match body with a separate rounded head layer
 test('puts the selected expression artwork inside both match heads', () => {
   const html = renderToStaticMarkup(createElement(PixelSidebarPreview, { expressionIndex: 4 }))
 
-  assert.match(html, /class="pixel-sidebar-character-expression"[^>]*data-expression-src="\/media\/expression-05\.png"/)
-  assert.match(html, /class="pixel-sidebar-avatar-expression"[^>]*data-expression-src="\/media\/expression-05\.png"/)
+  assert.match(html, /class="pixel-sidebar-character-expression[^\"]*"[^>]*data-expression-src="\/media\/expression-05\.png"/)
+  assert.match(html, /class="pixel-sidebar-avatar-expression[^\"]*"[^>]*data-expression-src="\/media\/expression-05\.png"/)
   assert.match(
     GLOBAL_STYLES,
     /\.pixel-sidebar-character-expression\s*\{[^}]*position:\s*absolute;[^}]*top:\s*1px;[^}]*z-index:\s*3;[^}]*width:\s*16px;[^}]*height:\s*20px;[^}]*object-fit:\s*contain/s
@@ -153,18 +196,28 @@ test('keeps the round-eyed expression uncut and fills its eye interiors white', 
 
 test('shrinks only the first expression inside the match heads', () => {
   const compactHtml = renderToStaticMarkup(createElement(PixelSidebarPreview, { expressionIndex: 0 }))
-  const regularHtml = renderToStaticMarkup(createElement(PixelSidebarPreview, { expressionIndex: 4 }))
+  const compactAngryHtml = renderToStaticMarkup(createElement(PixelSidebarPreview, { expressionIndex: 4 }))
+  const compactSmileHtml = renderToStaticMarkup(createElement(PixelSidebarPreview, { expressionIndex: 5 }))
+  const regularHtml = renderToStaticMarkup(createElement(PixelSidebarPreview, { expressionIndex: 3 }))
 
   assert.match(compactHtml, /class="pixel-sidebar-character-expression pixel-sidebar-expression-compact"/)
   assert.match(compactHtml, /class="pixel-sidebar-avatar-expression pixel-sidebar-expression-compact"/)
+  assert.match(compactAngryHtml, /class="pixel-sidebar-character-expression pixel-sidebar-expression-compact"[^>]*data-expression-src="\/media\/expression-05\.png"/)
+  assert.match(compactAngryHtml, /class="pixel-sidebar-avatar-expression pixel-sidebar-expression-compact pixel-sidebar-expression-angry"[^>]*data-expression-src="\/media\/expression-05\.png"/)
+  assert.match(compactSmileHtml, /class="pixel-sidebar-character-expression pixel-sidebar-expression-compact"[^>]*data-expression-src="\/media\/expression-06\.png"/)
+  assert.match(compactSmileHtml, /class="pixel-sidebar-avatar-expression pixel-sidebar-expression-compact"[^>]*data-expression-src="\/media\/expression-06\.png"/)
   assert.doesNotMatch(regularHtml, /pixel-sidebar-expression-compact/)
   assert.match(
     GLOBAL_STYLES,
-    /\.pixel-sidebar-character-expression\.pixel-sidebar-expression-compact\s*\{[^}]*top:\s*2px;[^}]*width:\s*14px;[^}]*height:\s*18px/s
+    /\.pixel-sidebar-character-expression\.pixel-sidebar-expression-compact\s*\{[^}]*top:\s*2px;[^}]*width:\s*12px;[^}]*height:\s*16px/s
   )
   assert.match(
     GLOBAL_STYLES,
-    /\.pixel-sidebar-avatar-expression\.pixel-sidebar-expression-compact\s*\{[^}]*top:\s*15px;[^}]*width:\s*20px;[^}]*height:\s*18px/s
+    /\.pixel-sidebar-avatar-expression\.pixel-sidebar-expression-compact\s*\{[^}]*top:\s*15px;[^}]*width:\s*18px;[^}]*height:\s*16px/s
+  )
+  assert.match(
+    GLOBAL_STYLES,
+    /\.pixel-sidebar-avatar-expression\.pixel-sidebar-expression-compact\.pixel-sidebar-expression-angry\s*\{[^}]*width:\s*23px;[^}]*height:\s*22px/s
   )
 })
 
@@ -198,16 +251,23 @@ test('enlarges the current match head in the avatar card with the selected head 
 
 test('uses the supplied shoe silhouette for the preview and shoe swatches', () => {
   const html = renderToStaticMarkup(createElement(PixelSidebarPreview, { shoeIndex: 2 }))
+  const greenHtml = renderToStaticMarkup(createElement(PixelSidebarPreview, { shoeIndex: 1 }))
   const sidebar = renderToStaticMarkup(createElement(CustomSidebarContent))
 
   assert.match(html, /class="pixel-sidebar-character-shoe"/)
   assert.match(html, /data-shoe-src="\/media\/custom-shoe-03\.png"/)
+  assert.match(html, /data-shoe-index="2"/)
+  assert.match(html, /--character-shoe-offset-x:-16%/)
+  assert.match(html, /--character-shoe-width:60%/)
+  assert.match(greenHtml, /--character-shoe-offset-x:-16%/)
+  assert.match(greenHtml, /--character-shoe-width:51%/)
   assert.match(html, /--character-shoe-image:url\(\/media\/custom-shoe-03\.png\)/)
   for (const index of [1, 2, 3, 4]) {
     assert.match(sidebar, new RegExp(`--shoe-image:url\\(/media/custom-shoe-0${index}\\.png\\)`))
   }
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-shoe\s*\{[^}]*mask-image:\s*var\(--character-shoe-image\)/s)
   assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-shoe\s*\{[^}]*mask-position:\s*center top;/s)
+  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-shoe\s*\{[^}]*transform:\s*translateX\(calc\(-50%\s*\+\s*var\(--character-shoe-offset-x/s)
   assert.match(GLOBAL_STYLES, /\.pixel-shoe-swatch::before\s*\{[^}]*mask-image:\s*var\(--shoe-image\)/s)
 })
 
@@ -221,7 +281,7 @@ test('renders each supplied shoe tone in the matching shoe swatch', () => {
   }
   assert.match(
     GLOBAL_STYLES,
-    /\.pixel-sidebar-character-shoe\s*\{[^}]*bottom:\s*-27px;[^}]*z-index:\s*3/s
+    /\.pixel-sidebar-character-shoe\s*\{[^}]*bottom:\s*-23px;[^}]*z-index:\s*3/s
   )
-  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-shoe\s*\{[^}]*width:\s*35px;[^}]*height:\s*31px/s)
+  assert.match(GLOBAL_STYLES, /\.pixel-sidebar-character-shoe\s*\{[^}]*width:\s*var\(--character-shoe-width,\s*73%\);[^}]*height:\s*31px/s)
 })

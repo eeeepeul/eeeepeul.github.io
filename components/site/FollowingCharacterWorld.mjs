@@ -3,10 +3,13 @@
 import { createElement, useEffect, useRef } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
 import {
+  FLAME_ATTACH_OFFSETS,
   FLAME_COLOR_TONES,
   MATCH_COLOR_TONES,
+  SHOE_ATTACH_OFFSETS,
   SHOE_IMAGES,
   SHOE_TONES,
+  SHOE_WIDTHS,
 } from '../../lib/character-customization.mjs'
 import { HOUSE_INTERIOR_MAP } from '../../lib/house-interior-map.mjs'
 import {
@@ -134,15 +137,17 @@ export function FollowingCharacterWorld({
     characterIds.map((characterId) => {
       const customization = characterCustomizations[characterId]
       const matchColorIndex = customization?.['match-color']
+      const expressionIndex = customization?.expression
       const flameColorIndex = customization?.['flame-color']
       const flameShapeIndex = customization?.['flame-shape']
       const shoeIndex = customization?.shoes
       const hasMatchColor = Number.isInteger(matchColorIndex)
+      const hasExpression = Number.isInteger(expressionIndex)
       const hasFlameShape = Number.isInteger(flameShapeIndex)
       const hasFlameColor = Number.isInteger(flameColorIndex)
       const hasShoe = Number.isInteger(shoeIndex)
       const shoeSrc = CUSTOM_SHOE_SRCS[hasShoe ? shoeIndex : 0]
-      const isCustomized = hasMatchColor || hasFlameShape || hasShoe
+      const isCustomized = hasMatchColor || hasExpression || hasFlameShape || hasShoe
       const style = isCustomized
         ? {
             transform: 'translate3d(-50%, -50%, 0)',
@@ -153,6 +158,11 @@ export function FollowingCharacterWorld({
       const flameSrc = hasFlameShape
         ? assetPath(`media/flame-shape-${String(flameShapeIndex + 1).padStart(2, '0')}.png`)
         : null
+      const expressionSrc = hasExpression
+        ? assetPath(`media/expression-${String(expressionIndex + 1).padStart(2, '0')}.png`)
+        : null
+      const expressionIsCompact = expressionIndex === 0 || expressionIndex === 4 || expressionIndex === 5
+      const expressionFillSrc = expressionIndex === 1 ? assetPath('media/expression-02-fill.svg') : null
       const flame = flameSrc
         ? createElement('span', {
             className: 'wandering-character-flame',
@@ -162,7 +172,26 @@ export function FollowingCharacterWorld({
               '--character-flame-color':
                 FLAME_COLOR_TONES[hasFlameColor ? flameColorIndex : 0] ?? FLAME_COLOR_TONES[0],
               '--character-flame-image': `url(${flameSrc})`,
+              '--character-flame-offset-x': FLAME_ATTACH_OFFSETS[flameShapeIndex] ?? '0%',
             },
+          })
+        : null
+      const expressionFill = expressionFillSrc
+        ? createElement('img', {
+            className: 'wandering-character-expression-fill',
+            src: expressionFillSrc,
+            'data-expression-fill-src': expressionFillSrc,
+            alt: '',
+            draggable: false,
+          })
+        : null
+      const expression = expressionSrc
+        ? createElement('img', {
+            className: `wandering-character-expression${expressionIsCompact ? ' wandering-character-expression-compact' : ''}`,
+            src: expressionSrc,
+            'data-expression-src': expressionSrc,
+            alt: '',
+            draggable: false,
           })
         : null
 
@@ -210,12 +239,19 @@ export function FollowingCharacterWorld({
         flame,
         image,
         head,
+        expressionFill,
+        expression,
         hasShoe
           ? createElement('i', {
               className: 'wandering-character-shoe',
               'aria-hidden': 'true',
               'data-shoe-src': shoeSrc,
-              style: { '--character-shoe-image': `url(${shoeSrc})` },
+              'data-shoe-index': String(shoeIndex),
+              style: {
+                '--character-shoe-image': `url(${shoeSrc})`,
+                '--character-shoe-offset-x': SHOE_ATTACH_OFFSETS[shoeIndex] ?? '0%',
+                '--character-shoe-width': SHOE_WIDTHS[shoeIndex] ?? '73%',
+              },
             })
           : null
       )

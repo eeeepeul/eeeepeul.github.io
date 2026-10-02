@@ -17,7 +17,7 @@ const VALID_ROW = {
   match_color: 2,
   expression: 4,
   flame_color: 1,
-  flame_shape: 5,
+  flame_shape: 4,
   shoe: 3,
 }
 
@@ -121,7 +121,7 @@ test('normalizes a valid shared character row into the application customization
       'match-color': 2,
       expression: 4,
       'flame-color': 1,
-      'flame-shape': 5,
+      'flame-shape': 4,
       shoes: 3,
     },
   })
@@ -148,7 +148,7 @@ test('records only validated selections and leaves created_at to the server', as
     'match-color': 2,
     expression: 4,
     'flame-color': 1,
-    'flame-shape': 5,
+    'flame-shape': 4,
     shoes: 3,
   })
 
@@ -160,7 +160,7 @@ test('records only validated selections and leaves created_at to the server', as
         match_color: 2,
         expression: 4,
         flame_color: 1,
-        flame_shape: 5,
+        flame_shape: 4,
         shoe: 3,
       },
     },
