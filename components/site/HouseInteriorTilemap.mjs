@@ -7,8 +7,11 @@ import {
 } from '../../lib/house-interior-map.mjs'
 import {
   HOUSE_INTERIOR_PIXEL_HEIGHT,
+  HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT,
   HOUSE_INTERIOR_PIXEL_PALETTE,
   HOUSE_INTERIOR_PIXEL_RUNS,
+  HOUSE_INTERIOR_PIXEL_SCALE,
+  HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH,
   HOUSE_INTERIOR_PIXEL_WIDTH,
   HOUSE_INTERIOR_WALL_THICKNESS,
 } from '../../lib/house-interior-pixel-art.mjs'
@@ -111,8 +114,8 @@ const renderSpawnLayer = (map) =>
 const hasWallCell = (wallCells, x, y) => wallCells.has(`${x}:${y}`)
 
 const createWallPixelMask = (map) => {
-  const scaleX = HOUSE_INTERIOR_PIXEL_WIDTH / map.width
-  const scaleY = HOUSE_INTERIOR_PIXEL_HEIGHT / map.height
+  const scaleX = HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH / map.width
+  const scaleY = HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT / map.height
   const paddingX = Math.ceil(scaleX)
   const paddingY = Math.ceil(scaleY)
   const mask = new Set()
@@ -121,11 +124,11 @@ const createWallPixelMask = (map) => {
     const left = Math.max(0, Math.floor(x * scaleX - paddingX))
     const top = Math.max(0, Math.floor(y * scaleY - paddingY))
     const right = Math.min(
-      HOUSE_INTERIOR_PIXEL_WIDTH,
+      HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH,
       Math.ceil((x + 1) * scaleX + paddingX)
     )
     const bottom = Math.min(
-      HOUSE_INTERIOR_PIXEL_HEIGHT,
+      HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT,
       Math.ceil((y + 1) * scaleY + paddingY)
     )
     for (let pixelY = top; pixelY < bottom; pixelY += 1) {
@@ -161,8 +164,8 @@ const drawPixelRuns = (context, map) => {
 }
 
 const drawWallSegments = (context, map) => {
-  const scaleX = HOUSE_INTERIOR_PIXEL_WIDTH / map.width
-  const scaleY = HOUSE_INTERIOR_PIXEL_HEIGHT / map.height
+  const scaleX = HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH / map.width
+  const scaleY = HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT / map.height
   const wallCells = new Set((map.layers.walls ?? []).map(({ x, y }) => `${x}:${y}`))
   const thickness = HOUSE_INTERIOR_WALL_THICKNESS
 
@@ -207,10 +210,11 @@ const drawWallSegments = (context, map) => {
 }
 
 export const drawPixelScene = (context, map = HOUSE_INTERIOR_MAP) => {
+  context.setTransform(1, 0, 0, 1, 0, 0)
   context.imageSmoothingEnabled = false
-  context.clearRect(0, 0, HOUSE_INTERIOR_PIXEL_WIDTH, HOUSE_INTERIOR_PIXEL_HEIGHT)
+  context.clearRect(0, 0, HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH, HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT)
   context.fillStyle = HOUSE_INTERIOR_PIXEL_PALETTE.white
-  context.fillRect(0, 0, HOUSE_INTERIOR_PIXEL_WIDTH, HOUSE_INTERIOR_PIXEL_HEIGHT)
+  context.fillRect(0, 0, HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH, HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT)
 
   drawPixelRuns(context, map)
 
@@ -228,8 +232,8 @@ export function HouseInteriorTilemap({ map = HOUSE_INTERIOR_MAP }) {
     const draw = () => {
       const context = canvas.getContext('2d')
       if (!context) return
-      canvas.width = HOUSE_INTERIOR_PIXEL_WIDTH
-      canvas.height = HOUSE_INTERIOR_PIXEL_HEIGHT
+      canvas.width = HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH
+      canvas.height = HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT
       drawPixelScene(context, map)
       tilemap?.setAttribute('data-pixel-ready', 'true')
     }
@@ -265,10 +269,11 @@ export function HouseInteriorTilemap({ map = HOUSE_INTERIOR_MAP }) {
     createElement('canvas', {
       ref: canvasRef,
       className: 'house-interior-pixel-canvas',
-      width: HOUSE_INTERIOR_PIXEL_WIDTH,
-      height: HOUSE_INTERIOR_PIXEL_HEIGHT,
+      width: HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH,
+      height: HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT,
       'data-pixel-width': HOUSE_INTERIOR_PIXEL_WIDTH,
       'data-pixel-height': HOUSE_INTERIOR_PIXEL_HEIGHT,
+      'data-pixel-scale': HOUSE_INTERIOR_PIXEL_SCALE,
       draggable: false,
       'aria-hidden': 'true',
     }),

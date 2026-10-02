@@ -3,9 +3,12 @@ import assert from 'node:assert/strict'
 
 import {
   HOUSE_INTERIOR_PIXEL_HEIGHT,
+  HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT,
   HOUSE_INTERIOR_PIXEL_PALETTE,
   HOUSE_INTERIOR_PIXEL_RUNS,
+  HOUSE_INTERIOR_PIXEL_SCALE,
   HOUSE_INTERIOR_PIXEL_SCENE,
+  HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH,
   HOUSE_INTERIOR_PIXEL_WIDTH,
   HOUSE_INTERIOR_WALL_THICKNESS,
 } from '../lib/house-interior-pixel-art.mjs'
@@ -17,6 +20,8 @@ import {
 test('exposes a bounded pixel canvas and approved palette', () => {
   assert.equal(HOUSE_INTERIOR_PIXEL_WIDTH, 256)
   assert.equal(HOUSE_INTERIOR_PIXEL_HEIGHT, 192)
+  assert.equal(HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH, 1024)
+  assert.equal(HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT, 768)
   assert.deepEqual(Object.keys(HOUSE_INTERIOR_PIXEL_PALETTE).sort(), [
     'blue',
     'coral',
@@ -31,6 +36,8 @@ test('exposes a bounded pixel canvas and approved palette', () => {
   assert.ok(HOUSE_INTERIOR_WALL_THICKNESS > 0)
   assert.ok(HOUSE_INTERIOR_WALL_THICKNESS <= 1)
   assert.ok(HOUSE_INTERIOR_WALL_THICKNESS < 16)
+  assert.strictEqual(HOUSE_INTERIOR_PIXEL_SCALE, 4)
+  assert.ok(HOUSE_INTERIOR_PIXEL_RUNS.some((run) => run.x >= HOUSE_INTERIOR_PIXEL_WIDTH))
 })
 
 test('keeps every pixel run inside the canvas', () => {
@@ -39,8 +46,8 @@ test('keeps every pixel run inside the canvas', () => {
     assert.ok(Number.isInteger(run.x) && run.x >= 0)
     assert.ok(Number.isInteger(run.y) && run.y >= 0)
     assert.ok(Number.isInteger(run.length) && run.length > 0)
-    assert.ok(run.x + run.length <= HOUSE_INTERIOR_PIXEL_WIDTH)
-    assert.ok(run.y < HOUSE_INTERIOR_PIXEL_HEIGHT)
+    assert.ok(run.x + run.length <= HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH)
+    assert.ok(run.y < HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT)
   }
 })
 

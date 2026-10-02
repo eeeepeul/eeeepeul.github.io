@@ -7,6 +7,8 @@ import { HouseInteriorTilemap, drawPixelScene } from '../components/site/HouseIn
 import {
   HOUSE_INTERIOR_PIXEL_PALETTE,
   HOUSE_INTERIOR_PIXEL_RUNS,
+  HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT,
+  HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH,
 } from '../lib/house-interior-pixel-art.mjs'
 
 test('renders a data-driven 64 by 48 tilemap with stable layer names', () => {
@@ -55,8 +57,11 @@ test('renders a code-native pixel canvas instead of a background image', () => {
   const html = renderToStaticMarkup(createElement(HouseInteriorTilemap))
 
   assert.match(html, /class="house-interior-pixel-canvas"/)
+  assert.match(html, /width="1024"/)
+  assert.match(html, /height="768"/)
   assert.match(html, /data-pixel-width="256"/)
   assert.match(html, /data-pixel-height="192"/)
+  assert.match(html, /data-pixel-scale="4"/)
   assert.doesNotMatch(html, /house-interior-background-image/)
   assert.doesNotMatch(html, /\/media\/house-interior-plan(?:-hd)?\.png/)
 })
@@ -74,6 +79,7 @@ test('does not redraw source blue pixels inside logical wall cells', () => {
   const context = {
     imageSmoothingEnabled: true,
     fillStyle: '',
+    setTransform() {},
     clearRect() {},
     fillRect(x, y, width, height) {
       rectangles.push({ color: this.fillStyle, x, y, width, height })
@@ -90,4 +96,23 @@ test('does not redraw source blue pixels inside logical wall cells', () => {
     .reduce((total, { width, height }) => total + width * height, 0)
 
   assert.ok(paintedSourceBluePixels < sourceBluePixels)
+})
+
+test('draws fine source dots on a higher-resolution backing canvas', () => {
+  const transforms = []
+  const context = {
+    imageSmoothingEnabled: true,
+    fillStyle: '',
+    setTransform(...values) {
+      transforms.push(values)
+    },
+    clearRect() {},
+    fillRect() {},
+  }
+
+  drawPixelScene(context)
+
+  assert.deepEqual(transforms[0], [1, 0, 0, 1, 0, 0])
+  assert.equal(HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH, 1024)
+  assert.equal(HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT, 768)
 })
