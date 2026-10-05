@@ -4262,10 +4262,20 @@ button:focus-visible,
 
 /* Pixel-house sidebar reference. These selectors are intentionally scoped to
    the right panel so the existing house map and camera remain untouched. */
+.experience-shell:has(.pixel-custom-sidebar) .house-interior-camera-viewport {
+  container-type: size;
+}
+
+.experience-shell:has(.pixel-custom-sidebar) .house-interior-camera-world {
+  width: max(278.260869565cqi, 376.470588235cqb);
+  height: auto;
+  aspect-ratio: 4 / 3;
+}
+
 .color-panel:has(.pixel-custom-sidebar) {
   width: 319px;
   padding: 16px;
-  border-radius: 8px;
+  border-radius: 0;
   background: #fff;
   box-shadow: 0 3px 30px 0 rgba(0, 0, 0, 0.05);
 }
@@ -4294,7 +4304,7 @@ button:focus-visible,
   padding: 0;
   pointer-events: auto;
   background: #ededed;
-  border-radius: 6px 0 0 6px;
+  border-radius: 0;
 }
 
 .color-panel:has(.pixel-custom-sidebar) .sidebar-close-button .sidebar-toggle-image {
@@ -4363,7 +4373,7 @@ button:focus-visible,
   grid-template-rows: 30px minmax(0, 1fr);
   gap: 8px;
   background: #f0f0f0;
-  border-radius: 8px;
+  border-radius: 0;
 }
 
 .pixel-sidebar-question {
@@ -4377,7 +4387,7 @@ button:focus-visible,
   color: #a1a1a1;
   background: #fff;
   border: 1px solid #dedede;
-  border-radius: 5px;
+  border-radius: 0;
   font-size: 11px;
 }
 
@@ -4386,7 +4396,7 @@ button:focus-visible,
   width: 20px;
   height: 17px;
   background: #ececec;
-  border-radius: 3px;
+  border-radius: 0;
 }
 
 .pixel-sidebar-preview-frame {
@@ -4395,7 +4405,7 @@ button:focus-visible,
   overflow: hidden;
   background: #fff;
   border: 7px solid #fafafa;
-  border-radius: 8px;
+  border-radius: 0;
   box-shadow: inset 0 0 0 1px #e4e4e4;
 }
 
@@ -4405,7 +4415,7 @@ button:focus-visible,
 }
 
 .pixel-sidebar-character {
-  top: 50%;
+  top: calc(50% + 12px);
   left: 50%;
   width: 48px;
   height: 100px;
@@ -4545,7 +4555,7 @@ button:focus-visible,
   overflow: hidden;
   background: #f1f1f1;
   border: 1px solid #e2e2e2;
-  border-radius: 5px;
+  border-radius: 0;
 }
 
 .pixel-sidebar-avatar-face {
@@ -4566,6 +4576,27 @@ button:focus-visible,
   mask-repeat: no-repeat;
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
+}
+
+.pixel-sidebar-avatar-flame {
+  position: absolute;
+  top: 1px;
+  left: 50%;
+  z-index: 0;
+  display: block;
+  width: 39px;
+  height: 35px;
+  transform: translateX(calc(-50% + var(--avatar-flame-offset-x, 0%)));
+  background: var(--avatar-flame-color, #00b9f6);
+  -webkit-mask-image: var(--avatar-flame-image);
+  mask-image: var(--avatar-flame-image);
+  -webkit-mask-position: center bottom;
+  mask-position: center bottom;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  pointer-events: none;
 }
 
 .pixel-sidebar-avatar-expression {
@@ -4640,9 +4671,43 @@ button:focus-visible,
   place-items: center;
   color: #c9c9c9;
   background: #f1f1f1;
-  border-radius: 5px;
+  border-radius: 0;
   font-family: Georgia, serif;
   font-size: 17px;
+}
+
+.pixel-sidebar-tool-expression img {
+  display: block;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.pixel-sidebar-tool-colors {
+  background: linear-gradient(
+    90deg,
+    var(--tool-match-tone, #DBDCDC) 0 50%,
+    var(--tool-flame-tone, #00B9F6) 50% 100%
+  ) !important;
+}
+
+.pixel-sidebar-tool-shoes::before {
+  content: '';
+  display: block;
+  width: 23px;
+  height: 18px;
+  background: var(--tool-shoe-tone, #ED361E);
+  -webkit-mask-image: var(--tool-shoe-image);
+  mask-image: var(--tool-shoe-image);
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 }
 
 .pixel-sidebar-custom-list {
@@ -4679,7 +4744,7 @@ button:focus-visible,
   padding: 2px 5px;
   color: #c5c5c5;
   background: #f1f1f1;
-  border-radius: 3px;
+  border-radius: 0;
 }
 
 .pixel-custom-row-arrow {
@@ -4722,7 +4787,7 @@ button:focus-visible,
   cursor: pointer;
   background: #ededed;
   border: 1px solid #dfdfdf;
-  border-radius: 6px;
+  border-radius: 0;
 }
 
 .pixel-flame-swatch {
@@ -4786,7 +4851,7 @@ button:focus-visible,
   position: relative;
   background: #ededed;
   border: 1px solid #dfdfdf;
-  border-radius: 6px;
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -4798,7 +4863,7 @@ button:focus-visible,
   width: 54px;
   height: 48px;
   background: var(--shoe-tone);
-  border-radius: 0 0 6px 6px;
+  border-radius: 0;
   -webkit-mask-image: var(--shoe-image);
   mask-image: var(--shoe-image);
   -webkit-mask-position: center;
@@ -4824,7 +4889,7 @@ button:focus-visible,
   color: #777;
   background: #ededed;
   border: 0;
-  border-radius: 7px;
+  border-radius: 0;
   font-size: 12px;
 }
 

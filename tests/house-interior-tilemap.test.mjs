@@ -116,3 +116,166 @@ test('draws fine source dots on a higher-resolution backing canvas', () => {
   assert.equal(HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH, 1448)
   assert.equal(HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT, 1086)
 })
+
+test('renders every blue role as teal while preserving coral accents', () => {
+  const paintedColors = []
+  const context = {
+    imageSmoothingEnabled: true,
+    fillStyle: '',
+    setTransform() {},
+    clearRect() {},
+    fillRect() {
+      paintedColors.push(this.fillStyle)
+    },
+  }
+
+  drawPixelScene(context)
+
+  assert.ok(paintedColors.includes(HOUSE_INTERIOR_PIXEL_PALETTE.teal))
+  assert.ok(paintedColors.includes(HOUSE_INTERIOR_PIXEL_PALETTE.coral))
+  assert.ok(!paintedColors.includes('#1254e8'))
+  assert.ok(!paintedColors.includes('#0030eb'))
+  assert.ok(!paintedColors.includes(HOUSE_INTERIOR_PIXEL_PALETTE.lightBlue))
+})
+
+test('renders soft blue fragments as white negative space', () => {
+  const paintedColors = []
+  const context = {
+    imageSmoothingEnabled: true,
+    fillStyle: '',
+    setTransform() {},
+    clearRect() {},
+    fillRect() {
+      paintedColors.push(this.fillStyle)
+    },
+  }
+
+  drawPixelScene(context)
+
+  const whitePaintCount = paintedColors.filter(
+    (color) => color === HOUSE_INTERIOR_PIXEL_PALETTE.white
+  ).length
+  assert.ok(whitePaintCount > 1)
+})
+
+test('clips procedural patterns to the existing source silhouette', () => {
+  const rectangles = []
+  const context = {
+    imageSmoothingEnabled: true,
+    fillStyle: '',
+    setTransform() {},
+    clearRect() {},
+    fillRect(x, y, width, height) {
+      rectangles.push({ color: this.fillStyle, x, y, width, height })
+    },
+  }
+
+  drawPixelScene(context)
+
+  assert.ok(!rectangles.some(({ color, x, y, width, height }) =>
+    color === HOUSE_INTERIOR_PIXEL_PALETTE.white &&
+    x === 566 &&
+    y === 453 &&
+    width === 22 &&
+    height === 22
+  ))
+})
+
+test('decorates wall lines with regular perpendicular ticks', () => {
+  const rectangles = []
+  const context = {
+    imageSmoothingEnabled: true,
+    fillStyle: '',
+    setTransform() {},
+    clearRect() {},
+    fillRect(x, y, width, height) {
+      rectangles.push({ color: this.fillStyle, x, y, width, height })
+    },
+  }
+
+  drawPixelScene(context)
+
+  assert.ok(rectangles.some(({ color, width, height }) =>
+    color === HOUSE_INTERIOR_PIXEL_PALETTE.wall && width === 1 && height === 5
+  ))
+  assert.ok(rectangles.some(({ color, width, height }) =>
+    color === HOUSE_INTERIOR_PIXEL_PALETTE.wall && width === 5 && height === 1
+  ))
+})
+
+test('gives the lower living-room rug band a thin white inset', () => {
+  const rectangles = []
+  const context = {
+    imageSmoothingEnabled: true,
+    fillStyle: '',
+    setTransform() {},
+    clearRect() {},
+    fillRect(x, y, width, height) {
+      rectangles.push({ color: this.fillStyle, x, y, width, height })
+    },
+  }
+
+  drawPixelScene(context)
+
+  assert.ok(rectangles.some(({ color, x, y, width, height }) =>
+    color === HOUSE_INTERIOR_PIXEL_PALETTE.white &&
+    x === 566 &&
+    y === 588 &&
+    width === 316 &&
+    height === 2
+  ))
+})
+
+test('confines the living-room rug pattern to a lower band beneath the furniture', () => {
+  const rectangles = []
+  const context = {
+    imageSmoothingEnabled: true,
+    fillStyle: '',
+    setTransform() {},
+    clearRect() {},
+    fillRect(x, y, width, height) {
+      rectangles.push({ color: this.fillStyle, x, y, width, height })
+    },
+  }
+
+  drawPixelScene(context)
+
+  const colorAt = (pixelX, pixelY) => {
+    let color = null
+    rectangles.forEach((rectangle) => {
+      const isInside =
+        pixelX >= rectangle.x &&
+        pixelX < rectangle.x + rectangle.width &&
+        pixelY >= rectangle.y &&
+        pixelY < rectangle.y + rectangle.height
+      if (isInside) color = rectangle.color
+    })
+    return color
+  }
+
+  assert.equal(colorAt(604, 460), HOUSE_INTERIOR_PIXEL_PALETTE.white)
+  assert.equal(colorAt(604, 596), HOUSE_INTERIOR_PIXEL_PALETTE.blue)
+})
+
+test('does not erase living-room furniture with a rectangular white underlay', () => {
+  const rectangles = []
+  const context = {
+    imageSmoothingEnabled: true,
+    fillStyle: '',
+    setTransform() {},
+    clearRect() {},
+    fillRect(x, y, width, height) {
+      rectangles.push({ color: this.fillStyle, x, y, width, height })
+    },
+  }
+
+  drawPixelScene(context)
+
+  assert.ok(!rectangles.some(({ color, x, y, width, height }) =>
+    color === HOUSE_INTERIOR_PIXEL_PALETTE.white &&
+    x === 634 &&
+    y === 498 &&
+    width === 181 &&
+    height === 90
+  ))
+})

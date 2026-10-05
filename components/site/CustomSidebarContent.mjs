@@ -141,7 +141,6 @@ function PatternSetting({ label, value, max = 10 }) {
 }
 
 export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeIndex, flameColorIndex, flameShapeIndex }) {
-  const tools = ['◡', '◩', '◒', '▰']
   const matchTone = MATCH_COLOR_TONES[Number.isInteger(matchColorIndex) ? matchColorIndex : 0]
   const expressionSrc = Number.isInteger(expressionIndex)
     ? assetPath(`media/expression-${String(expressionIndex + 1).padStart(2, '0')}.png`)
@@ -155,6 +154,7 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
   const flameShapeSrc = Number.isInteger(flameShapeIndex)
     ? assetPath(`media/flame-shape-${String(flameShapeIndex + 1).padStart(2, '0')}.png`)
     : null
+  const toolExpressionSrc = expressionSrc ?? assetPath('media/expression-01.png')
 
   return createElement(
     'section',
@@ -234,7 +234,47 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
       createElement(
         'div',
         { className: 'pixel-sidebar-tool-stack', 'aria-hidden': 'true' },
-        ...tools.map((tool, index) => createElement('span', { key: `tool-${index}` }, tool))
+        createElement(
+          'span',
+          {
+            className: 'pixel-sidebar-tool-expression',
+            'data-preview-tool': 'expression',
+            'data-expression-src': toolExpressionSrc,
+            style: {
+              '--tool-head-tone': matchTone,
+              '--tool-head-image': `url(${MATCH_CHARACTER_HEAD_AVATAR_SRC})`,
+            },
+          },
+          createElement(
+            'i',
+            { className: 'pixel-sidebar-tool-head' },
+            createElement('img', {
+              className: 'pixel-sidebar-tool-expression-art',
+              src: toolExpressionSrc,
+              alt: '',
+              draggable: false,
+            })
+          )
+        ),
+        createElement(
+          'span',
+          {
+            className: 'pixel-sidebar-tool-colors',
+            'data-preview-tool': 'match-flame-colors',
+            style: { '--tool-match-tone': matchTone, '--tool-flame-tone': flameTone },
+          },
+          createElement('i', { className: 'pixel-sidebar-tool-match-color' }),
+          createElement('i', { className: 'pixel-sidebar-tool-flame-color' })
+        ),
+        createElement('span', {
+          className: 'pixel-sidebar-tool-shoes',
+          'data-preview-tool': 'shoes',
+          'data-shoe-src': shoeSrc,
+          style: {
+            '--tool-shoe-tone': shoeTone,
+            '--tool-shoe-image': `url(${shoeSrc})`,
+          },
+        })
       ),
       createElement(
         'span',
@@ -247,6 +287,17 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
             '--avatar-head-image': `url(${MATCH_CHARACTER_HEAD_AVATAR_SRC})`,
           },
         },
+        flameShapeSrc
+          ? createElement('i', {
+              className: 'pixel-sidebar-avatar-flame',
+              'data-flame-src': flameShapeSrc,
+              style: {
+                '--avatar-flame-color': flameTone,
+                '--avatar-flame-image': `url(${flameShapeSrc})`,
+                '--avatar-flame-offset-x': FLAME_ATTACH_OFFSETS[flameShapeIndex] ?? '0%',
+              },
+            })
+          : null,
         createElement('i', {
           className: 'pixel-sidebar-avatar-face',
           'data-avatar-head-src': MATCH_CHARACTER_HEAD_AVATAR_SRC,

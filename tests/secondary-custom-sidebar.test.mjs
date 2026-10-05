@@ -11,6 +11,43 @@ import {
 
 const GLOBAL_STYLES = readFileSync(new URL('../app/globals.css', import.meta.url), 'utf8')
 
+const getLastDeclaration = (selector, property) => {
+  let value = null
+  for (const [, selectorList, declarations] of GLOBAL_STYLES.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if (!selectorList.split(',').map((item) => item.trim()).includes(selector)) continue
+
+    for (const declaration of declarations.split(';')) {
+      const separatorIndex = declaration.indexOf(':')
+      if (separatorIndex === -1) continue
+      if (declaration.slice(0, separatorIndex).trim() !== property) continue
+      value = declaration.slice(separatorIndex + 1).trim()
+    }
+  }
+  return value
+}
+
+test('uses square corners only for the custom sidebar chrome and controls', () => {
+  const squareCornerSelectors = [
+    '.color-panel:has(.pixel-custom-sidebar)',
+    '.color-panel:has(.pixel-custom-sidebar) .sidebar-close-button',
+    '.pixel-sidebar-preview',
+    '.pixel-sidebar-question',
+    '.pixel-sidebar-question i',
+    '.pixel-sidebar-preview-frame',
+    '.pixel-sidebar-avatar-small',
+    '.pixel-sidebar-tool-stack span',
+    '.pixel-custom-row-arrows',
+    '.pixel-custom-swatch',
+    '.pixel-shoe-swatch',
+    '.pixel-sidebar-input',
+  ]
+
+  for (const selector of squareCornerSelectors) {
+    assert.equal(getLastDeclaration(selector, 'border-radius'), '0', selector)
+  }
+  assert.equal(getLastDeclaration('.pixel-sidebar-logo span', 'border-radius'), '50%')
+})
+
 test('restores the previous character customization sidebar sections', () => {
   const html = renderToStaticMarkup(createElement(CustomSidebarContent))
 
@@ -154,6 +191,53 @@ test('puts the selected flame artwork behind the preview head', () => {
   assert.match(flameRule, /bottom:\s*68px/)
   assert.match(flameRule, /transform:\s*translateX\(calc\(-50%\s*\+\s*var\(--character-flame-offset-x/)
   assert.doesNotMatch(flameRule, /top:/)
+})
+
+test('keeps the preview flame clear of the top edge by lowering the match character', () => {
+  assert.equal(getLastDeclaration('.pixel-sidebar-character', 'top'), 'calc(50% + 6px)')
+})
+
+test('orders the preview tools as expression, split match-and-flame colors, then shoes', () => {
+  const html = renderToStaticMarkup(
+    createElement(PixelSidebarPreview, {
+      matchColorIndex: 1,
+      expressionIndex: 2,
+      shoeIndex: 3,
+      flameColorIndex: 2,
+    })
+  )
+  const toolOrder = [...html.matchAll(/data-preview-tool="([^"]+)"/g)].map(([, tool]) => tool)
+
+  assert.deepEqual(toolOrder, ['expression', 'match-flame-colors', 'shoes'])
+  assert.match(html, /class="pixel-sidebar-tool-expression"[^>]*data-expression-src="\/media\/expression-03\.png"/)
+  assert.match(html, /class="pixel-sidebar-tool-head"/)
+  assert.match(html, /class="pixel-sidebar-tool-expression-art"[^>]*src="\/media\/expression-03\.png"/)
+  assert.match(html, /class="pixel-sidebar-tool-colors"[^>]*--tool-match-tone:#D90000;--tool-flame-tone:#FFD15D/)
+  assert.match(html, /class="pixel-sidebar-tool-match-color"/)
+  assert.match(html, /class="pixel-sidebar-tool-flame-color"/)
+  assert.match(html, /class="pixel-sidebar-tool-shoes"[^>]*data-shoe-src="\/media\/custom-shoe-04\.png"/)
+  assert.equal(getLastDeclaration('.pixel-sidebar-tool-stack span', 'background'), '#f1f1f1')
+  assert.equal(getLastDeclaration('.pixel-sidebar-tool-match-color', 'background'), 'var(--tool-match-tone, #DBDCDC)')
+  assert.equal(getLastDeclaration('.pixel-sidebar-tool-flame-color', 'background'), 'var(--tool-flame-tone, #00B9F6)')
+})
+
+test('shows the selected flame shape and color in the passport-style avatar', () => {
+  const html = renderToStaticMarkup(
+    createElement(PixelSidebarPreview, { flameShapeIndex: 2, flameColorIndex: 1 })
+  )
+
+  assert.match(html, /class="pixel-sidebar-avatar-flame"/)
+  assert.match(html, /data-flame-src="\/media\/flame-shape-03\.png"/)
+  assert.match(html, /--avatar-flame-color:#C50011/)
+  assert.match(html, /--avatar-flame-offset-x:0%/)
+  assert.match(
+    GLOBAL_STYLES,
+    /\.pixel-sidebar-avatar-flame\s*\{[^}]*position:\s*absolute;[^}]*z-index:\s*0;[^}]*mask-image:\s*var\(--avatar-flame-image\)/s
+  )
+  assert.equal(getLastDeclaration('.pixel-sidebar-avatar-flame', 'top'), '2px')
+  assert.equal(getLastDeclaration('.pixel-sidebar-avatar-flame', 'height'), '36px')
+  assert.equal(getLastDeclaration('.pixel-sidebar-avatar-face', 'top'), '22px')
+  assert.equal(getLastDeclaration('.pixel-sidebar-avatar-expression', 'top'), '28px')
 })
 
 test('renders the approved slender match body with a separate rounded head layer', () => {

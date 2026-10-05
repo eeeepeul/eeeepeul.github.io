@@ -15,6 +15,11 @@ import {
   HOUSE_INTERIOR_PIXEL_WIDTH,
   HOUSE_INTERIOR_WALL_THICKNESS,
 } from '../../lib/house-interior-pixel-art.mjs'
+import {
+  HOUSE_INTERIOR_PATTERN_PERIOD,
+  isHouseInteriorPatternPixel,
+  resolveHouseInteriorPattern,
+} from '../../lib/house-interior-patterns.mjs'
 
 const tileStyle = (tile, map) => ({
   left: `${(tile.x / map.width) * 100}%`,
@@ -143,24 +148,168 @@ const createWallPixelMask = (map) => {
 
 const drawPixelRuns = (context, map) => {
   const wallPixelMask = createWallPixelMask(map)
-  HOUSE_INTERIOR_PIXEL_RUNS.forEach(({ color, x, y, length }) => {
-    context.fillStyle = HOUSE_INTERIOR_PIXEL_PALETTE[color]
-    if (color !== 'blue') {
-      context.fillRect(x, y, length, 1)
-      return
-    }
+  const patternCells = createPatternCellMap(map)
+  const scaleX = HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH / map.width
+  const scaleY = HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT / map.height
 
+  HOUSE_INTERIOR_PIXEL_RUNS.forEach(({ color, x, y, length }) => {
+    const renderedColor = color === 'lightBlue' ? 'white' : color
     let segmentStart = null
+    let segmentColor = null
+
     for (let offset = 0; offset <= length; offset += 1) {
-      const isMasked =
-        offset === length || wallPixelMask.has(`${x + offset}:${y}`)
-      if (!isMasked && segmentStart === null) segmentStart = offset
-      if (isMasked && segmentStart !== null) {
+      let nextColor = null
+      if (offset < length) {
+        const pixelX = x + offset
+        const tileX = Math.min(map.width - 1, Math.floor(pixelX / scaleX))
+        const tileY = Math.min(map.height - 1, Math.floor(y / scaleY))
+        const pattern = patternCells[tileY * map.width + tileX]
+
+        if (pattern) {
+          nextColor = isHouseInteriorPatternPixel(pattern.motif, pixelX, y)
+            ? HOUSE_INTERIOR_PIXEL_PALETTE[pattern.color]
+            : HOUSE_INTERIOR_PIXEL_PALETTE.white
+        } else if (color !== 'blue' || !wallPixelMask.has(`${pixelX}:${y}`)) {
+          const sourceColor = color === 'blue' ? 'teal' : renderedColor
+          nextColor = HOUSE_INTERIOR_PIXEL_PALETTE[sourceColor]
+        }
+      }
+
+      if (nextColor !== segmentColor && segmentStart !== null) {
+        context.fillStyle = segmentColor
         context.fillRect(x + segmentStart, y, offset - segmentStart, 1)
         segmentStart = null
       }
+      if (nextColor !== null && segmentStart === null) segmentStart = offset
+      segmentColor = nextColor
     }
   })
+}
+
+const fillPatternCellMap = (cellMap, tiles, map) => {
+  tiles.forEach((tile) => {
+    const pattern = resolveHouseInteriorPattern(tile.tileId)
+    for (let tileY = tile.y; tileY < tile.y + (tile.height ?? 1); tileY += 1) {
+      for (let tileX = tile.x; tileX < tile.x + (tile.width ?? 1); tileX += 1) {
+        cellMap[tileY * map.width + tileX] = pattern
+      }
+    }
+  })
+}
+
+const resolveRugVisualBounds = (rug) => {
+  if (rug.id !== 'living-rug') return rug
+
+  const visualHeight = 3
+  return {
+    ...rug,
+    y: rug.y + (rug.height ?? 1) - visualHeight,
+    height: visualHeight,
+  }
+}
+
+const createPatternCellMap = (map) => {
+  const cellMap = new Array(map.width * map.height).fill(null)
+  const decor = map.layers.decor ?? []
+  const rugs = decor
+    .filter(({ tileId }) => String(tileId).startsWith('rug-'))
+    .map(resolveRugVisualBounds)
+  const foregroundDecor = decor.filter(({ tileId }) => !String(tileId).startsWith('rug-'))
+
+  fillPatternCellMap(cellMap, rugs, map)
+  fillPatternCellMap(cellMap, map.layers.furniture ?? [], map)
+  fillPatternCellMap(cellMap, foregroundDecor, map)
+  fillPatternCellMap(cellMap, map.layers.doors_windows ?? [], map)
+  return cellMap
+}
+
+const drawPatternedRugs = (context, map) => {
+  const scaleX = HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH / map.width
+  const scaleY = HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT / map.height
+  const inset = 2
+
+  ;(map.layers.decor ?? [])
+    .filter(({ tileId }) => String(tileId).startsWith('rug-'))
+    .map(resolveRugVisualBounds)
+    .forEach((rug) => {
+      const pattern = resolveHouseInteriorPattern(rug.tileId)
+      if (!pattern) return
+
+      const left = Math.round(rug.x * scaleX) + inset
+      const top = Math.round(rug.y * scaleY) + inset
+      const right = Math.round((rug.x + (rug.width ?? 1)) * scaleX) - inset
+      const bottom = Math.round((rug.y + (rug.height ?? 1)) * scaleY) - inset
+
+      context.fillStyle = HOUSE_INTERIOR_PIXEL_PALETTE[pattern.color]
+      for (let pixelY = top; pixelY < bottom; pixelY += 1) {
+        let segmentStart = null
+        for (let pixelX = left; pixelX <= right; pixelX += 1) {
+          const isPatternPixel =
+            pixelX < right &&
+            isHouseInteriorPatternPixel(pattern.motif, pixelX, pixelY)
+          if (isPatternPixel && segmentStart === null) segmentStart = pixelX
+          if (!isPatternPixel && segmentStart !== null) {
+            context.fillRect(segmentStart, pixelY, pixelX - segmentStart, 1)
+            segmentStart = null
+          }
+        }
+      }
+    })
+}
+
+const drawRugInsets = (context, map) => {
+  const scaleX = HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH / map.width
+  const scaleY = HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT / map.height
+  const inset = 2
+
+  context.fillStyle = HOUSE_INTERIOR_PIXEL_PALETTE.white
+  ;(map.layers.decor ?? [])
+    .filter(({ tileId }) => String(tileId).startsWith('rug-'))
+    .map(resolveRugVisualBounds)
+    .forEach((rug) => {
+      const left = Math.round(rug.x * scaleX)
+      const top = Math.round(rug.y * scaleY)
+      const right = Math.round((rug.x + (rug.width ?? 1)) * scaleX)
+      const bottom = Math.round((rug.y + (rug.height ?? 1)) * scaleY)
+      const width = right - left
+      const height = bottom - top
+
+      context.fillRect(left, top, width, inset)
+      context.fillRect(left, bottom - inset, width, inset)
+      context.fillRect(left, top, inset, height)
+      context.fillRect(right - inset, top, inset, height)
+    })
+}
+
+const firstPatternCenter = (start) => {
+  const centerOffset = HOUSE_INTERIOR_PATTERN_PERIOD / 2
+  return (
+    Math.ceil((start - centerOffset) / HOUSE_INTERIOR_PATTERN_PERIOD) *
+      HOUSE_INTERIOR_PATTERN_PERIOD +
+    centerOffset
+  )
+}
+
+const drawHorizontalWallSegment = (context, left, top, width, thickness) => {
+  context.fillRect(left, top, width, thickness)
+  for (
+    let pixelX = firstPatternCenter(left);
+    pixelX < left + width;
+    pixelX += HOUSE_INTERIOR_PATTERN_PERIOD
+  ) {
+    context.fillRect(pixelX, Math.round(top) - 2, 1, 5)
+  }
+}
+
+const drawVerticalWallSegment = (context, left, top, height, thickness) => {
+  context.fillRect(left, top, thickness, height)
+  for (
+    let pixelY = firstPatternCenter(top);
+    pixelY < top + height;
+    pixelY += HOUSE_INTERIOR_PATTERN_PERIOD
+  ) {
+    context.fillRect(Math.round(left) - 2, pixelY, 5, 1)
+  }
 }
 
 const drawWallSegments = (context, map) => {
@@ -181,30 +330,58 @@ const drawWallSegments = (context, map) => {
     const isVerticalSegment = (hasAbove || hasBelow) && !hasLeft && !hasRight
 
     if (isHorizontalSegment) {
-      context.fillRect(left, top, scaleX, thickness)
-      if (!hasLeft) context.fillRect(left, top, thickness, scaleY)
-      if (!hasRight) context.fillRect((x + 1) * scaleX - thickness, top, thickness, scaleY)
+      drawHorizontalWallSegment(context, left, top, scaleX, thickness)
+      if (!hasLeft) drawVerticalWallSegment(context, left, top, scaleY, thickness)
+      if (!hasRight) {
+        drawVerticalWallSegment(
+          context,
+          (x + 1) * scaleX - thickness,
+          top,
+          scaleY,
+          thickness
+        )
+      }
       return
     }
 
     if (isVerticalSegment) {
-      context.fillRect(left, top, thickness, scaleY)
-      if (!hasAbove) context.fillRect(left, top, scaleX, thickness)
-      if (!hasBelow) context.fillRect(left, (y + 1) * scaleY - thickness, scaleX, thickness)
+      drawVerticalWallSegment(context, left, top, scaleY, thickness)
+      if (!hasAbove) drawHorizontalWallSegment(context, left, top, scaleX, thickness)
+      if (!hasBelow) {
+        drawHorizontalWallSegment(
+          context,
+          left,
+          (y + 1) * scaleY - thickness,
+          scaleX,
+          thickness
+        )
+      }
       return
     }
 
     if (!hasAbove) {
-      context.fillRect(left, top, scaleX, thickness)
+      drawHorizontalWallSegment(context, left, top, scaleX, thickness)
     }
     if (!hasBelow) {
-      context.fillRect(left, (y + 1) * scaleY - thickness, scaleX, thickness)
+      drawHorizontalWallSegment(
+        context,
+        left,
+        (y + 1) * scaleY - thickness,
+        scaleX,
+        thickness
+      )
     }
     if (!hasLeft) {
-      context.fillRect(left, top, thickness, scaleY)
+      drawVerticalWallSegment(context, left, top, scaleY, thickness)
     }
     if (!hasRight) {
-      context.fillRect((x + 1) * scaleX - thickness, top, thickness, scaleY)
+      drawVerticalWallSegment(
+        context,
+        (x + 1) * scaleX - thickness,
+        top,
+        scaleY,
+        thickness
+      )
     }
   })
 }
@@ -216,7 +393,11 @@ export const drawPixelScene = (context, map = HOUSE_INTERIOR_MAP) => {
   context.fillStyle = HOUSE_INTERIOR_PIXEL_PALETTE.white
   context.fillRect(0, 0, HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH, HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT)
 
+  drawPatternedRugs(context, map)
+
   drawPixelRuns(context, map)
+
+  drawRugInsets(context, map)
 
   drawWallSegments(context, map)
 }

@@ -27,6 +27,7 @@ test('exposes a bounded pixel canvas and approved palette', () => {
     'coral',
     'ivory',
     'lightBlue',
+    'teal',
     'wall',
     'white',
   ].sort())
