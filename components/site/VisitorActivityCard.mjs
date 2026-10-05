@@ -31,6 +31,8 @@ function ActivityBlock({ block, className, index }) {
   return createElement('span', {
     className,
     key: `${className}-${index}`,
+    // Positions derive from Date.now(), so server and client renders differ by design.
+    suppressHydrationWarning: true,
     style: {
       '--activity-tone': block.tone,
       '--activity-width': `${block.width}px`,
