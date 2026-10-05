@@ -71,8 +71,11 @@ function CompactRangeControl({
 export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
   return (
     <div className="settings-panel">
-      <p className="panel-label pattern-label">mosaic pattern</p>
+      <header className="panel-head">
+        <p className="panel-label pattern-label">Pattern</p>
+      </header>
 
+      <div className="panel-body settings-panel-body">
       <CompactRangeControl
         id="setting-scale"
         label="scale"
@@ -93,6 +96,7 @@ export function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
         displayValue={settings.spacing.toFixed(2)}
         onChange={(spacing) => onChange({ spacing })}
       />
+      </div>
     </div>
   )
 }

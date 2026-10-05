@@ -1,6 +1,6 @@
 'use client'
 
-import type { CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
 import { PIXEL_PALETTE_PRESETS } from '../../lib/pixel-palette.mjs'
 import { SettingsPanel, type MosaicSettings } from './SettingsPanel'
@@ -29,6 +29,7 @@ type ColorPanelProps = {
   onPrevious?: () => void
   onTogglePlayback?: () => void
   onNext?: () => void
+  onVolumeChange?: (volume: number) => void
 }
 
 export function ColorPanel({
@@ -46,9 +47,11 @@ export function ColorPanel({
   onPrevious,
   onTogglePlayback,
   onNext,
+  onVolumeChange,
 }: ColorPanelProps) {
+  const [volume, setVolume] = useState(1)
+  const [trackInfoOpen, setTrackInfoOpen] = useState(false)
   const progress = duration > 0 ? Math.min(1, Math.max(0, currentTime / duration)) : 0
-  const paletteLetters = ['M', 'O', 'M', 'E']
   const technicalDrawingAssets = [
     { houseId: 'house1', label: 'spot 01', union: '1', src: 'media/figma-technical-drawing-o.svg' },
     { houseId: 'house2', label: 'spot 02', union: '2', src: 'media/figma-technical-drawing-m1.svg' },
@@ -64,25 +67,22 @@ export function ColorPanel({
     { houseId: 'house4', label: 'spot 04', active: selectedHouseId === 'house4' },
   ]
 
+  const stop = () => {
+    if (isPlaying) onTogglePlayback?.()
+    onSeek?.(0)
+  }
+
   return (
     <div className="color-panel-content cctv-sidebar-content">
       <section className="cctv-sidebar-section now-playing-section" aria-label="현재 재생 중인 CCTV">
-        <div className="now-playing-card">
-          <p className="panel-label">now playing</p>
+        <header className="panel-head">
+          <p className="panel-label">Now playing</p>
+        </header>
+        <div className="panel-body now-playing-card">
           <div className="now-playing-main">
             <div className="now-playing-artwork" aria-label="앨범 아트" role="img">
-              <img
-                className="now-playing-artwork-shadow"
-                src={assetPath('media/figma-cctv-artwork.svg')}
-                alt=""
-                aria-hidden="true"
-              />
-              <img
-                className="now-playing-artwork-face"
-                src={assetPath('media/figma-cctv-artwork-shadow.svg')}
-                alt=""
-                aria-hidden="true"
-              />
+              <span className="now-playing-artwork-reflection" aria-hidden="true" />
+              <span className="now-playing-artwork-face" aria-hidden="true" />
             </div>
             <div className="now-playing-copy">
               <strong>If and only if</strong>
@@ -107,21 +107,51 @@ export function ColorPanel({
             <span>{formatTime(duration)}</span>
           </div>
           <div className="now-playing-controls" aria-label="재생 컨트롤">
-            <button type="button" aria-label="이전 트랙" onClick={onPrevious} />
-            <button
-              type="button"
-              className={isPlaying ? 'is-active is-playing' : 'is-active'}
-              aria-label={isPlaying ? '일시정지' : '재생'}
-              onClick={onTogglePlayback}
+            <div className="now-playing-transport">
+              <button type="button" className="transport-previous" aria-label="이전 트랙" onClick={onPrevious} />
+              <button
+                type="button"
+                className="transport-play"
+                aria-label="재생"
+                aria-pressed={isPlaying}
+                disabled={isPlaying}
+                onClick={onTogglePlayback}
+              />
+              <button
+                type="button"
+                className="transport-pause"
+                aria-label="일시정지"
+                aria-pressed={!isPlaying}
+                disabled={!isPlaying}
+                onClick={onTogglePlayback}
+              />
+              <button type="button" className="transport-stop" aria-label="정지" onClick={stop} />
+              <button type="button" className="transport-next" aria-label="다음 트랙" onClick={onNext} />
+            </div>
+            <input
+              className="now-playing-volume"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              aria-label="볼륨"
+              onChange={(event) => {
+                const next = Number(event.target.value)
+                setVolume(next)
+                onVolumeChange?.(next)
+              }}
+              style={{ '--progress': `${volume * 100}%` } as CSSProperties}
             />
-            <button type="button" aria-label="다음 트랙" onClick={onNext} />
           </div>
         </div>
       </section>
 
       <section className="cctv-sidebar-section house-layout-section playing-at-section" aria-label={`${houseLabel} 재생 위치`}>
-        <p className="panel-label">playing at</p>
-        <div className="playing-at-content">
+        <header className="panel-head">
+          <p className="panel-label">Playing at</p>
+        </header>
+        <div className="panel-body playing-at-content">
           <div className="playing-at-spots">
             {spotRows.map((spot) => (
               <a
@@ -152,9 +182,11 @@ export function ColorPanel({
       </section>
 
       <section className="cctv-sidebar-section palette-section" aria-label="영상 색 조합">
-        <p className="panel-label">color combination</p>
-        <div className="palette-presets">
-          {PIXEL_PALETTE_PRESETS.map((preset, index) => (
+        <header className="panel-head">
+          <p className="panel-label">color combination</p>
+        </header>
+        <div className="panel-body palette-presets">
+          {PIXEL_PALETTE_PRESETS.map((preset) => (
             <button
               className="palette-preset"
               type="button"
@@ -173,9 +205,7 @@ export function ColorPanel({
                 } as CSSProperties}
               >
                 <i className="palette-main-swatch" />
-                <b className="palette-letter">{paletteLetters[index]}</b>
               </span>
-              <span className="palette-preset-name">SKY BLUE</span>
             </button>
           ))}
         </div>
@@ -186,6 +216,39 @@ export function ColorPanel({
           settings={settings}
           onChange={onSettingsChange}
         />
+      </section>
+
+      <section className="cctv-sidebar-section track-info-section" aria-label="트랙 정보">
+        <header className="panel-head">
+          <p className="panel-label">Track info</p>
+          <button
+            type="button"
+            className="panel-toggle"
+            aria-expanded={trackInfoOpen}
+            aria-label={trackInfoOpen ? '트랙 정보 접기' : '트랙 정보 펼치기'}
+            onClick={() => setTrackInfoOpen((open) => !open)}
+          />
+        </header>
+        <div className="panel-body track-info-body">
+          <dl hidden={!trackInfoOpen}>
+            <div>
+              <dt>title</dt>
+              <dd>If and only if</dd>
+            </div>
+            <div>
+              <dt>artist</dt>
+              <dd>Deep House &amp; UK Garage</dd>
+            </div>
+            <div>
+              <dt>year</dt>
+              <dd>2026</dd>
+            </div>
+            <div>
+              <dt>length</dt>
+              <dd>{formatTime(duration)}</dd>
+            </div>
+          </dl>
+        </div>
       </section>
     </div>
   )

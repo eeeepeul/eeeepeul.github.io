@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import { SharedVisitRecorder } from '../components/site/SharedVisitRecorder'
 import './globals.css'
+import './cctv-skin.css'
 
 export const metadata: Metadata = {
   title: 'Pixel CCTV — if and only if',

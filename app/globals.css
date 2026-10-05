@@ -238,10 +238,19 @@ button:focus-visible,
   top: 0;
   display: block;
   max-width: none;
+  /* Hidden behind the planet; it stays a moment after the planet fades back in. */
+  opacity: 0;
+  transition: opacity 0s linear 450ms;
   background-color: #000;
   background-size: 100% 100%;
   user-select: none;
   pointer-events: none;
+}
+
+.figma-deep-zoom-map[data-map-mode="video"] .figma-deep-zoom-frame,
+.figma-deep-zoom-map[data-map-mode="aligning"] .figma-deep-zoom-frame {
+  opacity: 1;
+  transition-delay: 0s;
 }
 
 .figma-deep-zoom-globe {
@@ -304,6 +313,15 @@ button:focus-visible,
   color: rgba(31, 31, 31, 0.55);
   font: 12px/1.2 "Poppins", Arial, sans-serif;
   letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+.figma-deep-zoom-legend {
+  position: absolute;
+  z-index: 2;
+  width: auto;
+  max-width: none;
+  user-select: none;
   pointer-events: none;
 }
 

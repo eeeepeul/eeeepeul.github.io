@@ -6,12 +6,19 @@ import {
   GLOBE,
   HOME_ROTATION,
   HOUSE_HOTSPOTS,
+  MAP_LEGEND,
   ZOOM_VIDEO,
   clampLatitude,
   clampProgress,
   easeInOut,
   getHotspotCenter,
+  getDragDegreesPerPixel,
+  getGlobeScale,
+  getHandoffOpacity,
+  getLegendNumberedOpacity,
+  getVideoPlanetScale,
   getShortestYawDelta,
+  getZoomAnchorTurn,
   setCameraProgress,
 } from '../../lib/deep-zoom-map.mjs'
 
@@ -25,7 +32,7 @@ const MIN_SEEK_SECONDS = 1 / 60
 const SPIN_DECAY_MS = 260
 const MIN_SPIN_SPEED = 0.002
 // Fastest a released drag may keep spinning, in degrees per ms.
-const MAX_SPIN_SPEED = 0.12
+const MAX_SPIN_SPEED = 0.16
 // Progress below this snaps to zero when zooming back out.
 const MIN_PROGRESS = 0.004
 // A drag that paused this long before release does not coast.
@@ -56,7 +63,7 @@ function setHotspotGeometry(hotspotNodes, state) {
   hotspotNodes.forEach((node, index) => {
     if (!node) return
     const center = getHotspotCenter(state, HOUSE_HOTSPOTS[index])
-    const size = center.videoWidth * 0.045
+    const size = center.videoWidth * 0.037 * center.scale
     node.style.left = `${center.x}px`
     node.style.top = `${center.y}px`
     node.style.width = `${size}px`
@@ -76,6 +83,11 @@ function applyCameraFrame(rootNode, nodes, progress) {
   setFrameGeometry(nodes.canvas, state)
   setFrameGeometry(nodes.globeCanvas, state)
   setHotspotGeometry(nodes.hotspots, state)
+  if (nodes.legendNumbered && nodes.legendSymbols) {
+    const numbered = getLegendNumberedOpacity(progress)
+    nodes.legendNumbered.style.opacity = String(numbered)
+    nodes.legendSymbols.style.opacity = String(1 - numbered)
+  }
   if (nodes.video && Math.abs(nodes.video.currentTime - state.time) > MIN_SEEK_SECONDS) {
     nodes.video.currentTime = state.time
   }
@@ -92,6 +104,8 @@ export function DeepZoomMap() {
   const canvasRef = useRef(null)
   const globeCanvasRef = useRef(null)
   const hotspotRefs = useRef([])
+  const legendNumberedRef = useRef(null)
+  const legendSymbolsRef = useRef(null)
   const progressRef = useRef(0)
   const [status, setStatus] = useState('loading')
 
@@ -107,6 +121,8 @@ export function DeepZoomMap() {
       canvas: canvasNode,
       globeCanvas: globeCanvasNode,
       hotspots: hotspotRefs.current,
+      legendNumbered: legendNumberedRef.current,
+      legendSymbols: legendSymbolsRef.current,
     }
 
     let cancelled = false
@@ -116,9 +132,13 @@ export function DeepZoomMap() {
     let lastTimestamp = 0
     let globe = null
     let globeSize = ''
-    // 'video' scrubs the zoom clip; 'globe' lets the planet be dragged round;
-    // 'aligning' is the short turn from wherever it was dragged to the home view.
-    let mode = 'video'
+    // 'loading' until the planet is ready; 'globe' lets it be dragged round and
+    // grown with the wheel; 'aligning' is the short turn from wherever it was
+    // dragged to the home view; 'video' scrubs the zoom clip.
+    let mode = 'loading'
+    // 0 is the small planet in its stars, 1 the size of the clip's first frame.
+    let growth = 0
+    let growthTarget = 0
     let yaw = HOME_ROTATION.yaw
     let pitch = HOME_ROTATION.pitch
     let spinYaw = 0
@@ -129,11 +149,52 @@ export function DeepZoomMap() {
     let align = null
     let pendingZoom = 0
     let globeTimestamp = 0
+    // Where the pointer last zoomed, in video-frame pixels from the planet's
+    // centre; the planet turns as it grows so that point stays under the pointer.
+    let zoomAnchor = null
+
+    const getFrameScale = () => {
+      const width = globeCanvasNode.getBoundingClientRect().width
+      return width > 0 ? width / ZOOM_VIDEO.width : 1
+    }
+    const toFramePoint = (clientX, clientY) => {
+      const rect = globeCanvasNode.getBoundingClientRect()
+      const scale = getFrameScale()
+      return {
+        x: (clientX - (rect.left + rect.width / 2)) / scale,
+        y: (clientY - (rect.top + rect.height / 2)) / scale,
+      }
+    }
+
+    // In 'video' mode the planet dissolves into the clip as it plays, so its
+    // opacity follows the clip's progress; otherwise it is simply shown or hidden.
+    let handoffHidden = false
+    const updateGlobeHandoff = (progress) => {
+      if (!globe) return
+      const opacity = getHandoffOpacity(progress)
+      if (opacity <= 0.001) {
+        if (!handoffHidden) globeCanvasNode.style.opacity = '0'
+        handoffHidden = true
+        return
+      }
+      handoffHidden = false
+      // The planet grows exactly as the clip's own planet does.
+      globe.setScale(getVideoPlanetScale(progress))
+      globe.render()
+      globeCanvasNode.style.opacity = String(opacity)
+    }
 
     const setMode = (nextMode) => {
       mode = nextMode
       rootNode.dataset.mapMode = nextMode
-      globeCanvasNode.classList.toggle('is-hidden', nextMode === 'video')
+      // Progress drives the opacity in video mode, so it must not lag behind.
+      globeCanvasNode.style.transitionDuration = nextMode === 'video' ? '0s' : ''
+      if (nextMode === 'video') {
+        handoffHidden = false
+        updateGlobeHandoff(progressRef.current)
+      } else {
+        globeCanvasNode.style.opacity = nextMode === 'loading' ? '0' : '1'
+      }
     }
 
     const syncGlobeSize = (state) => {
@@ -148,13 +209,17 @@ export function DeepZoomMap() {
     const renderVideoFrame = (progress) => {
       const state = applyCameraFrame(rootNode, nodes, progress)
       syncGlobeSize(state)
+      if (mode === 'video') updateGlobeHandoff(progress)
       return state
     }
 
-    const enterGlobeMode = () => {
+    const enterGlobeMode = (startGrowth) => {
       if (!globe) return
       yaw = HOME_ROTATION.yaw
       pitch = HOME_ROTATION.pitch
+      growth = startGrowth
+      growthTarget = startGrowth
+      globe.setScale(getGlobeScale(growth))
       globe.setRotation(yaw, pitch)
       globe.render()
       setMode('globe')
@@ -177,7 +242,7 @@ export function DeepZoomMap() {
       } else {
         lastTimestamp = 0
         // Zoomed all the way back out: hand the planet back to the pointer.
-        if (progress === 0 && mode === 'video') enterGlobeMode()
+        if (progress === 0 && mode === 'video') enterGlobeMode(1)
       }
     }
 
@@ -192,6 +257,27 @@ export function DeepZoomMap() {
       globeTimestamp = timestamp
       let active = false
 
+      // The planet grows towards the wheel's target, smoothed like the clip.
+      const growthGap = growthTarget - growth
+      const scaleBefore = getGlobeScale(growth)
+      if (Math.abs(growthGap) > 0.0004) {
+        growth += growthGap * (1 - Math.exp(-delta / GLOBE.zoomSmoothingMs))
+        active = true
+      } else {
+        growth = growthTarget
+      }
+      const scaleAfter = getGlobeScale(growth)
+      if (mode === 'globe' && zoomAnchor && scaleAfter !== scaleBefore) {
+        const turn = getZoomAnchorTurn(zoomAnchor, scaleBefore, scaleAfter)
+        if (turn) {
+          yaw += turn.yaw
+          pitch = clampLatitude(pitch + turn.pitch)
+        }
+      }
+      globe.setScale(scaleAfter)
+      rootNode.dataset.mapGrowth = growth.toFixed(3)
+      rootNode.dataset.mapRotation = `${yaw.toFixed(1)} ${pitch.toFixed(1)}`
+
       if (mode === 'aligning' && align) {
         if (align.start === null) align.start = timestamp
         const amount = (timestamp - align.start) / GLOBE.alignMs
@@ -203,7 +289,7 @@ export function DeepZoomMap() {
           pitch = HOME_ROTATION.pitch
           align = null
           setMode('video')
-          targetProgress = clampProgress(pendingZoom)
+          targetProgress = Math.min(clampProgress(pendingZoom), GLOBE.firstStepMax)
           pendingZoom = 0
           requestVideoFrame()
         } else {
@@ -236,10 +322,11 @@ export function DeepZoomMap() {
       pendingZoom = Math.max(0, amount)
       spinYaw = 0
       spinPitch = 0
+      growthTarget = 1
       const yawDelta = getShortestYawDelta(yaw, HOME_ROTATION.yaw)
       if (Math.abs(yawDelta) < 0.5 && Math.abs(pitch - HOME_ROTATION.pitch) < 0.5) {
         setMode('video')
-        targetProgress = clampProgress(pendingZoom)
+        targetProgress = Math.min(clampProgress(pendingZoom), GLOBE.firstStepMax)
         pendingZoom = 0
         requestVideoFrame()
         return
@@ -257,8 +344,18 @@ export function DeepZoomMap() {
 
     // Wheel, pinch and swipe all arrive here as a signed amount of zoom.
     const zoomBy = (amount) => {
+      if (mode === 'loading') return
       if (mode === 'globe') {
-        if (amount > 0) startAlign(amount)
+        // The planet grows first; once it is the size of the clip's first
+        // frame, the next step turns it to the home view and starts the clip.
+        if (amount > 0 && growthTarget >= 1 && growth >= 0.99) {
+          startAlign(amount)
+        } else {
+          growthTarget = clampProgress(
+            growthTarget + amount * GLOBE.zoomPerProgress
+          )
+          requestGlobeFrame()
+        }
       } else if (mode === 'aligning') {
         pendingZoom = Math.max(0, pendingZoom + amount)
       } else {
@@ -273,6 +370,7 @@ export function DeepZoomMap() {
       event.preventDefault()
       // deltaMode 1 = lines; normalize to pixels.
       const pixels = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY
+      if (mode === 'globe') zoomAnchor = toFramePoint(event.clientX, event.clientY)
       zoomBy(pixels * WHEEL_PROGRESS_PER_PIXEL)
     }
 
@@ -294,7 +392,7 @@ export function DeepZoomMap() {
       const dx = event.clientX - lastPointer.x
       const dy = event.clientY - lastPointer.y
       const elapsed = Math.max(1, event.timeStamp - lastPointer.time)
-      const degrees = GLOBE.dragDegreesPerPixel
+      const degrees = getDragDegreesPerPixel(getGlobeScale(growth), getFrameScale())
       yaw += dx * degrees
       pitch = clampLatitude(pitch + dy * degrees)
       // Speed in degrees per ms, blended so a stop before release stays a stop.
@@ -333,6 +431,12 @@ export function DeepZoomMap() {
     const handleTouchMove = (event) => {
       if (event.touches.length === 2 && pinchDistance !== null) {
         const distance = touchDistance(event.touches)
+        if (mode === 'globe') {
+          zoomAnchor = toFramePoint(
+            (event.touches[0].clientX + event.touches[1].clientX) / 2,
+            (event.touches[0].clientY + event.touches[1].clientY) / 2
+          )
+        }
         // Spreading the fingers zooms in.
         zoomBy((distance - pinchDistance) * PINCH_PROGRESS_PER_PIXEL)
         pinchDistance = distance
@@ -392,7 +496,11 @@ export function DeepZoomMap() {
     // the wheel scrubs the clip straight away.
     import('../../lib/globe-scene.mjs')
       .then(({ createGlobe }) =>
-        createGlobe(globeCanvasNode, assetPath(GLOBE.texture.slice(1)))
+        createGlobe(
+          globeCanvasNode,
+          assetPath(GLOBE.texture.slice(1)),
+          assetPath(GLOBE.milkyWay.texture.slice(1))
+        )
       )
       .then((created) => {
         if (cancelled) {
@@ -401,16 +509,27 @@ export function DeepZoomMap() {
         }
         globe = created
         handleResize()
-        // Wait for the video geometry so the planet is sized before it shows.
-        if (progressRef.current === 0 && targetProgress === 0 && mode === 'video') {
-          enterGlobeMode()
+        // Start small, in the stars, unless the clip has already been scrubbed.
+        if (progressRef.current === 0 && targetProgress === 0 && mode === 'loading') {
+          enterGlobeMode(0)
+        } else if (mode === 'loading') {
+          setMode('video')
         }
       })
       .catch(() => {
         // No WebGL or texture: the clip's own first frame stands in for the planet.
+        if (!cancelled) setMode('video')
       })
 
+    // Coming back with the browser's Back button can restore this page from the
+    // back/forward cache with a lost WebGL context and a stale clip. Start it over.
+    const handlePageShow = (event) => {
+      if (event.persisted) window.location.reload()
+    }
+    window.addEventListener('pageshow', handlePageShow)
+
     return () => {
+      window.removeEventListener('pageshow', handlePageShow)
       cancelled = true
       window.cancelAnimationFrame(frameId)
       window.cancelAnimationFrame(globeFrameId)
@@ -441,7 +560,7 @@ export function DeepZoomMap() {
       'data-map-camera-api': 'setCameraProgress',
       'data-map-wheel': 'bound',
       'data-map-status': status,
-      'data-map-mode': 'video',
+      'data-map-mode': 'loading',
       'data-map-progress': '0.0000',
       'data-map-scale': '0.0000',
       'data-map-houses': 'inactive',
@@ -453,14 +572,15 @@ export function DeepZoomMap() {
       createElement('canvas', {
         ref: canvasRef,
         className: 'figma-deep-zoom-frame',
-        width: ZOOM_VIDEO.width,
-        height: ZOOM_VIDEO.height,
+        width: ZOOM_VIDEO.bufferWidth,
+        height: ZOOM_VIDEO.bufferHeight,
         style: { backgroundImage: `url(${assetPath(ZOOM_VIDEO.poster.slice(1))})` },
         'data-map-frame': 'zoom',
       }),
       createElement('canvas', {
         ref: globeCanvasRef,
-        className: 'figma-deep-zoom-globe is-hidden',
+        className: 'figma-deep-zoom-globe',
+        style: { opacity: 0 },
         'data-map-globe': 'planet',
       }),
       createElement('video', {
@@ -474,6 +594,28 @@ export function DeepZoomMap() {
         tabIndex: -1,
         disablePictureInPicture: true,
         'data-map-video': 'zoom',
+      })
+    ),
+    // The two keys lie exactly over one another; progress along the clip decides
+    // which shows (see MAP_LEGEND).
+    ['symbols', 'numbered'].map((kind) =>
+      createElement('img', {
+        key: kind,
+        ref: kind === 'numbered' ? legendNumberedRef : legendSymbolsRef,
+        className: 'figma-deep-zoom-legend',
+        src: assetPath(MAP_LEGEND[kind].slice(1)),
+        alt: kind === 'numbered' ? '지도 범례' : '',
+        'aria-hidden': kind === 'numbered' ? undefined : 'true',
+        width: MAP_LEGEND.width,
+        height: MAP_LEGEND.height,
+        draggable: false,
+        style: {
+          left: MAP_LEGEND.left,
+          top: MAP_LEGEND.top,
+          height: MAP_LEGEND.heightPercent,
+          opacity: kind === 'numbered' ? 0 : 1,
+        },
+        'data-map-legend': kind,
       })
     ),
     HOUSE_HOTSPOTS.map((house, index) =>

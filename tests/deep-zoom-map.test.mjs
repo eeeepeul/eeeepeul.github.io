@@ -8,7 +8,14 @@ import {
   HOME_ROTATION,
   clampLatitude,
   easeInOut,
+  getDragDegreesPerPixel,
   getFacingRotation,
+  getGlobeScale,
+  getHandoffOpacity,
+  MAP_LEGEND,
+  getLegendNumberedOpacity,
+  getVideoPlanetScale,
+  getZoomAnchorTurn,
   getShortestYawDelta,
   HOUSE_HOTSPOTS,
   ZOOM_VIDEO,
@@ -72,8 +79,11 @@ test('a 16:9 window shows the whole frame at its own proportions', () => {
   assert.equal(state.video.top, 0)
 })
 
-test('the planet texture ships with the site', () => {
+test('the planet and sky textures ship with the site', () => {
   assert.ok(existsSync(new URL(`../public${GLOBE.texture}`, import.meta.url)))
+  assert.ok(existsSync(new URL(`../public${GLOBE.milkyWay.texture}`, import.meta.url)))
+  assert.ok(GLOBE.milkyWay.blackLevel >= 0 && GLOBE.milkyWay.blackLevel < 0.2)
+  assert.ok(GLOBE.milkyWay.solidRadius >= 0 && GLOBE.milkyWay.solidRadius < 1)
 })
 
 test('facing rotation puts a longitude/latitude at the front of the sphere', () => {
@@ -100,4 +110,103 @@ test('the home turn eases from rest to rest', () => {
   assert.equal(easeInOut(0.5), 0.5)
   assert.ok(easeInOut(0.25) < 0.25)
   assert.ok(easeInOut(0.75) > 0.75)
+})
+
+test('the planet grows exponentially from a small start to the clip size', () => {
+  assert.equal(getGlobeScale(0), GLOBE.minScale)
+  assert.equal(getGlobeScale(1), 1)
+  assert.equal(getGlobeScale(-3), GLOBE.minScale)
+  assert.equal(getGlobeScale(4), 1)
+  assert.ok(Math.abs(getGlobeScale(0.5) - Math.sqrt(GLOBE.minScale)) < 1e-9)
+  assert.ok(GLOBE.minScale > 0 && GLOBE.minScale < 1)
+  assert.ok(GLOBE.starCount > 0)
+})
+
+test('a drag turns the planet so its surface follows the pointer', () => {
+  const small = getDragDegreesPerPixel(GLOBE.minScale)
+  const full = getDragDegreesPerPixel(1)
+
+  // One pixel is 1 / (radius * scale) radians, so a smaller planet turns more.
+  assert.ok(Math.abs(full - 180 / Math.PI / GLOBE.radius) < 1e-9)
+  assert.ok(small > full)
+  // A larger on-screen frame means each pixel is a smaller part of the planet.
+  assert.ok(getDragDegreesPerPixel(1, 2) < full)
+})
+
+test('zooming towards the pointer turns the planet to keep that point in place', () => {
+  const point = { x: 120, y: -60 }
+  const grow = getZoomAnchorTurn(point, 0.5, 0.6)
+  const shrink = getZoomAnchorTurn(point, 0.6, 0.5)
+
+  // Centre pointer: nothing to anchor. Off the planet: nothing to anchor.
+  assert.equal(getZoomAnchorTurn({ x: 0, y: 0 }, 0.5, 0.6), null)
+  assert.equal(getZoomAnchorTurn({ x: 400, y: 0 }, 0.5, 0.6), null)
+  // Growing pulls the point back towards the centre: left and down here.
+  assert.ok(grow.yaw < 0 && grow.pitch > 0)
+  // Shrinking is the exact opposite turn.
+  assert.ok(Math.abs(grow.yaw + shrink.yaw) < 1e-9)
+  assert.ok(Math.abs(grow.pitch + shrink.pitch) < 1e-9)
+  // The turn follows the direction of the pointer from the centre.
+  assert.ok(Math.abs(grow.yaw / grow.pitch - point.x / point.y) < 1e-9)
+})
+
+test('the sky turns with the planet, as it does in Google Earth', () => {
+  assert.equal(GLOBE.skyFollow, 1)
+})
+
+test('the 3D planet follows the clip planet in size while it dissolves away', () => {
+  // Starts at the clip's first frame size and never shrinks while the clip plays on.
+  assert.equal(getVideoPlanetScale(0), 1)
+  let previous = 1
+  for (let step = 1; step <= 40; step += 1) {
+    const scale = getVideoPlanetScale(step / 100)
+    assert.ok(scale >= previous)
+    previous = scale
+  }
+  // Measured on the clip: about 2.4x by the time the planet fills the frame.
+  assert.ok(Math.abs(getVideoPlanetScale(0.25) - 2.435) < 1e-9)
+  // Interpolates between the measured points.
+  const between = getVideoPlanetScale(0.0917)
+  assert.ok(between > getVideoPlanetScale(0.0833) && between < getVideoPlanetScale(0.1))
+})
+
+test('the planet dissolves smoothly over a stretch of the clip, not in one step', () => {
+  assert.equal(getHandoffOpacity(0), 1)
+  assert.equal(getHandoffOpacity(GLOBE.handoffStart), 1)
+  assert.equal(getHandoffOpacity(GLOBE.handoffEnd), 0)
+  assert.equal(getHandoffOpacity(1), 0)
+  let previous = 1
+  for (let step = 0; step <= 50; step += 1) {
+    const opacity = getHandoffOpacity((step / 50) * GLOBE.handoffEnd)
+    assert.ok(opacity <= previous + 1e-12)
+    previous = opacity
+  }
+  // No single wheel step covers the dissolve: the clip is never rushed in.
+  assert.ok(GLOBE.firstStepMax < GLOBE.handoffEnd - GLOBE.handoffStart)
+})
+
+test('both map keys ship with the site', () => {
+  assert.ok(existsSync(new URL(`../public${MAP_LEGEND.symbols}`, import.meta.url)))
+  assert.ok(existsSync(new URL(`../public${MAP_LEGEND.numbered}`, import.meta.url)))
+  assert.ok(MAP_LEGEND.width > 0 && MAP_LEGEND.height > 0)
+})
+
+test('the keys cross as the planet fills the screen and space disappears', () => {
+  // Symbol-only key over space: the globe and the start of the clip.
+  assert.equal(getLegendNumberedOpacity(0), 0)
+  assert.equal(getLegendNumberedOpacity(MAP_LEGEND.crossFrom), 0)
+  // Numbered key once the map fills the screen.
+  assert.equal(getLegendNumberedOpacity(MAP_LEGEND.crossTo), 1)
+  assert.equal(getLegendNumberedOpacity(1), 1)
+  // In between they swap smoothly, never both fully hidden.
+  let previous = 0
+  for (let step = 0; step <= 40; step += 1) {
+    const progress = MAP_LEGEND.crossFrom + ((MAP_LEGEND.crossTo - MAP_LEGEND.crossFrom) * step) / 40
+    const numbered = getLegendNumberedOpacity(progress)
+    assert.ok(numbered >= previous)
+    assert.ok(numbered >= 0 && numbered <= 1)
+    previous = numbered
+  }
+  // The cross happens after the planet has filled the clip's frame (about 25%).
+  assert.ok(MAP_LEGEND.crossTo >= 0.25)
 })
