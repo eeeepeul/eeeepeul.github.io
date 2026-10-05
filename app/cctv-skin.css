@@ -1,0 +1,1151 @@
+/* CCTV page skin: the grey control-room layout.
+   Sizes are written in `--m`, one pixel of the 2000 x 1125 design (0.05vw), so the
+   whole page scales like the design at any window width. */
+
+.experience-shell.experience-shell--cctv {
+  --m: 0.05vw;
+  --cctv-page: #dddfde;
+  --cctv-panel: #a7b0b0;
+  --cctv-panel-light: #ebedee;
+  --cctv-body: #e2e4e5;
+  --cctv-soft: #c9cdce;
+  --cctv-dash: #b9bfc0;
+  --cctv-handle: #8b9494;
+  --cctv-ink: #4b5455;
+  --cctv-red: #770509;
+  --cctv-video: #f5f9fa;
+  --cctv-font-small: max(10px, calc(13 * var(--m)));
+  --cctv-font: max(12px, calc(17 * var(--m)));
+  --cctv-font-head: max(14px, calc(22 * var(--m)));
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(462 * var(--m));
+  grid-template-rows: minmax(0, 1fr);
+  column-gap: calc(35 * var(--m));
+  width: 100%;
+  height: 100dvh;
+  min-height: 560px;
+  padding: 3.4dvh calc(38 * var(--m)) 3.4dvh calc(40 * var(--m));
+  overflow: hidden;
+  background: var(--cctv-page);
+  color: var(--cctv-ink);
+}
+
+/* ---- left column ------------------------------------------------------- */
+.experience-shell--cctv > .stage-workspace.cctv-layout {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  grid-template-rows: 63fr 847fr 118fr;
+  row-gap: 1dvh;
+  height: 100%;
+  min-height: 0;
+}
+
+.experience-shell--cctv .cctv-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  padding: 0 calc(20 * var(--m));
+  background: var(--cctv-panel);
+}
+
+.experience-shell--cctv .cctv-topbar-actions {
+  display: flex;
+  gap: calc(10 * var(--m));
+}
+
+.experience-shell--cctv .cctv-topbar .action-button {
+  min-height: 0;
+  padding: calc(7 * var(--m)) calc(16 * var(--m));
+  color: #fff;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 0;
+  font: inherit;
+  font-size: var(--cctv-font-small);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.experience-shell--cctv .cctv-topbar .action-button:hover:not(:disabled) {
+  color: var(--cctv-red);
+  background: #fff;
+}
+
+.experience-shell--cctv .cctv-topbar .action-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.experience-shell--cctv .cctv-topbar .recording-button {
+  color: #fff;
+  background: var(--cctv-red);
+  border-color: var(--cctv-red);
+}
+
+/* Page navigation sits inside the empty top bar. */
+.experience-shell--cctv > .page-route-nav {
+  position: absolute;
+  z-index: 6;
+  top: calc(3.4dvh + (63 * var(--m) - 30px) / 2);
+  left: calc(60 * var(--m));
+  padding: 0;
+  gap: 0;
+  background: transparent;
+  border: 0;
+}
+
+.experience-shell--cctv > .page-route-nav .page-route-link {
+  min-width: 0;
+  padding: 8px calc(16 * var(--m));
+  color: rgba(255, 255, 255, 0.78);
+  font-size: var(--cctv-font-small);
+  letter-spacing: 0.1em;
+}
+
+.experience-shell--cctv > .page-route-nav .page-route-link:hover {
+  color: #fff;
+}
+
+.experience-shell--cctv > .page-route-nav .page-route-link.is-current {
+  color: var(--cctv-red);
+  background: #fff;
+}
+
+/* Breadcrumb, video and footer bar share one grey frame. */
+.experience-shell--cctv .cctv-video-frame {
+  display: grid;
+  grid-template-rows: calc(40 * var(--m)) minmax(0, 1fr) calc(26 * var(--m));
+  min-height: 0;
+  padding: 0;
+  gap: 0;
+  background: var(--cctv-panel);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.experience-shell--cctv .cctv-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: calc(8 * var(--m));
+  padding: 0 calc(13 * var(--m));
+  color: #fff;
+  font-size: var(--cctv-font);
+  line-height: 1;
+}
+
+.experience-shell--cctv .cctv-breadcrumb i {
+  font-style: normal;
+  opacity: 0.85;
+}
+
+.experience-shell--cctv .cctv-stage-canvas {
+  position: relative;
+  min-height: 0;
+  margin: 0 calc(5 * var(--m));
+  overflow: hidden;
+  background: var(--cctv-video);
+  border: 0;
+  border-radius: 0;
+}
+
+.experience-shell--cctv .cctv-footerbar {
+  display: flex;
+  align-items: center;
+  gap: calc(14 * var(--m));
+  min-width: 0;
+  padding: 0 calc(14 * var(--m));
+  color: #fff;
+}
+
+.experience-shell--cctv .cctv-footerbar .drag-control {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: calc(12 * var(--m));
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.experience-shell--cctv .cctv-footerbar .drag-copy {
+  display: flex;
+  flex: 0 0 auto;
+  gap: calc(10 * var(--m));
+  margin: 0;
+  color: #fff;
+  font-size: var(--cctv-font-small);
+  letter-spacing: 0.08em;
+}
+
+.experience-shell--cctv .cctv-footerbar .drag-rail {
+  position: relative;
+  flex: 1 1 auto;
+  height: calc(12 * var(--m));
+  min-height: 8px;
+  margin: 0;
+  background: rgba(255, 255, 255, 0.35);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.experience-shell--cctv .cctv-footerbar .drag-rail .rail-start,
+.experience-shell--cctv .cctv-footerbar .drag-rail .rail-end {
+  display: none;
+}
+
+.experience-shell--cctv .cctv-footerbar .drag-fill {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.experience-shell--cctv .cctv-footerbar .drag-handle {
+  top: 50%;
+  width: calc(14 * var(--m));
+  height: calc(20 * var(--m));
+  min-height: 12px;
+  background: var(--cctv-handle);
+  border: 0;
+  border-radius: 0;
+  transform: translate(-50%, -50%);
+}
+
+.experience-shell--cctv .cctv-footerbar .drag-handle span {
+  display: none;
+}
+
+.experience-shell--cctv .cctv-footerbar .support-note,
+.experience-shell--cctv .cctv-footerbar .error-note {
+  margin: 0;
+  color: #fff;
+  font-size: var(--cctv-font-small);
+  white-space: nowrap;
+}
+
+.experience-shell--cctv .cctv-footerbar .error-note {
+  color: #ffd9dc;
+}
+
+/* Red crosshair and target box over the video. */
+.experience-shell--cctv .cctv-hud {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  pointer-events: none;
+}
+
+.experience-shell--cctv .cctv-hud-line {
+  position: absolute;
+  background: var(--cctv-red);
+}
+
+.experience-shell--cctv .cctv-hud-line--vertical {
+  left: 49.96%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.experience-shell--cctv .cctv-hud-line--horizontal {
+  left: 0;
+  right: 0;
+  top: 50.8%;
+  height: 1px;
+}
+
+.experience-shell--cctv .cctv-hud-ring {
+  position: absolute;
+  left: 49.96%;
+  top: 50.8%;
+  width: calc(26 * var(--m));
+  height: calc(26 * var(--m));
+  border: 1px solid var(--cctv-red);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.experience-shell--cctv .cctv-hud-target {
+  position: absolute;
+  /* Moved and sized from the track while the clip plays; this is the resting spot. */
+  left: 34.4%;
+  top: 33.3%;
+  width: 13.94%;
+  height: 25.2%;
+  border: 1px solid var(--cctv-red);
+  transform: translate(-50%, -50%);
+}
+
+.experience-shell--cctv .cctv-hud-target[data-tracking="lost"] {
+  opacity: 0;
+}
+
+.experience-shell--cctv .cctv-hud-target b {
+  position: absolute;
+  width: calc(10 * var(--m));
+  height: calc(10 * var(--m));
+  background: var(--cctv-red);
+}
+
+.experience-shell--cctv .cctv-hud-target b.is-top-left {
+  left: calc(-5 * var(--m));
+  top: calc(-5 * var(--m));
+}
+
+.experience-shell--cctv .cctv-hud-target b.is-top-right {
+  right: calc(-5 * var(--m));
+  top: calc(-5 * var(--m));
+}
+
+.experience-shell--cctv .cctv-hud-target b.is-bottom-left {
+  left: calc(-5 * var(--m));
+  bottom: calc(-5 * var(--m));
+}
+
+.experience-shell--cctv .cctv-hud-target b.is-bottom-right {
+  right: calc(-5 * var(--m));
+  bottom: calc(-5 * var(--m));
+}
+
+.experience-shell--cctv .cctv-hud-target em {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(18 * var(--m));
+  height: calc(18 * var(--m));
+  transform: translate(-50%, -50%);
+  background:
+    linear-gradient(var(--cctv-red), var(--cctv-red)) center / 1px 100% no-repeat,
+    linear-gradient(var(--cctv-red), var(--cctv-red)) center / 100% 1px no-repeat;
+}
+
+/* Timeline panel: waveform on a grid with a red playhead. */
+.experience-shell--cctv .cctv-timeline-panel {
+  position: relative;
+  min-height: 0;
+  background: var(--cctv-panel);
+}
+
+.experience-shell--cctv .cctv-timeline-grid {
+  position: absolute;
+  left: calc(33 * var(--m));
+  right: calc(17 * var(--m));
+  top: calc(18 * var(--m));
+  bottom: calc(17 * var(--m));
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)) left top / 100% 1px no-repeat,
+    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)) left bottom / 100% 1px no-repeat,
+    linear-gradient(rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.45)) left 50% / 100% 1px no-repeat,
+    linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.35)) left 25% / 100% 1px no-repeat,
+    linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.35)) left 75% / 100% 1px no-repeat,
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.45) 0 1px, transparent 1px 10%);
+  border: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.55);
+  border-right: 1px solid rgba(255, 255, 255, 0.55);
+}
+
+.experience-shell--cctv .cctv-timeline-grid > span,
+.experience-shell--cctv .cctv-timeline-grid > p {
+  display: none;
+}
+
+.experience-shell--cctv .cctv-timeline-grid .equalizer-waveform {
+  position: absolute;
+  inset: 8% 0;
+  width: 100%;
+  height: 84%;
+  overflow: visible;
+}
+
+.experience-shell--cctv .cctv-timeline-grid .equalizer-waveform path {
+  fill: #5b5f63;
+  stroke: #5b5f63;
+  stroke-width: 0.6;
+  vector-effect: non-scaling-stroke;
+}
+
+.experience-shell--cctv .cctv-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--cctv-red);
+}
+
+.experience-shell--cctv .cctv-playhead::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(-2 * var(--m));
+  width: calc(8 * var(--m));
+  height: calc(8 * var(--m));
+  min-width: 6px;
+  min-height: 6px;
+  border-radius: 50%;
+  background: var(--cctv-red);
+  transform: translateX(-50%);
+}
+
+.experience-shell--cctv .cctv-timeline-scale {
+  position: absolute;
+  left: calc(14 * var(--m));
+  top: calc(18 * var(--m));
+  bottom: calc(17 * var(--m));
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: calc(10 * var(--m));
+  line-height: 1;
+}
+
+.experience-shell--cctv .cctv-timecodes {
+  position: absolute;
+  right: calc(24 * var(--m));
+  top: calc(2 * var(--m));
+  display: flex;
+  gap: calc(8 * var(--m));
+  margin: 0;
+  color: #fff;
+  font-size: var(--cctv-font-small);
+  line-height: 1;
+}
+
+.experience-shell--cctv .cctv-timecodes .timeline {
+  display: none;
+}
+
+.experience-shell--cctv .cctv-timecodes .timecode + .timeline + .timecode::before {
+  content: "/ ";
+}
+
+.experience-shell--cctv .cctv-overlay-back {
+  position: absolute;
+  z-index: 4;
+  left: calc(16 * var(--m));
+  bottom: calc(14 * var(--m));
+  display: block;
+  width: calc(26 * var(--m));
+  min-width: 18px;
+  height: calc(28 * var(--m));
+  min-height: 19px;
+}
+
+.experience-shell--cctv .cctv-overlay-back .brand-mark,
+.experience-shell--cctv .cctv-overlay-back .brand-mark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.experience-shell--cctv .cctv-overlay-back .brand-mark svg * {
+  fill: var(--cctv-red);
+}
+
+/* ---- right column ------------------------------------------------------ */
+.experience-shell--cctv > .color-panel.sidebar-panel {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: stretch;
+  justify-self: stretch;
+  width: 100%;
+  height: 100%;
+  padding: calc(21 * var(--m)) calc(22 * var(--m));
+  overflow: auto;
+  background: var(--cctv-panel-light);
+  scrollbar-width: none;
+}
+
+.experience-shell--cctv > .color-panel.sidebar-panel::-webkit-scrollbar {
+  display: none;
+}
+
+.experience-shell--cctv .sidebar-content {
+  height: auto;
+  overflow: visible;
+}
+
+.experience-shell--cctv .cctv-sidebar-content {
+  display: flex;
+  flex-direction: column;
+  gap: calc(18 * var(--m));
+  height: auto;
+  padding: 0;
+}
+
+.experience-shell--cctv .cctv-sidebar-section {
+  display: block;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.experience-shell--cctv .panel-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: calc(49 * var(--m));
+  min-height: 30px;
+  padding: 0 calc(18 * var(--m));
+  background: var(--cctv-panel);
+}
+
+.experience-shell--cctv .panel-label {
+  margin: 0;
+  color: #fff;
+  font-size: var(--cctv-font-head);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: none;
+}
+
+.experience-shell--cctv .now-playing-section .panel-head::after {
+  content: "";
+  width: calc(20 * var(--m));
+  height: calc(18 * var(--m));
+  min-width: 12px;
+  min-height: 11px;
+  border: 1.5px solid #fff;
+  border-radius: 2px;
+  background: linear-gradient(#fff, #fff) left bottom / 100% 35% no-repeat;
+  opacity: 0.9;
+}
+
+.experience-shell--cctv .panel-toggle {
+  position: relative;
+  width: calc(28 * var(--m));
+  height: calc(28 * var(--m));
+  min-width: 18px;
+  min-height: 18px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.experience-shell--cctv .panel-toggle::before,
+.experience-shell--cctv .panel-toggle::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: #fff;
+  transform: translate(-50%, -50%);
+}
+
+.experience-shell--cctv .panel-toggle::before {
+  width: 62%;
+  height: 2px;
+}
+
+.experience-shell--cctv .panel-toggle::after {
+  width: 2px;
+  height: 62%;
+  transition: opacity 120ms ease;
+}
+
+.experience-shell--cctv .panel-toggle[aria-expanded="true"]::after {
+  opacity: 0;
+}
+
+.experience-shell--cctv .panel-body {
+  margin-top: calc(3 * var(--m));
+  padding: calc(15 * var(--m)) calc(18 * var(--m));
+  background: var(--cctv-body);
+  border: 1px dashed var(--cctv-dash);
+  color: var(--cctv-ink);
+  font-size: var(--cctv-font);
+}
+
+/* Now playing */
+.experience-shell--cctv .now-playing-card {
+  display: grid;
+  gap: calc(12 * var(--m));
+}
+
+.experience-shell--cctv .now-playing-main {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(20 * var(--m));
+}
+
+.experience-shell--cctv .now-playing-artwork {
+  flex: 0 0 calc(163 * var(--m));
+  width: calc(163 * var(--m));
+  height: calc(104 * var(--m));
+  background: var(--cctv-panel);
+  border-radius: 0;
+  transform: none;
+}
+
+.experience-shell--cctv .now-playing-copy {
+  display: grid;
+  gap: calc(6 * var(--m));
+  padding-top: calc(36 * var(--m));
+  min-width: 0;
+}
+
+.experience-shell--cctv .now-playing-copy strong {
+  color: var(--cctv-ink);
+  font-size: calc(19 * var(--m));
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.experience-shell--cctv .now-playing-copy span,
+.experience-shell--cctv .now-playing-copy small {
+  display: inline;
+  color: #a1a9aa;
+  font-size: calc(12 * var(--m));
+  line-height: 1.2;
+}
+
+.experience-shell--cctv .now-playing-progress {
+  display: block;
+}
+
+.experience-shell--cctv .now-playing-progress > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.experience-shell--cctv .now-playing-progress-track,
+.experience-shell--cctv .now-playing-volume {
+  --progress: 0%;
+  display: block;
+  width: 100%;
+  height: calc(22 * var(--m));
+  min-height: 14px;
+  margin: 0;
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background:
+    linear-gradient(var(--cctv-handle), var(--cctv-handle)) left / var(--progress) 100% no-repeat,
+    var(--cctv-panel);
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.experience-shell--cctv .now-playing-progress-track::-webkit-slider-thumb,
+.experience-shell--cctv .now-playing-volume::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: calc(53 * var(--m));
+  min-width: 28px;
+  height: calc(22 * var(--m));
+  min-height: 14px;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.85) 0 1px, transparent 1px 3px) center / 56% 56% no-repeat,
+    var(--cctv-handle);
+  border: 0;
+  border-radius: 0;
+}
+
+.experience-shell--cctv .now-playing-progress-track::-moz-range-thumb,
+.experience-shell--cctv .now-playing-volume::-moz-range-thumb {
+  width: calc(53 * var(--m));
+  height: calc(22 * var(--m));
+  background: var(--cctv-handle);
+  border: 0;
+  border-radius: 0;
+}
+
+.experience-shell--cctv .now-playing-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(20 * var(--m));
+}
+
+.experience-shell--cctv .now-playing-transport {
+  display: flex;
+  gap: calc(4 * var(--m));
+}
+
+.experience-shell--cctv .now-playing-transport button {
+  position: relative;
+  width: calc(31 * var(--m));
+  height: calc(31 * var(--m));
+  min-width: 20px;
+  min-height: 20px;
+  padding: 0;
+  background: var(--cctv-soft);
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.experience-shell--cctv .now-playing-transport button:hover:not(:disabled) {
+  background: var(--cctv-panel);
+}
+
+.experience-shell--cctv .now-playing-transport button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Transport icons are drawn with gradients, no extra images. */
+.experience-shell--cctv .now-playing-transport button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 46%;
+  height: 46%;
+  background: var(--cctv-handle);
+}
+
+.experience-shell--cctv .transport-previous::before,
+.experience-shell--cctv .transport-next::before {
+  width: 56%;
+  clip-path: polygon(0 50%, 48% 0, 48% 50%, 100% 0, 100% 100%, 48% 50%, 48% 100%);
+}
+
+.experience-shell--cctv .transport-next::before {
+  transform: scaleX(-1);
+}
+
+.experience-shell--cctv .transport-play::before {
+  clip-path: polygon(10% 0, 100% 50%, 10% 100%);
+}
+
+.experience-shell--cctv .transport-pause::before {
+  clip-path: polygon(0 0, 35% 0, 35% 100%, 0 100%, 0 0, 65% 0, 100% 0, 100% 100%, 65% 100%, 65% 0);
+}
+
+.experience-shell--cctv .now-playing-volume {
+  flex: 0 0 calc(138 * var(--m));
+  width: calc(138 * var(--m));
+  height: calc(20 * var(--m));
+}
+
+.experience-shell--cctv .now-playing-volume::-webkit-slider-thumb {
+  width: calc(34 * var(--m));
+  min-width: 16px;
+  height: calc(20 * var(--m));
+}
+
+/* Playing at */
+.experience-shell--cctv .playing-at-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(140 * var(--m));
+  align-items: center;
+  gap: calc(20 * var(--m));
+}
+
+.experience-shell--cctv .playing-at-spots {
+  display: grid;
+  gap: calc(11 * var(--m));
+}
+
+.experience-shell--cctv .playing-at-row {
+  display: flex;
+  align-items: center;
+  gap: calc(14 * var(--m));
+  color: #a1a9aa;
+  font-size: var(--cctv-font);
+  text-decoration: none;
+}
+
+.experience-shell--cctv .playing-at-row.is-active {
+  color: var(--cctv-ink);
+}
+
+.experience-shell--cctv .playing-at-dot {
+  flex: 0 0 calc(10 * var(--m));
+  width: calc(10 * var(--m));
+  height: calc(10 * var(--m));
+  min-width: 6px;
+  min-height: 6px;
+  background: var(--cctv-soft);
+  border: 0;
+  border-radius: 0;
+}
+
+.experience-shell--cctv .playing-at-dot.is-active {
+  background: var(--cctv-ink);
+}
+
+.experience-shell--cctv .playing-at-label {
+  flex: 0 0 calc(66 * var(--m));
+}
+
+.experience-shell--cctv .playing-at-bars {
+  display: flex;
+  gap: calc(2 * var(--m));
+  height: calc(20 * var(--m));
+}
+
+.experience-shell--cctv .playing-at-bars i {
+  display: block;
+  width: calc(6 * var(--m));
+  min-width: 3px;
+  background: var(--cctv-soft);
+  border: 0;
+}
+
+.experience-shell--cctv .playing-at-bars i.is-active {
+  background: var(--cctv-red);
+}
+
+.experience-shell--cctv .playing-at-technical-drawing {
+  width: 100%;
+  min-width: 0;
+}
+
+.experience-shell--cctv .playing-at-technical-drawing img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: grayscale(1);
+}
+
+/* Colour combination */
+.experience-shell--cctv .palette-presets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: calc(15 * var(--m));
+  padding: calc(11 * var(--m)) calc(15 * var(--m));
+}
+
+.experience-shell--cctv .palette-preset {
+  display: block;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.experience-shell--cctv .palette-preset-preview {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 85 / 80;
+  background: #fff;
+  border: 2px solid #fff;
+  border-radius: 0;
+  box-shadow: 0 0 0 1px var(--cctv-dash);
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.experience-shell--cctv .palette-preset[aria-pressed="true"] .palette-preset-preview {
+  background: var(--cctv-red);
+  border-color: var(--cctv-red);
+  box-shadow: none;
+}
+
+/* A small chip of the palette's own colour, so the options stay tellable apart. */
+.experience-shell--cctv .palette-main-swatch {
+  display: block;
+  width: 34%;
+  height: 34%;
+  background: var(--preset-main, #999);
+  border: 0;
+  border-radius: 0;
+}
+
+.experience-shell--cctv .palette-preset[aria-pressed="true"] .palette-main-swatch {
+  background: #fff;
+}
+
+.experience-shell--cctv .palette-preset:focus-visible .palette-preset-preview {
+  outline: 2px solid var(--cctv-ink);
+  outline-offset: 2px;
+}
+
+/* Pattern */
+.experience-shell--cctv .mosaic-section .settings-panel {
+  display: block;
+}
+
+.experience-shell--cctv .settings-panel-body {
+  display: grid;
+  gap: calc(8 * var(--m));
+  padding: calc(15 * var(--m)) calc(18 * var(--m));
+}
+
+.experience-shell--cctv .compact-setting-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: calc(49 * var(--m));
+  min-height: 30px;
+  padding: 0 calc(14 * var(--m));
+  overflow: hidden;
+  background: var(--cctv-panel-light);
+  border: 0;
+  border-radius: 0;
+  color: var(--cctv-ink);
+  font-size: var(--cctv-font);
+}
+
+.experience-shell--cctv .compact-setting-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--setting-fill, 0%);
+  background: var(--cctv-soft);
+}
+
+.experience-shell--cctv .compact-setting-row label,
+.experience-shell--cctv .compact-setting-row output {
+  position: relative;
+  z-index: 1;
+}
+
+.experience-shell--cctv .compact-setting-row output {
+  color: #a1a9aa;
+}
+
+/* Track info */
+.experience-shell--cctv .track-info-body {
+  min-height: calc(43 * var(--m));
+  padding: calc(8 * var(--m)) calc(18 * var(--m));
+}
+
+.experience-shell--cctv .track-info-body dl {
+  display: grid;
+  gap: calc(6 * var(--m));
+  margin: 0;
+  padding: calc(4 * var(--m)) 0;
+}
+
+.experience-shell--cctv .track-info-body dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: calc(16 * var(--m));
+}
+
+.experience-shell--cctv .track-info-body dt {
+  color: #a1a9aa;
+}
+
+.experience-shell--cctv .track-info-body dd {
+  margin: 0;
+  text-align: right;
+}
+
+/* ---- small screens: stack the columns ---------------------------------- */
+@media (max-width: 900px) {
+  .experience-shell.experience-shell--cctv {
+    --m: 0.1vw;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    height: auto;
+    min-height: 100dvh;
+    overflow: auto;
+    padding: 12px;
+    row-gap: 12px;
+  }
+
+  .experience-shell--cctv > .stage-workspace.cctv-layout {
+    grid-column: 1;
+    grid-template-rows: 44px auto 96px;
+    height: auto;
+  }
+
+  .experience-shell--cctv .cctv-video-frame {
+    grid-template-rows: 32px auto 12px;
+    height: auto;
+  }
+
+  .experience-shell--cctv .cctv-breadcrumb {
+    font-size: 13px;
+  }
+
+  .experience-shell--cctv .cctv-stage-canvas {
+    aspect-ratio: 16 / 10;
+    min-height: 0;
+  }
+
+  .experience-shell--cctv > .color-panel.sidebar-panel {
+    grid-column: 1;
+    grid-row: 2;
+    height: auto;
+  }
+
+  .experience-shell--cctv > .page-route-nav {
+    top: 12px;
+    left: 16px;
+  }
+}
+
+/* ---- resets over the older rules this skin replaces --------------------- */
+.experience-shell.experience-shell--cctv > .color-panel.sidebar-panel .sidebar-content {
+  flex: 0 0 auto;
+  height: auto;
+  margin-top: 0;
+}
+
+.experience-shell.experience-shell--cctv > .color-panel.sidebar-panel {
+  padding-right: calc(20 * var(--m));
+}
+
+.experience-shell.experience-shell--cctv .cctv-stage-canvas {
+  width: auto;
+  height: auto;
+}
+
+.experience-shell.experience-shell--cctv .cctv-timeline-grid {
+  width: auto;
+  max-width: none;
+  height: auto;
+}
+
+.experience-shell.experience-shell--cctv .now-playing-progress {
+  min-height: 0;
+  height: auto;
+  margin: 0;
+  padding: 0;
+}
+
+.experience-shell.experience-shell--cctv .playing-at-content {
+  min-height: 0;
+}
+
+.experience-shell.experience-shell--cctv .playing-at-spots {
+  padding: 0;
+}
+
+.experience-shell.experience-shell--cctv .track-info-body dl[hidden] {
+  display: none;
+}
+
+.experience-shell.experience-shell--cctv .now-playing-progress > span {
+  position: absolute;
+  display: block;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.experience-shell.experience-shell--cctv .now-playing-progress {
+  position: relative;
+}
+
+.experience-shell.experience-shell--cctv .palette-presets {
+  padding-top: calc(8 * var(--m));
+  padding-bottom: calc(8 * var(--m));
+}
+
+.experience-shell.experience-shell--cctv .now-playing-card {
+  width: 100%;
+  height: auto;
+  grid-template-rows: none;
+  overflow: visible;
+  background: var(--cctv-body);
+  border: 1px dashed var(--cctv-dash);
+}
+
+.experience-shell.experience-shell--cctv .palette-presets {
+  grid-template-rows: none;
+  grid-auto-rows: auto;
+  align-items: start;
+}
+
+.experience-shell.experience-shell--cctv .palette-preset {
+  width: 100%;
+  height: auto;
+}
+
+.experience-shell.experience-shell--cctv .palette-preset-preview {
+  height: auto;
+  min-height: 0;
+}
+
+/* The start / save buttons, flow-scale slider and notes were never part of the
+   on-screen design (the older frame hid them too); they stay in the page, out of
+   sight, and only errors are shown. */
+.experience-shell.experience-shell--cctv .cctv-topbar-actions,
+.experience-shell.experience-shell--cctv .cctv-footerbar .drag-control,
+.experience-shell.experience-shell--cctv .cctv-footerbar .support-note,
+.experience-shell.experience-shell--cctv .cctv-timecodes {
+  display: none;
+}
+
+/* Album art and its reflection.
+   The reflection is a copy of the art, as big as the art, flipped upside down and
+   faded out downwards. On hover both turn the same way about their own vertical
+   centre line (left side towards the viewer), so the reflection is the true mirror
+   image of the turned art and the two cross in an X in the middle. It sits behind
+   the progress bar and buttons, which stay readable. At rest the art is flat and the
+   reflection lies a small gap below it; turning closes that gap. */
+.experience-shell.experience-shell--cctv .now-playing-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  gap: calc(8 * var(--m));
+}
+
+.experience-shell.experience-shell--cctv .now-playing-artwork {
+  position: relative;
+  overflow: visible;
+  margin-bottom: calc(18 * var(--m));
+  background: transparent;
+}
+
+.experience-shell.experience-shell--cctv .now-playing-artwork-face,
+.experience-shell.experience-shell--cctv .now-playing-artwork-reflection {
+  display: block;
+  width: 100%;
+  background: var(--cctv-panel);
+  transform-origin: 50% 50%;
+  transition:
+    transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    top 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+}
+
+.experience-shell.experience-shell--cctv .now-playing-artwork-face {
+  height: 100%;
+  transform: perspective(calc(475 * var(--m))) rotateY(0deg);
+}
+
+.experience-shell.experience-shell--cctv .now-playing-artwork-reflection {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6.4 * var(--m));
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  /* The mask is drawn before the flip, so "to top" reads as fading downwards. */
+  -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+  mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+  transform: scaleY(-1) perspective(calc(475 * var(--m))) rotateY(0deg);
+}
+
+.experience-shell.experience-shell--cctv .now-playing-artwork:hover .now-playing-artwork-face {
+  transform: scale(0.94) perspective(calc(475 * var(--m))) rotateY(11deg);
+}
+
+.experience-shell.experience-shell--cctv .now-playing-artwork:hover .now-playing-artwork-reflection {
+  top: 94%;
+  transform: scaleY(-1) scale(0.94) perspective(calc(475 * var(--m))) rotateY(11deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .experience-shell.experience-shell--cctv .now-playing-artwork-face,
+  .experience-shell.experience-shell--cctv .now-playing-artwork-reflection {
+    transition: none;
+  }
+}

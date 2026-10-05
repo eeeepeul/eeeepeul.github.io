@@ -185,14 +185,14 @@ test('the native Figma home sidebar uses the exact 319 by 664 geometry', () => {
   assert.doesNotMatch(css, /\.figma-home-sidebar-artwork\s*\{/)
 })
 
-test('the page-one scene fills the canvas and keeps the exact map crop and controls', () => {
+test('the page-one scene fills the canvas and fills the canvas with the map and keeps the controls', () => {
   assert.match(
     css,
     /\.experience-shell:has\(\.figma-home-sidebar-content\)\s+>\s+\.landing-space\s*\{[^}]*position:\s*fixed;[^}]*inset:\s*0;[^}]*min-height:\s*100dvh;/s
   )
   assert.match(
     css,
-    /\.figma-home-map-clip\s*\{[^}]*top:\s*-7px;[^}]*left:\s*0;[^}]*width:\s*833px;[^}]*height:\s*674px;/s
+    /\.figma-home-map-clip\s*\{[^}]*position:\s*absolute;[^}]*inset:\s*0;[^}]*overflow:\s*hidden;/s
   )
   assert.match(
     css,

@@ -424,6 +424,7 @@ __metadata:
     prettier: ^3.7.3
     react: 19.2.4
     react-dom: 19.2.4
+    three: ^0.186.1
     typescript: ^5.9.3
   languageName: unknown
   linkType: soft
@@ -696,6 +697,13 @@ __metadata:
     babel-plugin-macros:
       optional: true
   checksum: 879ad68e3e81adcf4373038aaafe55f968294955593660e173fbf679204aff158c59966716a60b29af72dc88795cfb2c479b6d2c3c87b2b2d282f3e27cc66461
+  languageName: node
+  linkType: hard
+
+"three@npm:^0.186.1":
+  version: 0.186.1
+  resolution: "three@npm:0.186.1"
+  checksum: ebcfeb4b3781dd96cf30871069681af4874c542b54eabd4316adbfdde69066569c28b4863705a0deb6e7c22ed2cc814bc7fee47cf5747b9b66b7dcf42905ef41
   languageName: node
   linkType: hard
 

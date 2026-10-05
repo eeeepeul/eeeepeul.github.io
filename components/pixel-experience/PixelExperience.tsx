@@ -11,7 +11,7 @@ import { DEFAULT_MOSAIC_SETTINGS, normalizeMosaicSettings } from '../../lib/mosa
 import { MOSAIC_VIDEO_FILES, pickNextVideoIndex } from '../../lib/video-playlist.mjs'
 import { getCctvHouse, normalizeHouseId } from '../../lib/cctv-houses.mjs'
 import { waveformPathFromSamples } from '../../lib/waveform.mjs'
-import { formatCctvHudTimestamp } from '../../lib/cctv-hud.mjs'
+import { MOTION_STEP_FPS, sampleMotionTrack } from '../../lib/motion-track.mjs'
 import { useH264Recorder } from '../../hooks/useH264Recorder'
 import { usePlaybackEngine } from '../../hooks/usePlaybackEngine'
 import { ColorPanel } from './ColorPanel'
@@ -30,6 +30,7 @@ function formatTime(value: number) {
 
 export function PixelExperience() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const targetRef = useRef<HTMLSpanElement>(null)
   const [manualPosition, setManualPosition] = useState(0.18)
   const [paletteId, setPaletteId] = useState(DEFAULT_PIXEL_PALETTE_ID)
   const [settings, setSettings] = useState<MosaicSettings>(() => ({ ...DEFAULT_MOSAIC_SETTINGS }))
@@ -62,6 +63,13 @@ export function PixelExperience() {
   const playRandomNextVideo = useCallback(() => {
     setVideoIndex((current) => pickNextVideoIndex(current, MOSAIC_VIDEO_FILES.length))
   }, [])
+  const handleVolumeChange = useCallback(
+    (volume: number) => {
+      const audio = playback.audioRef.current
+      if (audio) audio.volume = Math.min(1, Math.max(0, volume))
+    },
+    [playback.audioRef]
+  )
   const handleExport = useCallback(async () => {
     const started = await recorder.startRecording(canvasRef.current, playback.recordingAudioStream)
     if (started) await playback.restart()
@@ -92,8 +100,48 @@ export function PixelExperience() {
     void video.play().catch(() => {})
   }, [house.id, videoElement, playback.status, playback.videoRef])
 
+  // The red target box follows the person in the clip. The clips are fixed, so where
+  // the person is was worked out ahead of time (scripts/build-motion-track.mjs) and is
+  // only looked up here by the video's own time.
+  useEffect(() => {
+    const video = videoElement
+    if (!video) return undefined
+
+    let cancelled = false
+    let frame = 0
+    let track: unknown = null
+    fetch(assetPath(`media/tracks/${house.id}.json`))
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (!cancelled) track = data
+      })
+      .catch(() => {})
+
+    const tick = () => {
+      frame = window.requestAnimationFrame(tick)
+      const target = targetRef.current
+      if (!target) return
+      if (!track) {
+        target.dataset.tracking = 'off'
+        return
+      }
+      const box = sampleMotionTrack(track, video.currentTime, MOTION_STEP_FPS)
+      target.dataset.tracking = box.visible ? 'on' : 'lost'
+      // Only the position follows the subject; the box keeps one fixed size.
+      target.style.left = `${box.x * 100}%`
+      target.style.top = `${box.y * 100}%`
+    }
+    frame = window.requestAnimationFrame(tick)
+
+    return () => {
+      cancelled = true
+      window.cancelAnimationFrame(frame)
+    }
+  }, [house.id, videoElement])
+
   const progress = playback.duration > 0 ? playback.currentTime / playback.duration : 0
   const activeError = webglError || playback.error || recorder.error
+  const houseTitleCase = house.label.replace(/^./, (letter) => letter.toUpperCase())
   const waveformPaths = useMemo(
     () => [waveformPathFromSamples(playback.waveformSamples, 240)],
     [playback.waveformSamples]
@@ -127,17 +175,41 @@ export function PixelExperience() {
           onPrevious={() => void playback.restart()}
           onTogglePlayback={() => void playback.toggle()}
           onNext={playRandomNextVideo}
+          onVolumeChange={handleVolumeChange}
         />
       }
     >
       <div className="stage-workspace cctv-layout">
-        <section className="visual-stage cctv-video-frame" aria-label="픽셀 CCTV 재생 영역">
-          <div className="visual-stage-canvas cctv-stage-canvas">
-            <header className="cctv-overlay-header" aria-label={`${house.label} 라이브 상태`}>
-              <span>{house.label}</span>
-              <span className="live-indicator"><i aria-hidden="true" />LIVE</span>
-            </header>
+        <header className="cctv-topbar" aria-label="재생과 저장">
+          <div className="cctv-topbar-actions">
+            <button
+              className="action-button"
+              type="button"
+              onClick={() => void (hasStarted ? playback.restart() : playback.start())}
+              disabled={playback.status === 'loading' || recorder.recording}
+            >
+              {playback.status === 'loading' ? '시작 중' : hasStarted ? '처음부터' : '음악 시작'}
+            </button>
+            <ExportButton
+              supported={recorder.supported}
+              recording={recorder.recording}
+              disabled={!hasStarted || !playback.recordingAudioStream}
+              onStart={() => void handleExport()}
+              onStop={recorder.stopRecording}
+            />
+          </div>
+        </header>
 
+        <section className="visual-stage cctv-video-frame" aria-label="픽셀 CCTV 재생 영역">
+          <nav className="cctv-breadcrumb" aria-label="현재 위치">
+            <span>Country</span>
+            <i aria-hidden="true">&gt;</i>
+            <span>{houseTitleCase}</span>
+            <i aria-hidden="true">&gt;</i>
+            <span>CCTV A</span>
+          </nav>
+
+          <div className="visual-stage-canvas cctv-stage-canvas">
             {showLiquidEffect && (
               <PixelCanvas
                 video={videoElement}
@@ -166,34 +238,18 @@ export function PixelExperience() {
               onEnded={playRandomNextVideo}
               aria-hidden="true"
             />
-            <div className="cctv-thermal-hud" aria-label="CCTV 측정 그래픽">
-              <span className="cctv-thermal-top-bar" aria-hidden="true" />
-              <div className="cctv-thermal-zone" aria-hidden="true">
-                <span className="cctv-thermal-zone-label">zone-alarm</span>
-                <span className="cctv-thermal-stats">Avg:23.5 Min:15.8 Max:35.9 °C</span>
-              </div>
-              <time className="cctv-thermal-timestamp">
-                {formatCctvHudTimestamp(playback.currentTime)}
-              </time>
-              <span className="cctv-thermal-reading cctv-thermal-reading--left">36.1 °C</span>
-              <span className="cctv-thermal-reading cctv-thermal-reading--center">15.7 °C</span>
-              <span className="cctv-thermal-reading cctv-thermal-reading--right">N/A</span>
-              <span className="cctv-thermal-reading cctv-thermal-reading--bottom">15.7 °C</span>
-              <span className="cctv-thermal-cursor" aria-hidden="true" />
-              <div className="cctv-thermal-temperature-scale" aria-hidden="true">
-                <span>36.1 °C</span>
-                <i />
-                <span>15.7 °C</span>
-              </div>
-              <span className="cctv-thermal-tpc">TPC</span>
+            <div className="cctv-hud" aria-hidden="true">
+              <i className="cctv-hud-line cctv-hud-line--vertical" />
+              <i className="cctv-hud-line cctv-hud-line--horizontal" />
+              <i className="cctv-hud-ring" />
+              <span className="cctv-hud-target" ref={targetRef} data-tracking="off">
+                <b className="is-top-left" />
+                <b className="is-top-right" />
+                <b className="is-bottom-left" />
+                <b className="is-bottom-right" />
+                <em />
+              </span>
             </div>
-            <a className="cctv-overlay-back" href={assetPath('')} aria-label="메인 화면으로 이동">
-              <span
-                className="brand-mark"
-                aria-hidden="true"
-                dangerouslySetInnerHTML={{ __html: brandMarkSvg() }}
-              />
-            </a>
             <audio
               ref={playback.audioRef}
               className="source-media"
@@ -201,66 +257,63 @@ export function PixelExperience() {
               preload="auto"
             />
           </div>
-          <section className="control-deck cctv-control-deck" aria-label="픽셀 컨트롤">
-          <div className="timeline-row">
+
+          <div className="cctv-footerbar">
+            <DragControl
+              value={manualPosition}
+              onChange={setManualPosition}
+              disabled={!isReady && playback.status === 'loading'}
+            />
+            {!recorder.supported && (
+              <p className="support-note">
+                H.264 MP4 저장은 지원 브라우저에서만 활성화됩니다. 화면 조작과 자동 Kick 반응은 그대로
+                사용할 수 있습니다.
+              </p>
+            )}
+            {activeError && (
+              <p className="error-note" role="alert">
+                {activeError}
+              </p>
+            )}
+          </div>
+        </section>
+
+        <section className="cctv-timeline-panel" aria-label="재생 타임라인">
+          <a className="cctv-overlay-back" href={assetPath('')} aria-label="메인 화면으로 이동">
+            <span
+              className="brand-mark"
+              aria-hidden="true"
+              dangerouslySetInnerHTML={{ __html: brandMarkSvg() }}
+            />
+          </a>
+          <div className="cctv-timeline-scale" aria-hidden="true">
+            <span>5</span>
+            <span>0</span>
+          </div>
+          <div className="cctv-timeline-grid kick-monitor music-equalizer" aria-label="실시간 음악 웨이브폼">
+            <svg
+              className="equalizer-waveform"
+              viewBox="0 0 240 72"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              {waveformPaths.map((path, index) => (
+                <path key={index} d={path} />
+              ))}
+            </svg>
+            <div
+              className="cctv-playhead"
+              style={{ left: `${Math.min(1, Math.max(0, progress)) * 100}%` }}
+              aria-hidden="true"
+            />
+          </div>
+          <div className="timeline-row cctv-timecodes">
             <span className="timecode">{formatTime(playback.currentTime)}</span>
             <div className="timeline" aria-hidden="true">
               <span style={{ transform: `scaleX(${Math.min(1, Math.max(0, progress))})` }} />
             </div>
             <span className="timecode">{formatTime(playback.duration)}</span>
           </div>
-
-          <DragControl
-            value={manualPosition}
-            onChange={setManualPosition}
-            disabled={!isReady && playback.status === 'loading'}
-          />
-
-          <div className="action-row">
-            <div className="kick-monitor music-equalizer" aria-label="실시간 음악 웨이브폼">
-              <span>EQUALIZER</span>
-              <svg
-                className="equalizer-waveform"
-                viewBox="0 0 240 72"
-                preserveAspectRatio="none"
-                aria-hidden="true"
-              >
-                {waveformPaths.map((path, index) => (
-                  <path key={index} d={path} />
-                ))}
-              </svg>
-            </div>
-            <div className="button-group">
-              <button
-                className="action-button"
-                type="button"
-                onClick={() => void (hasStarted ? playback.restart() : playback.start())}
-                disabled={playback.status === 'loading' || recorder.recording}
-              >
-                {playback.status === 'loading' ? '시작 중' : hasStarted ? '처음부터' : '음악 시작'}
-              </button>
-              <ExportButton
-                supported={recorder.supported}
-                recording={recorder.recording}
-                disabled={!hasStarted || !playback.recordingAudioStream}
-                onStart={() => void handleExport()}
-                onStop={recorder.stopRecording}
-              />
-            </div>
-          </div>
-
-          {!recorder.supported && (
-            <p className="support-note">
-              H.264 MP4 저장은 지원 브라우저에서만 활성화됩니다. 화면 조작과 자동 Kick 반응은 그대로
-              사용할 수 있습니다.
-            </p>
-          )}
-          {activeError && (
-            <p className="error-note" role="alert">
-              {activeError}
-            </p>
-          )}
-          </section>
         </section>
       </div>
     </ExperienceFrame>

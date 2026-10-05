@@ -206,10 +206,7 @@ button:focus-visible,
 
 .figma-home-map-clip {
   position: absolute;
-  top: -7px;
-  left: 0;
-  width: 833px;
-  height: 674px;
+  inset: 0;
   overflow: hidden;
 }
 
@@ -235,27 +232,73 @@ button:focus-visible,
   pointer-events: none;
 }
 
-.figma-deep-zoom-layer {
+.figma-deep-zoom-frame {
   position: absolute;
   left: 0;
   top: 0;
   display: block;
   max-width: none;
-  border: 0;
-  object-fit: fill;
-  transform-origin: 0 0;
+  /* Hidden behind the planet; it stays a moment after the planet fades back in. */
+  opacity: 0;
+  transition: opacity 0s linear 450ms;
+  background-color: #000;
+  background-size: 100% 100%;
   user-select: none;
-  -webkit-user-drag: none;
   pointer-events: none;
-  visibility: hidden;
 }
 
-.figma-deep-zoom-layer[data-map-level="level-0"] {
-  visibility: visible;
+.figma-deep-zoom-map[data-map-mode="video"] .figma-deep-zoom-frame,
+.figma-deep-zoom-map[data-map-mode="aligning"] .figma-deep-zoom-frame {
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+.figma-deep-zoom-globe {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  max-width: none;
+  opacity: 1;
+  transition: opacity 420ms ease;
+  user-select: none;
+  pointer-events: none;
+}
+
+.figma-deep-zoom-globe.is-hidden {
+  opacity: 0;
+}
+
+.figma-deep-zoom-map[data-map-mode="globe"] {
+  cursor: grab;
+}
+
+.figma-deep-zoom-map[data-map-mode="globe"].is-dragging {
+  cursor: grabbing;
+}
+
+.figma-deep-zoom-map[data-map-mode="video"],
+.figma-deep-zoom-map[data-map-mode="aligning"] {
+  cursor: default;
+}
+
+/* The decoder source for the canvas; kept in layout so it keeps decoding. */
+.figma-deep-zoom-video {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .figma-home-map-engine[data-map-status="loading"] {
   background: #f8f7f4;
+}
+
+.figma-home-map-engine[data-map-status="ready"] {
+  background: #000;
 }
 
 .figma-home-map-engine[data-map-status="error"] {
@@ -270,6 +313,15 @@ button:focus-visible,
   color: rgba(31, 31, 31, 0.55);
   font: 12px/1.2 "Poppins", Arial, sans-serif;
   letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+.figma-deep-zoom-legend {
+  position: absolute;
+  z-index: 2;
+  width: auto;
+  max-width: none;
+  user-select: none;
   pointer-events: none;
 }
 
@@ -296,54 +348,15 @@ button:focus-visible,
 }
 
 .figma-deep-zoom-house-hit {
-  width: 11%;
-  height: 11%;
   opacity: 0;
 }
 
-.figma-deep-zoom-debug {
-  position: absolute;
-  left: 12px;
-  bottom: 12px;
-  z-index: 4;
-  display: grid;
-  gap: 3px;
-  padding: 8px 10px;
-  color: #282828;
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(40, 40, 40, 0.4);
-  font: 10px/1.25 "Poppins", Arial, sans-serif;
+.figma-deep-zoom-map[data-map-houses="inactive"] .figma-deep-zoom-house-hit {
+  visibility: hidden;
   pointer-events: none;
 }
 
-.figma-deep-zoom-debug-crosshair {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 18px;
-  height: 18px;
-  transform: translate(-50%, -50%);
-  border: 1px solid rgba(20, 20, 20, 0.8);
-  border-radius: 50%;
-  box-shadow:
-    0 -10px 0 -9px rgba(20, 20, 20, 0.8),
-    0 10px 0 -9px rgba(20, 20, 20, 0.8),
-    -10px 0 0 -9px rgba(20, 20, 20, 0.8),
-    10px 0 0 -9px rgba(20, 20, 20, 0.8);
-}
-
-.figma-deep-zoom-debug-target {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 7px;
-  height: 7px;
-  transform: translate(-50%, -50%) rotate(45deg);
-  border: 1px solid #282828;
-  background: rgba(255, 255, 255, 0.72);
-}
-
-.figma-deep-zoom-world img {
+.figma-deep-zoom-world canvas {
   display: block;
   outline: none;
 }
