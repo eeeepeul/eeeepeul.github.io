@@ -14,6 +14,8 @@ import {
   getHandoffOpacity,
   MAP_LEGEND,
   getLegendNumberedOpacity,
+  getStarsAmount,
+  getVideoLimbRatio,
   getVideoPlanetScale,
   getZoomAnchorTurn,
   getShortestYawDelta,
@@ -163,14 +165,14 @@ test('the 3D planet follows the clip planet in size while it dissolves away', ()
     assert.ok(scale >= previous)
     previous = scale
   }
-  // Measured on the clip: about 2.4x by the time the planet fills the frame.
-  assert.ok(Math.abs(getVideoPlanetScale(0.25) - 2.435) < 1e-9)
+  // Measured on the clip: about 1.6x by 21% of the way through.
+  assert.ok(Math.abs(getVideoPlanetScale(0.2074) - 1.687) < 1e-9)
   // Interpolates between the measured points.
-  const between = getVideoPlanetScale(0.0917)
-  assert.ok(between > getVideoPlanetScale(0.0833) && between < getVideoPlanetScale(0.1))
+  const between = getVideoPlanetScale(0.0916)
+  assert.ok(between > getVideoPlanetScale(0.0824) && between < getVideoPlanetScale(0.1008))
 })
 
-test('the planet dissolves smoothly over a stretch of the clip, not in one step', () => {
+test('the planet hands over to the clip right at its first frames, which match', () => {
   assert.equal(getHandoffOpacity(0), 1)
   assert.equal(getHandoffOpacity(GLOBE.handoffStart), 1)
   assert.equal(getHandoffOpacity(GLOBE.handoffEnd), 0)
@@ -181,8 +183,10 @@ test('the planet dissolves smoothly over a stretch of the clip, not in one step'
     assert.ok(opacity <= previous + 1e-12)
     previous = opacity
   }
-  // No single wheel step covers the dissolve: the clip is never rushed in.
-  assert.ok(GLOBE.firstStepMax < GLOBE.handoffEnd - GLOBE.handoffStart)
+  // The clip's first frame was laid into the planet's map, so the two agree only
+  // at the very start: the swap must finish within the first sliver of the clip.
+  assert.ok(GLOBE.handoffEnd > GLOBE.handoffStart)
+  assert.ok(GLOBE.handoffEnd <= 0.01)
 })
 
 test('both map keys ship with the site', () => {
@@ -207,6 +211,21 @@ test('the keys cross as the planet fills the screen and space disappears', () =>
     assert.ok(numbered >= 0 && numbered <= 1)
     previous = numbered
   }
-  // The cross happens after the planet has filled the clip's frame (about 25%).
-  assert.ok(MAP_LEGEND.crossTo >= 0.25)
+  // The cross happens after the planet has filled the clip's frame (about a third).
+  assert.ok(MAP_LEGEND.crossTo >= 0.3)
+})
+
+test('the 3D planet rim is squeezed onto the clip rim while the land stays put', () => {
+  assert.equal(getVideoLimbRatio(0), 1)
+  for (let step = 0; step <= 10; step += 1) {
+    const ratio = getVideoLimbRatio((step / 10) * GLOBE.handoffEnd)
+    assert.ok(ratio <= 1 && ratio > 0.9)
+  }
+})
+
+test('the sky stars stay over the clip while there is sky, then go', () => {
+  assert.equal(getStarsAmount(0), 1)
+  assert.equal(getStarsAmount(0.2), 1)
+  assert.equal(getStarsAmount(0.32), 0)
+  assert.equal(getStarsAmount(1), 0)
 })

@@ -16,6 +16,8 @@ import {
   getGlobeScale,
   getHandoffOpacity,
   getLegendNumberedOpacity,
+  getStarsAmount,
+  getVideoLimbRatio,
   getVideoPlanetScale,
   getShortestYawDelta,
   getZoomAnchorTurn,
@@ -173,7 +175,10 @@ export function DeepZoomMap() {
       // The planet dissolves into the clip inside the globe canvas itself, so both
       // are drawn as one sketch; the canvas stays opaque for the whole clip.
       globe.setScale(getVideoPlanetScale(progress))
+      globe.setLimbRatio(getVideoLimbRatio(progress))
+      globe.setStarsAmount(getStarsAmount(progress))
       globe.setGlobeMix(getHandoffOpacity(progress), progress < 0.5 ? 1 : 0)
+      globe.setSatellite(getHandoffOpacity(progress))
       globe.render()
       globeCanvasNode.style.opacity = '1'
     }
@@ -186,7 +191,10 @@ export function DeepZoomMap() {
       if (nextMode === 'video') {
           updateGlobeHandoff(progressRef.current)
       } else {
+        globe?.setLimbRatio(1)
+        globe?.setStarsAmount(0)
         globe?.setGlobeMix(1, 1)
+        globe?.setSatellite(nextMode === 'loading' ? 0 : 1)
         globeCanvasNode.style.opacity = nextMode === 'loading' ? '0' : '1'
       }
     }
