@@ -1,5 +1,6 @@
 import { createElement } from 'react'
 import { DeepZoomMap } from './DeepZoomMap.mjs'
+import { MapViewportRulers } from './MapViewportRulers.mjs'
 
 const TOP_LABELS = Array.from({ length: 18 }, (_, index) => index)
 const SIDE_LABELS = Array.from({ length: 12 }, (_, index) => index)
@@ -9,6 +10,7 @@ export function FigmaHomeScene() {
     'div',
     { className: 'figma-home-scene', 'aria-hidden': 'true' },
     createElement('div', { className: 'figma-home-grid' }),
+    createElement(MapViewportRulers),
     createElement(
       'div',
       { className: 'figma-home-top-labels' },
