@@ -61,6 +61,32 @@ button {
   color: inherit;
 }
 
+.compass-cursor-active,
+.compass-cursor-active * {
+  cursor: none !important;
+}
+
+.compass-cursor-mark {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  width: 88px;
+  height: 88px;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.compass-cursor-compass {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: var(--red);
+  mask: var(--compass-cursor-image) center / contain no-repeat;
+  -webkit-mask: var(--compass-cursor-image) center / contain no-repeat;
+  pointer-events: none;
+}
+
 button:focus-visible,
 [role="slider"]:focus-visible {
   outline: 2px solid var(--red);
