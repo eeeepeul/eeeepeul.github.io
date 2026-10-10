@@ -168,20 +168,14 @@ export function DeepZoomMap() {
 
     // In 'video' mode the planet dissolves into the clip as it plays, so its
     // opacity follows the clip's progress; otherwise it is simply shown or hidden.
-    let handoffHidden = false
     const updateGlobeHandoff = (progress) => {
       if (!globe) return
-      const opacity = getHandoffOpacity(progress)
-      if (opacity <= 0.001) {
-        if (!handoffHidden) globeCanvasNode.style.opacity = '0'
-        handoffHidden = true
-        return
-      }
-      handoffHidden = false
-      // The planet grows exactly as the clip's own planet does.
+      // The planet dissolves into the clip inside the globe canvas itself, so both
+      // are drawn as one sketch; the canvas stays opaque for the whole clip.
       globe.setScale(getVideoPlanetScale(progress))
+      globe.setGlobeMix(getHandoffOpacity(progress), progress < 0.5 ? 1 : 0)
       globe.render()
-      globeCanvasNode.style.opacity = String(opacity)
+      globeCanvasNode.style.opacity = '1'
     }
 
     const setMode = (nextMode) => {
@@ -190,9 +184,9 @@ export function DeepZoomMap() {
       // Progress drives the opacity in video mode, so it must not lag behind.
       globeCanvasNode.style.transitionDuration = nextMode === 'video' ? '0s' : ''
       if (nextMode === 'video') {
-        handoffHidden = false
-        updateGlobeHandoff(progressRef.current)
+          updateGlobeHandoff(progressRef.current)
       } else {
+        globe?.setGlobeMix(1, 1)
         globeCanvasNode.style.opacity = nextMode === 'loading' ? '0' : '1'
       }
     }
@@ -459,12 +453,16 @@ export function DeepZoomMap() {
       syncGlobeSize(state)
     }
 
-    const handleSeeked = () => drawFrame(canvasNode, videoNode)
+    const handleSeeked = () => {
+      drawFrame(canvasNode, videoNode)
+      if (globe && mode === 'video') globe.render()
+    }
     const handleReady = () => {
       if (cancelled) return
       setStatus('ready')
       handleResize()
       drawFrame(canvasNode, videoNode)
+      if (globe && mode === 'video') globe.render()
     }
     const handleError = () => {
       if (!cancelled) setStatus('error')
@@ -508,6 +506,7 @@ export function DeepZoomMap() {
           return
         }
         globe = created
+        globe.setVideoSource(canvasNode)
         handleResize()
         // Start small, in the stars, unless the clip has already been scrubbed.
         if (progressRef.current === 0 && targetProgress === 0 && mode === 'loading') {
