@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
+import { CompassCursor } from '../components/site/CompassCursor'
 import { SharedVisitRecorder } from '../components/site/SharedVisitRecorder'
 import './globals.css'
 import './cctv-skin.css'
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
     <html lang="ko">
       <body>
         <SharedVisitRecorder />
+        <CompassCursor />
         {children}
       </body>
     </html>
