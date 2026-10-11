@@ -4,6 +4,7 @@ import { FigmaHomeScene } from './FigmaHomeScene.mjs'
 import { FigmaHomeSidebarContent } from './FigmaHomeSidebarContent.mjs'
 import { AttentionHeatmap } from './AttentionHeatmap.mjs'
 import { LandingFrame } from './LandingFrame.mjs'
+import { MapGisChrome } from './MapGisChrome.mjs'
 
 export function MainLanding() {
   return createElement(
@@ -18,6 +19,10 @@ export function MainLanding() {
       playfield: createElement(FigmaHomeScene),
       sidebarFooter: createElement(AttentionHeatmap),
     },
+    createElement(MapGisChrome, {
+      homeHref: assetPath(''),
+      cctvHref: `${assetPath('experience')}/`,
+    }),
     createElement('a', {
       className: 'landing-enter-link',
       href: `${assetPath('experience')}/`,
