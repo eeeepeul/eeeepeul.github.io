@@ -16,6 +16,8 @@ import {
   getGlobeScale,
   getHandoffOpacity,
   getLegendNumberedOpacity,
+  getStarsAmount,
+  getVideoLimbRatio,
   getVideoPlanetScale,
   getShortestYawDelta,
   getZoomAnchorTurn,
@@ -136,6 +138,8 @@ export function DeepZoomMap() {
     // grown with the wheel; 'aligning' is the short turn from wherever it was
     // dragged to the home view; 'video' scrubs the zoom clip.
     let mode = 'loading'
+    // The toolbar's satellite button and the layer list's checkboxes.
+    let satelliteEnabled = true
     // 0 is the small planet in its stars, 1 the size of the clip's first frame.
     let growth = 0
     let growthTarget = 0
@@ -168,20 +172,17 @@ export function DeepZoomMap() {
 
     // In 'video' mode the planet dissolves into the clip as it plays, so its
     // opacity follows the clip's progress; otherwise it is simply shown or hidden.
-    let handoffHidden = false
     const updateGlobeHandoff = (progress) => {
       if (!globe) return
-      const opacity = getHandoffOpacity(progress)
-      if (opacity <= 0.001) {
-        if (!handoffHidden) globeCanvasNode.style.opacity = '0'
-        handoffHidden = true
-        return
-      }
-      handoffHidden = false
-      // The planet grows exactly as the clip's own planet does.
+      // The planet dissolves into the clip inside the globe canvas itself, so both
+      // are drawn as one sketch; the canvas stays opaque for the whole clip.
       globe.setScale(getVideoPlanetScale(progress))
+      globe.setLimbRatio(getVideoLimbRatio(progress))
+      globe.setStarsAmount(getStarsAmount(progress))
+      globe.setGlobeMix(getHandoffOpacity(progress), progress < 0.5 ? 1 : 0)
+      globe.setSatellite(satelliteEnabled ? getHandoffOpacity(progress) : 0)
       globe.render()
-      globeCanvasNode.style.opacity = String(opacity)
+      globeCanvasNode.style.opacity = '1'
     }
 
     const setMode = (nextMode) => {
@@ -190,9 +191,12 @@ export function DeepZoomMap() {
       // Progress drives the opacity in video mode, so it must not lag behind.
       globeCanvasNode.style.transitionDuration = nextMode === 'video' ? '0s' : ''
       if (nextMode === 'video') {
-        handoffHidden = false
-        updateGlobeHandoff(progressRef.current)
+          updateGlobeHandoff(progressRef.current)
       } else {
+        globe?.setLimbRatio(1)
+        globe?.setStarsAmount(0)
+        globe?.setGlobeMix(1, 1)
+        globe?.setSatellite(nextMode === 'loading' || !satelliteEnabled ? 0 : 1)
         globeCanvasNode.style.opacity = nextMode === 'loading' ? '0' : '1'
       }
     }
@@ -459,12 +463,16 @@ export function DeepZoomMap() {
       syncGlobeSize(state)
     }
 
-    const handleSeeked = () => drawFrame(canvasNode, videoNode)
+    const handleSeeked = () => {
+      drawFrame(canvasNode, videoNode)
+      if (globe && mode === 'video') globe.render()
+    }
     const handleReady = () => {
       if (cancelled) return
       setStatus('ready')
       handleResize()
       drawFrame(canvasNode, videoNode)
+      if (globe && mode === 'video') globe.render()
     }
     const handleError = () => {
       if (!cancelled) setStatus('error')
@@ -476,6 +484,35 @@ export function DeepZoomMap() {
         : null
     resizeObserver?.observe(rootNode)
     window.addEventListener('resize', handleResize)
+
+    const readLayers = () => {
+      const { mapLayerGrid, mapLayerWorld } = document.body.dataset
+      globe?.setLayers({ grid: mapLayerGrid !== 'off', world: mapLayerWorld !== 'off' })
+      if (mode === 'globe') globe?.render()
+      else if (mode === 'video') updateGlobeHandoff(progressRef.current)
+    }
+    // Back to the first view: turned home and zoomed all the way out.
+    const handleReset = () => {
+      if (mode === 'globe') {
+        yaw = HOME_ROTATION.yaw
+        pitch = HOME_ROTATION.pitch
+        spinYaw = 0
+        spinPitch = 0
+        growthTarget = 0
+        requestGlobeFrame()
+      } else if (mode === 'video') {
+        targetProgress = 0
+        requestVideoFrame()
+      }
+    }
+    const handleSatellite = (event) => {
+      satelliteEnabled = event.detail?.on !== false
+      if (mode === 'globe') globe?.setSatellite(satelliteEnabled ? 1 : 0)
+      else if (mode === 'video') updateGlobeHandoff(progressRef.current)
+    }
+    window.addEventListener('map:layers', readLayers)
+    window.addEventListener('map:reset', handleReset)
+    window.addEventListener('map:satellite', handleSatellite)
     rootNode.addEventListener('wheel', handleWheel, { passive: false })
     rootNode.addEventListener('pointerdown', handlePointerDown)
     rootNode.addEventListener('pointermove', handlePointerMove)
@@ -508,6 +545,8 @@ export function DeepZoomMap() {
           return
         }
         globe = created
+        readLayers()
+        globe.setVideoSource(canvasNode)
         handleResize()
         // Start small, in the stars, unless the clip has already been scrubbed.
         if (progressRef.current === 0 && targetProgress === 0 && mode === 'loading') {
@@ -535,6 +574,9 @@ export function DeepZoomMap() {
       window.cancelAnimationFrame(globeFrameId)
       resizeObserver?.disconnect()
       window.removeEventListener('resize', handleResize)
+      window.removeEventListener('map:layers', readLayers)
+      window.removeEventListener('map:reset', handleReset)
+      window.removeEventListener('map:satellite', handleSatellite)
       rootNode.removeEventListener('wheel', handleWheel)
       rootNode.removeEventListener('pointerdown', handlePointerDown)
       rootNode.removeEventListener('pointermove', handlePointerMove)

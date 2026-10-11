@@ -56,10 +56,17 @@ test('the main page renders the Figma sidebar as native UI instead of a flattene
   assert.match(html, /viewBox="0 0 287 180"/)
   assert.equal((html.match(/data-map-house="house[1-4]"/g) ?? []).length, 4)
   assert.equal((html.match(/class="figma-house-map-ring/g) ?? []).length, 4)
-  assert.match(
-    html,
-    /<img class="figma-sidebar-star" src="\/media\/figma-sidebar-star\.svg" alt="" draggable="false"\/?>/
-  )
+  // The page is a GIS-style workspace: a toolbar and zoom bar, and a column of panels
+  // (mini globe, layers, ground profile) beside the activity and distance cards.
+  assert.match(html, /class="map-gis-toolbar"/)
+  assert.match(html, /aria-label="시점 초기화"/)
+  assert.match(html, /aria-label="인공위성 끄기"/)
+  assert.match(html, /aria-label="CCTV 화면으로 이동"/)
+  assert.match(html, /class="map-gis-zoombar"/)
+  assert.match(html, /class="map-mini-globe"/)
+  assert.match(html, /class="map-layers"/)
+  assert.match(html, />Area of Interest</)
+  assert.match(html, /class="map-profile"/)
   assert.doesNotMatch(html, /figma-home-sidebar-artwork|figma-home-sidebar\.png/)
   assert.match(
     html,

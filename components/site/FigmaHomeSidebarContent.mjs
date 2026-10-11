@@ -1,7 +1,9 @@
 import { createElement } from 'react'
-import { assetPath } from '../../lib/asset-path.mjs'
 import { HouseMapSection } from './HouseMapSection.mjs'
 import { VisitorActivityCard } from './VisitorActivityCard.mjs'
+import { MapElevationProfile } from './MapElevationProfile.mjs'
+import { MapLayersPanel } from './MapLayersPanel.mjs'
+import { MapMiniGlobe } from './MapMiniGlobe.mjs'
 
 function SidebarTag({ id, label }) {
   return createElement(
@@ -24,7 +26,7 @@ function SidebarTag({ id, label }) {
   )
 }
 
-function IntroCard() {
+export function MapIntroCard() {
   return createElement(
     'section',
     { className: 'figma-sidebar-card figma-sidebar-intro', 'aria-label': 'EPEUL 소개' },
@@ -56,14 +58,10 @@ export function FigmaHomeSidebarContent() {
   return createElement(
     'div',
     { className: 'figma-home-sidebar-content' },
-    createElement('img', {
-      className: 'figma-sidebar-star',
-      src: assetPath('media/figma-sidebar-star.svg'),
-      alt: '',
-      draggable: false,
-    }),
-    createElement(IntroCard),
+    createElement(MapMiniGlobe),
     createElement(VisitorActivityCard),
-    createElement(HouseMapSection)
+    createElement(MapLayersPanel),
+    createElement(HouseMapSection),
+    createElement(MapElevationProfile)
   )
 }

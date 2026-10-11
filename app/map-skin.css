@@ -1,0 +1,384 @@
+/* Map page chrome: a GIS-style workspace. A slim toolbar down the left, a zoom bar at
+   the bottom left, and a column of small panels down the right, with the rulers round
+   the edge. The map itself is the sheet in the middle. */
+
+.map-gis-chrome {
+  --gis-gray: #c6c6c6;
+  --gis-panel: #fbfbfb;
+  --gis-ink: #111;
+  font-family: "Pretendard", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* ---- toolbar (left) ------------------------------------------------------------- */
+.map-gis-toolbar {
+  position: fixed;
+  z-index: 75;
+  top: 14px;
+  left: 14px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 52px;
+  min-height: 316px;
+  padding: 8px 0;
+  background: var(--gis-gray);
+}
+
+.map-gis-logo {
+  display: grid;
+  width: 36px;
+  margin-bottom: 4px;
+  color: var(--gis-ink);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 0.82;
+  letter-spacing: -0.05em;
+  text-align: left;
+  text-decoration: none;
+  text-transform: lowercase;
+}
+
+.map-gis-tool {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--gis-ink);
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.map-gis-tool:hover,
+.map-gis-tool:focus-visible {
+  background: #ececec;
+  outline: 1px solid var(--gis-ink);
+  outline-offset: 1px;
+}
+
+.map-gis-tool.is-pressed {
+  background: #e2e2e2;
+  box-shadow: inset 0 0 0 1px var(--gis-ink);
+}
+
+/* The house link (to the second page) sits at the foot of the toolbar. */
+.experience-shell:has(.map-gis-toolbar) > .house-link:has(.house-mark--figma) {
+  position: fixed;
+  z-index: 76;
+  top: 270px;
+  bottom: auto;
+  left: 23px;
+  width: 34px;
+  height: 34px;
+  margin: 0;
+}
+
+.experience-shell:has(.map-gis-toolbar) > .house-link .house-mark--figma {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: invert(1) brightness(1.6);
+}
+
+/* ---- info popover --------------------------------------------------------------- */
+.map-gis-info {
+  position: fixed;
+  z-index: 78;
+  top: 14px;
+  left: 76px;
+  box-sizing: border-box;
+  width: 320px;
+  padding: 10px;
+  background: var(--gis-panel);
+  border: 1px solid #8d8d8d;
+}
+
+.map-gis-info[hidden] {
+  display: none;
+}
+
+.map-gis-info .figma-sidebar-card {
+  border: 0;
+}
+
+.map-gis-info .page-route-nav {
+  position: static;
+  margin-top: 10px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+/* The key to the map signs shows with the info panel, under it. */
+body:not([data-map-info="open"]) .figma-deep-zoom-legend {
+  display: none;
+}
+
+body[data-map-info="open"] .figma-deep-zoom-legend {
+  top: 190px !important;
+  left: 76px !important;
+  height: 360px !important;
+}
+
+/* ---- zoom bar (bottom left) ------------------------------------------------------ */
+.map-gis-zoombar {
+  position: fixed;
+  z-index: 75;
+  left: 14px;
+  bottom: 14px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(26vw, 520px);
+  height: 30px;
+  padding: 0 8px;
+  background: var(--gis-gray);
+}
+
+.map-gis-zoombar__end {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+}
+
+.map-gis-zoombar__range {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 22px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.map-gis-zoombar__range::-webkit-slider-runnable-track {
+  height: 1px;
+  background: var(--gis-ink);
+}
+
+.map-gis-zoombar__range::-moz-range-track {
+  height: 1px;
+  background: var(--gis-ink);
+}
+
+.map-gis-zoombar__range::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+  margin-top: 1px;
+  background: var(--gis-ink);
+  border: 0;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.map-gis-zoombar__range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: var(--gis-ink);
+  border: 0;
+  border-radius: 0;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+/* ---- right column --------------------------------------------------------------- */
+@media (min-width: 801px) {
+  .experience-shell:has(.figma-home-sidebar-content) > .page-route-nav,
+  .color-panel:has(.figma-home-sidebar-content) .sidebar-header,
+  .sidebar-menu-trigger {
+    display: none;
+  }
+
+  .color-panel.sidebar-panel:has(.figma-home-sidebar-content),
+  .color-panel.sidebar-panel.is-dismissed:has(.figma-home-sidebar-content) {
+    top: 14px;
+    right: 14px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 260px;
+    height: calc(100dvh - 28px);
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: var(--gis-gray, #c6c6c6);
+    border: 0;
+    border-radius: 0;
+    clip-path: none;
+    scrollbar-width: none;
+  }
+
+  .color-panel:has(.figma-home-sidebar-content)::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* The cards are drawn 287px wide; scale them to the 260px column. */
+  .figma-home-sidebar-content,
+  .color-panel:has(.figma-home-sidebar-content) .sidebar-footer-content {
+    zoom: calc(260 / 287);
+  }
+
+  .sidebar-content:has(.figma-home-sidebar-content) {
+    flex: 0 0 auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .color-panel:has(.figma-home-sidebar-content) .sidebar-footer-content {
+    display: block;
+    margin: 0;
+    padding: 0;
+  }
+
+  .figma-home-sidebar-content {
+    gap: 12px;
+  }
+
+  .figma-home-sidebar-content .figma-sidebar-card,
+  .color-panel:has(.figma-home-sidebar-content) .attention-heatmap {
+    border: 0;
+  }
+}
+
+.map-mini-globe {
+  box-sizing: border-box;
+  background: #cdcdcd;
+}
+
+.map-mini-globe__canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ---- layer list ----------------------------------------------------------------- */
+.map-layers {
+  box-sizing: border-box;
+  min-height: 150px;
+  padding: 8px 10px;
+  color: #222;
+  background: var(--gis-panel, #fbfbfb);
+  border: 1px solid #b9b9b9;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 12px;
+}
+
+.map-layers__tree {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.map-layers__item {
+  position: relative;
+  padding-left: 12px;
+}
+
+.map-layers__item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 9px;
+  border-top: 1px dotted #8d8d8d;
+}
+
+.map-layers__item::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dotted #8d8d8d;
+}
+
+.map-layers__item:last-child::after {
+  bottom: auto;
+  height: 11px;
+}
+
+.map-layers__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+  cursor: pointer;
+}
+
+.map-layers__check {
+  margin: 0;
+  accent-color: #222;
+}
+
+.map-layers__row:has(.map-layers__check:focus-visible) .map-layers__label {
+  outline: 1px solid #222;
+}
+
+.map-layers__row:hover .map-layers__label {
+  background: #e4e4e4;
+}
+
+/* ---- ground profile ------------------------------------------------------------- */
+.map-profile {
+  box-sizing: border-box;
+  background: var(--gis-panel, #fbfbfb);
+  border: 1px solid #b9b9b9;
+}
+
+.map-profile__chart {
+  display: block;
+  width: 100%;
+  height: 120px;
+}
+
+/* ---- phones: the toolbar and zoom bar stay, smaller ------------------------------ */
+@media (max-width: 800px) {
+  .map-gis-toolbar {
+    top: 56px;
+    left: 8px;
+    width: 40px;
+    min-height: 0;
+    padding: 6px 0;
+  }
+
+  .map-gis-tool {
+    width: 28px;
+    height: 28px;
+  }
+
+  .map-gis-logo {
+    width: 30px;
+    font-size: 11px;
+  }
+
+  .map-gis-info {
+    top: 56px;
+    left: 56px;
+    width: min(320px, calc(100vw - 72px));
+  }
+
+  .map-gis-zoombar {
+    left: 8px;
+    bottom: 8px;
+    width: calc(100vw - 80px);
+  }
+
+  .experience-shell:has(.map-gis-toolbar) > .house-link:has(.house-mark--figma) {
+    top: 250px;
+    left: 14px;
+    width: 28px;
+    height: 28px;
+  }
+}
