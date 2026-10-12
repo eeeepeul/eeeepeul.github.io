@@ -65,7 +65,7 @@ function setHotspotGeometry(hotspotNodes, state) {
   hotspotNodes.forEach((node, index) => {
     if (!node) return
     const center = getHotspotCenter(state, HOUSE_HOTSPOTS[index])
-    const size = center.videoWidth * 0.037 * center.scale
+    const size = center.videoWidth * 0.045 * center.scale
     node.style.left = `${center.x}px`
     node.style.top = `${center.y}px`
     node.style.width = `${size}px`
