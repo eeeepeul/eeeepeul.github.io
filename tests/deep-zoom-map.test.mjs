@@ -15,8 +15,12 @@ import {
   MAP_LEGEND,
   getLegendNumberedOpacity,
   getStarsAmount,
+  getVideoHandoffProgress,
   getVideoLimbRatio,
   getVideoPlanetScale,
+  isVideoFrameReady,
+  isVideoSeekCurrent,
+  shouldRequestVideoSeek,
   getZoomAnchorTurn,
   getShortestYawDelta,
   HOUSE_HOTSPOTS,
@@ -34,11 +38,65 @@ test('the supplied zoom video and its poster ship with the site', () => {
   assert.ok(ZOOM_VIDEO.durationSeconds > 0)
 })
 
-test('progress maps linearly onto the video timeline and is clamped', () => {
+test('the video timeline follows the same normalized zoom progress', () => {
   assert.equal(setCameraProgress(-2, viewport).time, 0)
-  assert.equal(setCameraProgress(0.5, viewport).time, ZOOM_VIDEO.durationSeconds / 2)
+  const earlyZoom = setCameraProgress(0.2, viewport)
+  const lastFrame = setCameraProgress(1, viewport)
+
+  assert.equal(earlyZoom.timelineProgress, 0.2)
+  assert.equal(earlyZoom.time, ZOOM_VIDEO.durationSeconds * 0.2)
+  assert.equal(lastFrame.timelineProgress, 1)
+  assert.equal(lastFrame.time, ZOOM_VIDEO.durationSeconds)
   assert.equal(setCameraProgress(2, viewport).time, ZOOM_VIDEO.durationSeconds)
   assert.equal(setCameraProgress(Number.NaN, viewport).progress, 0)
+})
+
+test('handoff progress never runs ahead of the decoded video frame', () => {
+  assert.equal(getVideoHandoffProgress(0.2, 0), 0)
+  assert.equal(getVideoHandoffProgress(0.2, ZOOM_VIDEO.durationSeconds * 0.1), 0.1)
+  assert.equal(getVideoHandoffProgress(0.2, ZOOM_VIDEO.durationSeconds * 0.2), 0.2)
+  assert.equal(getVideoHandoffProgress(0.2, ZOOM_VIDEO.durationSeconds * 0.4), 0.2)
+  assert.equal(getVideoHandoffProgress(0.2, Number.NaN), 0)
+})
+
+test('a decoded frame can be checked against the requested timestamp', () => {
+  assert.equal(isVideoFrameReady(0, 0), true)
+  assert.equal(isVideoFrameReady(0.2, 0), false)
+  assert.equal(isVideoFrameReady(0.2, ZOOM_VIDEO.durationSeconds * 0.2), true)
+  assert.equal(isVideoFrameReady(0.2, ZOOM_VIDEO.durationSeconds * 0.2 + 0.01), true)
+  assert.equal(isVideoFrameReady(0.2, ZOOM_VIDEO.durationSeconds * 0.2 + 0.03), false)
+})
+
+test('late seek events cannot repaint an obsolete video frame', () => {
+  assert.equal(isVideoSeekCurrent(2, 2), true)
+  assert.equal(isVideoSeekCurrent(2, 2.01), true)
+  assert.equal(isVideoSeekCurrent(2, 2.03), false)
+  assert.equal(isVideoSeekCurrent(2, 2.03, 1 / 24), true)
+  assert.equal(isVideoSeekCurrent(2, Number.NaN), false)
+})
+
+test('video seeks are skipped when the decoder is already on the requested frame', () => {
+  assert.equal(shouldRequestVideoSeek(2, 2), false)
+  assert.equal(shouldRequestVideoSeek(2, 2.01), false)
+  assert.equal(shouldRequestVideoSeek(2, 2.03), true)
+  assert.equal(shouldRequestVideoSeek(Number.NaN, 2), false)
+})
+
+test('the original 3D background only leads the first reference frames', () => {
+  assert.equal(setCameraProgress(0.01, viewport).backgroundPinned, true)
+  assert.equal(setCameraProgress(0.02, viewport).backgroundPinned, true)
+  assert.equal(setCameraProgress(0.35, viewport).backgroundPinned, true)
+  assert.equal(setCameraProgress(0.41, viewport).backgroundPinned, false)
+})
+
+test('the globe stays visible until its rim leaves the viewport, then blends into the clip', () => {
+  for (const progress of [0, 0.005, 0.01, GLOBE.handoffStart]) {
+    assert.equal(getHandoffOpacity(progress), 1)
+  }
+  assert.ok(getHandoffOpacity(0.395) > 0 && getHandoffOpacity(0.395) < 1)
+  assert.equal(getHandoffOpacity(GLOBE.handoffEnd), 0)
+  assert.equal(getHandoffOpacity(0.41), 0)
+  assert.equal(getHandoffOpacity(1), 0)
 })
 
 test('the video always covers the viewport and stays centered', () => {
@@ -156,7 +214,7 @@ test('the sky turns with the planet, as it does in Google Earth', () => {
   assert.equal(GLOBE.skyFollow, 1)
 })
 
-test('the 3D planet follows the clip planet in size while it dissolves away', () => {
+test('the 3D planet follows the clip planet in size while the camera pushes in', () => {
   // Starts at the clip's first frame size and never shrinks while the clip plays on.
   assert.equal(getVideoPlanetScale(0), 1)
   let previous = 1
@@ -172,21 +230,17 @@ test('the 3D planet follows the clip planet in size while it dissolves away', ()
   assert.ok(between > getVideoPlanetScale(0.0824) && between < getVideoPlanetScale(0.1008))
 })
 
-test('the planet hands over to the clip right at its first frames, which match', () => {
-  assert.equal(getHandoffOpacity(0), 1)
-  assert.equal(getHandoffOpacity(GLOBE.handoffStart), 1)
-  assert.equal(getHandoffOpacity(GLOBE.handoffEnd), 0)
-  assert.equal(getHandoffOpacity(1), 0)
-  let previous = 1
-  for (let step = 0; step <= 50; step += 1) {
-    const opacity = getHandoffOpacity((step / 50) * GLOBE.handoffEnd)
-    assert.ok(opacity <= previous + 1e-12)
-    previous = opacity
-  }
-  // The clip's first frame was laid into the planet's map, so the two agree only
-  // at the very start: the swap must finish within the first sliver of the clip.
-  assert.ok(GLOBE.handoffEnd > GLOBE.handoffStart)
-  assert.ok(GLOBE.handoffEnd <= 0.01)
+test('the fully opaque 3D planet only covers the supplied reference lead-in', () => {
+  const earlyScale = getVideoPlanetScale(0.01)
+  const lateScale = getVideoPlanetScale(0.02)
+
+  assert.equal(getHandoffOpacity(0.01), 1)
+  assert.equal(getHandoffOpacity(0.28), 1)
+  assert.ok(getHandoffOpacity(0.34) > 0)
+  assert.equal(getHandoffOpacity(0.4), 0)
+  assert.ok(lateScale > earlyScale)
+  assert.equal(GLOBE.handoffEnd, GLOBE.backgroundEnd)
+  assert.ok(getVideoPlanetScale(GLOBE.handoffEnd) > 1)
 })
 
 test('both map keys ship with the site', () => {
@@ -218,14 +272,14 @@ test('the keys cross as the planet fills the screen and space disappears', () =>
 test('the 3D planet rim is squeezed onto the clip rim while the land stays put', () => {
   assert.equal(getVideoLimbRatio(0), 1)
   for (let step = 0; step <= 10; step += 1) {
-    const ratio = getVideoLimbRatio((step / 10) * GLOBE.handoffEnd)
+    const ratio = getVideoLimbRatio((step / 10) * 0.1)
     assert.ok(ratio <= 1 && ratio > 0.9)
   }
 })
 
 test('the sky stars stay over the clip while there is sky, then go', () => {
   assert.equal(getStarsAmount(0), 1)
-  assert.equal(getStarsAmount(0.2), 1)
-  assert.equal(getStarsAmount(0.32), 0)
+  assert.equal(getStarsAmount(0.35), 1)
+  assert.equal(getStarsAmount(0.52), 0)
   assert.equal(getStarsAmount(1), 0)
 })
