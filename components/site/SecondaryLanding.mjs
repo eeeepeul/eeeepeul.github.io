@@ -1,6 +1,7 @@
 'use client'
 
 import { createElement, useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { assetPath } from '../../lib/asset-path.mjs'
 import {
   CHARACTER_WORLD_ID,
@@ -25,19 +26,14 @@ const DEFAULT_CUSTOMIZATION = {
 }
 const SHARED_CHARACTER_WINDOW_MS = 24 * 60 * 60 * 1000
 
-export function SecondaryLanding() {
+export function SecondaryLanding({ initialCustomView = false }) {
   // The custom page keeps the same house interior world built for /second/;
   // only the sidebar changes to the Figma character custom controls.
-  const [isCustomView, setIsCustomView] = useState(false)
+  const [isCustomView, setIsCustomView] = useState(initialCustomView)
   const [activeCharacterId, setActiveCharacterId] = useState(null)
   const [characterIds, setCharacterIds] = useState(INITIAL_CHARACTER_IDS)
   const [characterCustomizations, setCharacterCustomizations] = useState({})
   const nextCharacterNumber = useRef(7)
-
-  useEffect(() => {
-    const view = new URLSearchParams(window.location.search).get('view')
-    setIsCustomView(view === 'custom')
-  }, [])
 
   useEffect(() => {
     setCharacterCustomizations((currentCustomizations) => {
@@ -50,6 +46,38 @@ export function SecondaryLanding() {
       return nextCustomizations
     })
   }, [])
+
+  useEffect(() => {
+    const customPathname = new URL(
+      `${assetPath('second/custom')}/`,
+      window.location.origin
+    ).pathname
+    const handlePopState = () => {
+      setIsCustomView(window.location.pathname === customPathname)
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  const handleRouteSelect = (route, event) => {
+    if (
+      route.id !== 'custom' ||
+      isCustomView ||
+      event.defaultPrevented ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      event.button > 0
+    ) {
+      return
+    }
+
+    event.preventDefault()
+    flushSync(() => setIsCustomView(true))
+    window.history.pushState(null, '', route.href)
+  }
 
   useEffect(() => {
     const feed = startSharedCharacterFeed({
@@ -122,6 +150,7 @@ export function SecondaryLanding() {
     houseHref: assetPath(''),
     houseLabel: '메인 화면으로 이동',
     navigationCurrent: isCustomView ? 'custom' : '',
+    onRouteSelect: handleRouteSelect,
     playfield: createElement(HouseInteriorWorld, {
       activeCharacterId,
       characterIds,

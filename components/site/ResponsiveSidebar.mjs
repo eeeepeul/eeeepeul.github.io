@@ -2,6 +2,7 @@
 
 import { createElement, Fragment, useEffect, useId, useState } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
+import { getMapSidebarLayout } from '../../lib/map-sidebar-scale.mjs'
 
 const SIDEBAR_WORDMARK_URL = assetPath('media/figma-sidebar-wordmark.svg')
 const SIDEBAR_TOGGLE_URL = assetPath('media/figma-sidebar-toggle.svg')
@@ -19,9 +20,13 @@ export function ResponsiveSidebar({
   className = '',
   label = '사이드 메뉴',
   footer = null,
+  scaleToViewport = false,
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
+  const [viewportLayout, setViewportLayout] = useState(() =>
+    getMapSidebarLayout({ width: 1920, height: 1080 })
+  )
   const panelId = useId()
   const panelClassName = `color-panel sidebar-panel${className ? ` ${className}` : ''}${
     isOpen ? ' is-open' : ''
@@ -49,6 +54,21 @@ export function ResponsiveSidebar({
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [isOpen])
+
+  useEffect(() => {
+    if (!scaleToViewport) return undefined
+
+    const updateViewportScale = () => {
+      setViewportLayout(
+        getMapSidebarLayout({ width: window.innerWidth, height: window.innerHeight })
+      )
+    }
+
+    updateViewportScale()
+    window.addEventListener('resize', updateViewportScale)
+
+    return () => window.removeEventListener('resize', updateViewportScale)
+  }, [scaleToViewport])
 
   return createElement(
     Fragment,
@@ -84,6 +104,17 @@ export function ResponsiveSidebar({
         className: panelClassName,
         id: panelId,
         'aria-label': label,
+        ...(scaleToViewport
+          ? {
+              'data-viewport-scaled': 'true',
+              style: {
+                '--map-sidebar-scale': viewportLayout.scale,
+                '--map-sidebar-width': viewportLayout.panelWidth,
+                '--map-sidebar-zoom': viewportLayout.contentZoom,
+                '--map-sidebar-inset': viewportLayout.inset,
+              },
+            }
+          : {}),
       },
       createElement(
         'div',

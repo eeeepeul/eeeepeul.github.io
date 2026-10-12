@@ -12,12 +12,14 @@ export function LandingFrame({
   panelLabel = '빈 메인 패널',
   playfield,
   navigationCurrent = '',
+  onRouteSelect,
   sidebarFooter,
+  scaleSidebarToViewport = false,
 }) {
   return createElement(
     'main',
     { className: 'experience-shell landing-shell' },
-    createElement(PageNavigation, { current: navigationCurrent }),
+    createElement(PageNavigation, { current: navigationCurrent, onRouteSelect }),
     createElement(
       'div',
       { className: 'landing-space', 'aria-hidden': 'true' },
@@ -35,6 +37,7 @@ export function LandingFrame({
         className: 'landing-panel',
         label: panelLabel,
         footer: sidebarFooter,
+        scaleToViewport: scaleSidebarToViewport,
       },
       panel
     )

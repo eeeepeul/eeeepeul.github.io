@@ -66,6 +66,24 @@ test('renders a code-native pixel canvas instead of a background image', () => {
   assert.doesNotMatch(html, /\/media\/house-interior-plan(?:-hd)?\.png/)
 })
 
+test('renders the completed pixel scene poster before the hydration canvas', () => {
+  const html = renderToStaticMarkup(createElement(HouseInteriorTilemap))
+  const posterIndex = html.indexOf('class="house-interior-pixel-poster"')
+  const canvasIndex = html.indexOf('class="house-interior-pixel-canvas"')
+
+  assert.ok(posterIndex >= 0, 'the server response should include the completed pixel scene')
+  assert.ok(canvasIndex > posterIndex, 'the poster should paint before the hydration canvas')
+  assert.match(html, /src="\/media\/house-interior-poster\.png"/)
+})
+
+test('keeps the block tile fallback hidden in the first server response', () => {
+  const html = renderToStaticMarkup(createElement(HouseInteriorTilemap))
+
+  for (const layer of ['floor', 'walls', 'doors_windows', 'furniture', 'decor']) {
+    assert.match(html, new RegExp(`<div[^>]*data-layer="${layer}"[^>]*\\shidden=""`))
+  }
+})
+
 test('keeps collision metadata hidden beside the canvas', () => {
   const html = renderToStaticMarkup(createElement(HouseInteriorTilemap))
 
