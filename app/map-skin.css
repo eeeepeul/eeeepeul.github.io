@@ -197,19 +197,17 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
     display: none;
   }
 
-  .color-panel.sidebar-panel:has(.figma-home-sidebar-content),
-  .color-panel.sidebar-panel.is-dismissed:has(.figma-home-sidebar-content) {
-    top: 14px;
-    right: 14px;
+  .color-panel.sidebar-panel[data-viewport-scaled='true']:has(.figma-home-sidebar-content) {
+    top: var(--map-sidebar-inset);
+    right: var(--map-sidebar-inset);
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    width: 260px;
-    height: calc(100dvh - 28px);
+    gap: calc(12px * var(--map-sidebar-scale));
+    width: var(--map-sidebar-width);
+    height: calc(100dvh - (var(--map-sidebar-inset) * 2));
     padding: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
     background: var(--gis-gray, #c6c6c6);
     border: 0;
     border-radius: 0;
@@ -224,7 +222,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   /* The cards are drawn 287px wide; scale them to the 260px column. */
   .figma-home-sidebar-content,
   .color-panel:has(.figma-home-sidebar-content) .sidebar-footer-content {
-    zoom: calc(260 / 287);
+    zoom: var(--map-sidebar-zoom);
   }
 
   .sidebar-content:has(.figma-home-sidebar-content) {
@@ -345,6 +343,61 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 
 /* ---- phones: the toolbar and zoom bar stay, smaller ------------------------------ */
 @media (max-width: 800px) {
+  .color-panel.sidebar-panel[data-viewport-scaled='true']:has(.figma-home-sidebar-content) {
+    top: var(--map-sidebar-inset);
+    right: var(--map-sidebar-inset);
+    bottom: auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: calc(12px * var(--map-sidebar-scale));
+    width: var(--map-sidebar-width);
+    height: calc(100dvh - (var(--map-sidebar-inset) * 2));
+    padding: 0;
+    overflow: hidden;
+    background: var(--gis-gray, #c6c6c6);
+    border: 0;
+    border-radius: 0;
+  }
+
+  .color-panel.sidebar-panel[data-viewport-scaled='true']:has(.figma-home-sidebar-content) .sidebar-header {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 3;
+    width: auto;
+    min-height: 0;
+  }
+
+  .color-panel.sidebar-panel[data-viewport-scaled='true']:has(.figma-home-sidebar-content) .sidebar-wordmark {
+    display: none;
+  }
+
+  .color-panel.sidebar-panel[data-viewport-scaled='true']:has(.figma-home-sidebar-content) .sidebar-close-button {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.84);
+  }
+
+  .figma-home-sidebar-content,
+  .color-panel:has(.figma-home-sidebar-content) .sidebar-footer-content {
+    zoom: var(--map-sidebar-zoom);
+  }
+
+  .sidebar-content:has(.figma-home-sidebar-content) {
+    flex: 0 0 auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .color-panel:has(.figma-home-sidebar-content) .sidebar-footer-content {
+    display: block;
+    margin: 0;
+    padding: 0;
+  }
+
   .map-gis-toolbar {
     top: 56px;
     left: 8px;

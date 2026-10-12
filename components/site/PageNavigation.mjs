@@ -4,10 +4,10 @@ import { assetPath } from '../../lib/asset-path.mjs'
 const PAGE_ROUTES = [
   { id: 'map', label: 'map', href: assetPath('') },
   { id: 'cctv', label: 'cctv', href: `${assetPath('experience')}/` },
-  { id: 'custom', label: 'custom', href: `${assetPath('second')}/?view=custom` },
+  { id: 'custom', label: 'custom', href: `${assetPath('second/custom')}/` },
 ]
 
-export function PageNavigation({ current = '' }) {
+export function PageNavigation({ current = '', onRouteSelect }) {
   return createElement(
     'nav',
     { className: 'page-route-nav', 'aria-label': '페이지 이동' },
@@ -19,6 +19,9 @@ export function PageNavigation({ current = '' }) {
           href: route.href,
           className: `page-route-link${current === route.id ? ' is-current' : ''}`,
           'aria-current': current === route.id ? 'page' : undefined,
+          onClick: onRouteSelect
+            ? (event) => onRouteSelect(route, event)
+            : undefined,
         },
         route.label
       )

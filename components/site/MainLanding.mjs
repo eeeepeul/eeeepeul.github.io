@@ -17,6 +17,7 @@ export function MainLanding() {
       panel: createElement(FigmaHomeSidebarContent),
       panelLabel: '홈 정보 메뉴',
       playfield: createElement(FigmaHomeScene),
+      scaleSidebarToViewport: true,
       sidebarFooter: createElement(AttentionHeatmap),
     },
     createElement(MapGisChrome, {

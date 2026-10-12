@@ -1,6 +1,7 @@
 'use client'
 
 import { createElement, useEffect, useRef } from 'react'
+import { assetPath } from '../../lib/asset-path.mjs'
 import {
   HOUSE_INTERIOR_LAYER_ORDER,
   HOUSE_INTERIOR_MAP,
@@ -76,6 +77,7 @@ const renderLayer = (layerName, tiles, map) =>
       className: `house-interior-map-layer house-interior-map-layer--${layerName}`,
       'data-layer': layerName,
       'aria-hidden': 'true',
+      hidden: true,
     },
     tiles.map((tile) => renderTile(tile, map, layerName))
   )
@@ -447,6 +449,17 @@ export function HouseInteriorTilemap({ map = HOUSE_INTERIOR_MAP }) {
       'aria-label': '미발화하우스 실내 배경',
       role: 'img',
     },
+    createElement('img', {
+      className: 'house-interior-pixel-poster',
+      src: assetPath('media/house-interior-poster.png'),
+      width: HOUSE_INTERIOR_PIXEL_BUFFER_WIDTH,
+      height: HOUSE_INTERIOR_PIXEL_BUFFER_HEIGHT,
+      alt: '',
+      fetchPriority: 'high',
+      decoding: 'sync',
+      draggable: false,
+      'aria-hidden': 'true',
+    }),
     createElement('canvas', {
       ref: canvasRef,
       className: 'house-interior-pixel-canvas',
