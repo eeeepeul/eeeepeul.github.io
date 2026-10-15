@@ -17,7 +17,9 @@ import {
   getHandoffOpacity,
   getLegendNumberedOpacity,
   getStarsAmount,
-  getVideoPlanetRadius,
+  getVideoFrameIndex,
+  getVideoPlanetEllipse,
+  VIDEO_FRAME_CODE,
   getVideoLimbRatio,
   getVideoPlanetScale,
   getShortestYawDelta,
@@ -56,10 +58,26 @@ function setFrameGeometry(node, state) {
 
 // Paused videos are not repainted reliably after a seek in every browser, so the
 // visible frame is a canvas that copies whatever frame the hidden video lands on.
+// Returns the number of the frame that was drawn, read back from the blocks the clip
+// carries in its bottom rows (-1 when they cannot be read).
 function drawFrame(canvasNode, videoNode) {
-  if (!canvasNode || !videoNode || videoNode.readyState < 2) return
-  const context = canvasNode.getContext('2d')
-  context?.drawImage(videoNode, 0, 0, canvasNode.width, canvasNode.height)
+  if (!canvasNode || !videoNode || videoNode.readyState < 2) return -1
+  const context = canvasNode.getContext('2d', { willReadFrequently: true })
+  if (!context) return -1
+  context.drawImage(videoNode, 0, 0, canvasNode.width, canvasNode.height)
+  try {
+    const { bits, blockWidth, row } = VIDEO_FRAME_CODE
+    const scale = canvasNode.width / ZOOM_VIDEO.bufferWidth
+    const strip = context.getImageData(0, Math.round(row * scale), Math.round(bits * blockWidth * scale), 1).data
+    let frame = 0
+    for (let bit = 0; bit < bits; bit += 1) {
+      const x = Math.round((bit * blockWidth + blockWidth / 2) * scale)
+      frame = (frame << 1) | (strip[x * 4] < 128 ? 1 : 0)
+    }
+    return frame
+  } catch {
+    return -1
+  }
 }
 
 function setHotspotGeometry(hotspotNodes, state) {
@@ -173,6 +191,7 @@ export function DeepZoomMap() {
 
     // In 'video' mode the planet dissolves into the clip as it plays, so its
     // opacity follows the clip's progress; otherwise it is simply shown or hidden.
+    let shownFrame = -1
     const updateGlobeHandoff = (progress) => {
       if (!globe) return
       // The planet dissolves into the clip inside the globe canvas itself, so both
@@ -180,7 +199,11 @@ export function DeepZoomMap() {
       globe.setScale(getVideoPlanetScale(progress))
       // The 3D planet's rim is squeezed onto the clip's only while it still shows.
       globe.setLimbRatio(getHandoffOpacity(progress) > 0.001 ? getVideoLimbRatio(progress) : 1)
-      globe.setVideoPlanet(getVideoPlanetRadius(progress))
+      // The picture on screen says which frame it is; before the first one is read
+      // (or if it cannot be) the frame is worked out from the progress.
+      globe.setVideoPlanet(
+        getVideoPlanetEllipse(shownFrame >= 0 ? shownFrame : getVideoFrameIndex(progress))
+      )
       globe.setStarsAmount(getStarsAmount(progress))
       globe.setGlobeMix(getHandoffOpacity(progress), progress < 0.5 ? 1 : 0)
       globe.setSatellite(satelliteEnabled ? getHandoffOpacity(progress) : 0)
@@ -468,15 +491,15 @@ export function DeepZoomMap() {
     }
 
     const handleSeeked = () => {
-      drawFrame(canvasNode, videoNode)
-      if (globe && mode === 'video') globe.render()
+      shownFrame = drawFrame(canvasNode, videoNode)
+      if (globe && mode === 'video') updateGlobeHandoff(progressRef.current)
     }
     const handleReady = () => {
       if (cancelled) return
       setStatus('ready')
       handleResize()
-      drawFrame(canvasNode, videoNode)
-      if (globe && mode === 'video') globe.render()
+      shownFrame = drawFrame(canvasNode, videoNode)
+      if (globe && mode === 'video') updateGlobeHandoff(progressRef.current)
     }
     const handleError = () => {
       if (!cancelled) setStatus('error')
@@ -516,7 +539,24 @@ export function DeepZoomMap() {
     }
     window.addEventListener('map:layers', readLayers)
     window.addEventListener('map:reset', handleReset)
+    // The clip comes in two looks: the line drawing and the coloured one.
+    const setClipStyle = (color) => {
+      const wanted = assetPath((color ? '/maps/zoom-color.mp4' : ZOOM_VIDEO.src).slice(1))
+      if (videoNode.getAttribute('src') === wanted) return
+      videoNode.setAttribute('src', wanted)
+      videoNode.load()
+    }
+    try {
+      if (window.localStorage.getItem('map:color') === '1') setClipStyle(true)
+    } catch {}
+    const handleStyle = (event) => {
+      setClipStyle(event.detail?.on === true)
+      globe?.setColorMap(event.detail?.on === true)
+      globe?.render()
+      requestGlobeFrame()
+    }
     window.addEventListener('map:satellite', handleSatellite)
+    window.addEventListener('map:style', handleStyle)
     rootNode.addEventListener('wheel', handleWheel, { passive: false })
     rootNode.addEventListener('pointerdown', handlePointerDown)
     rootNode.addEventListener('pointermove', handlePointerMove)
@@ -550,6 +590,9 @@ export function DeepZoomMap() {
         }
         globe = created
         readLayers()
+        try {
+          if (window.localStorage.getItem('map:color') === '1') globe.setColorMap(true)
+        } catch {}
         globe.setVideoSource(canvasNode)
         handleResize()
         // Start small, in the stars, unless the clip has already been scrubbed.
@@ -581,6 +624,7 @@ export function DeepZoomMap() {
       window.removeEventListener('map:layers', readLayers)
       window.removeEventListener('map:reset', handleReset)
       window.removeEventListener('map:satellite', handleSatellite)
+      window.removeEventListener('map:style', handleStyle)
       rootNode.removeEventListener('wheel', handleWheel)
       rootNode.removeEventListener('pointerdown', handlePointerDown)
       rootNode.removeEventListener('pointermove', handlePointerMove)

@@ -60,7 +60,7 @@ test('the main page renders the Figma sidebar as native UI instead of a flattene
   // (mini globe, layers, ground profile) beside the activity and distance cards.
   assert.match(html, /class="map-gis-toolbar"/)
   assert.match(html, /aria-label="시점 초기화"/)
-  assert.match(html, /aria-label="인공위성 끄기"/)
+  assert.match(html, /aria-label="색 지도 켜기"/)
   assert.match(html, /aria-label="CCTV 화면으로 이동"/)
   assert.match(html, /class="map-gis-zoombar"/)
   assert.match(html, /class="map-mini-globe"/)
