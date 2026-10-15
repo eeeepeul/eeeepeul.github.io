@@ -101,10 +101,20 @@ export function MapGisChrome({ homeHref = '/', cctvHref = '/experience/' }) {
     return () => window.clearInterval(timer)
   }, [])
 
+  // The chosen map style survives a reload.
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem('map:color') === '1') setSatelliteOn(false)
+    } catch {}
+  }, [])
+
   const toggleSatellite = () => {
     const next = !satelliteOn
     setSatelliteOn(next)
-    window.dispatchEvent(new CustomEvent('map:satellite', { detail: { on: next } }))
+    try {
+      window.localStorage.setItem('map:color', next ? '0' : '1')
+    } catch {}
+    window.dispatchEvent(new CustomEvent('map:style', { detail: { on: !next } }))
   }
 
   // The slider turns into the same wheel steps the mouse wheel would make, so the map's
@@ -146,9 +156,9 @@ export function MapGisChrome({ homeHref = '/', cctvHref = '/experience/' }) {
         onClick: () => window.dispatchEvent(new CustomEvent('map:reset')),
       }),
       createElement(ToolButton, {
-        label: satelliteOn ? '인공위성 끄기' : '인공위성 켜기',
+        label: satelliteOn ? '색 지도 켜기' : '색 지도 끄기',
         icon: 'satellite',
-        pressed: satelliteOn,
+        pressed: !satelliteOn,
         onClick: toggleSatellite,
       }),
       createElement(ToolButton, { label: 'CCTV 화면으로 이동', icon: 'lasso', href: cctvHref }),
