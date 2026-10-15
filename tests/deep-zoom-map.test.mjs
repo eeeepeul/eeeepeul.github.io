@@ -89,11 +89,12 @@ test('the original 3D background only leads the first reference frames', () => {
   assert.equal(setCameraProgress(0.41, viewport).backgroundPinned, false)
 })
 
-test('the globe stays visible until its rim leaves the viewport, then blends into the clip', () => {
-  for (const progress of [0, 0.005, 0.01, GLOBE.handoffStart]) {
+test('the 3D planet hands over to the clip in the first sliver of progress', () => {
+  for (const progress of [0, GLOBE.handoffStart]) {
     assert.equal(getHandoffOpacity(progress), 1)
   }
-  assert.ok(getHandoffOpacity(0.395) > 0 && getHandoffOpacity(0.395) < 1)
+  const middle = (GLOBE.handoffStart + GLOBE.handoffEnd) / 2
+  assert.ok(getHandoffOpacity(middle) > 0 && getHandoffOpacity(middle) < 1)
   assert.equal(getHandoffOpacity(GLOBE.handoffEnd), 0)
   assert.equal(getHandoffOpacity(0.41), 0)
   assert.equal(getHandoffOpacity(1), 0)
@@ -230,16 +231,14 @@ test('the 3D planet follows the clip planet in size while the camera pushes in',
   assert.ok(between > getVideoPlanetScale(0.0824) && between < getVideoPlanetScale(0.1008))
 })
 
-test('the fully opaque 3D planet only covers the supplied reference lead-in', () => {
+test('the 3D planet is gone once the clip has taken over', () => {
   const earlyScale = getVideoPlanetScale(0.01)
   const lateScale = getVideoPlanetScale(0.02)
 
-  assert.equal(getHandoffOpacity(0.01), 1)
-  assert.equal(getHandoffOpacity(0.28), 1)
-  assert.ok(getHandoffOpacity(0.34) > 0)
+  assert.equal(getHandoffOpacity(0.001), 1)
+  assert.equal(getHandoffOpacity(0.01), 0)
   assert.equal(getHandoffOpacity(0.4), 0)
   assert.ok(lateScale > earlyScale)
-  assert.equal(GLOBE.handoffEnd, GLOBE.backgroundEnd)
   assert.ok(getVideoPlanetScale(GLOBE.handoffEnd) > 1)
 })
 
@@ -279,7 +278,7 @@ test('the 3D planet rim is squeezed onto the clip rim while the land stays put',
 
 test('the sky stars stay over the clip while there is sky, then go', () => {
   assert.equal(getStarsAmount(0), 1)
-  assert.equal(getStarsAmount(0.35), 1)
-  assert.equal(getStarsAmount(0.52), 0)
+  assert.equal(getStarsAmount(0.05), 1)
+  assert.equal(getStarsAmount(0.35), 0)
   assert.equal(getStarsAmount(1), 0)
 })
