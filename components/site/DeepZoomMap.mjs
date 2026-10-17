@@ -237,8 +237,63 @@ export function DeepZoomMap() {
       globe.render()
     }
 
+    // A second, hidden copy of the colour clip, kept at the same time as the one on show
+    // while the lasso needs colour pictures to put inside its holes.
+    let peekVideo = null
+    let peekCanvas = null
+    let peekFrameReady = false
+    let peekSeeking = false
+    let peekWanted = 0
+    const syncPeek = (time) => {
+      peekWanted = time
+      if (!peekVideo || peekSeeking) return
+      if (Math.abs(peekVideo.currentTime - time) > 1 / 48) {
+        peekSeeking = true
+        peekVideo.currentTime = time
+      }
+    }
+    const ensurePeek = () => {
+      if (peekVideo) return
+      peekCanvas = document.createElement('canvas')
+      peekCanvas.width = ZOOM_VIDEO.bufferWidth
+      peekCanvas.height = ZOOM_VIDEO.bufferHeight
+      peekVideo = document.createElement('video')
+      peekVideo.muted = true
+      peekVideo.playsInline = true
+      peekVideo.preload = 'auto'
+      peekVideo.src = `${assetPath('maps/zoom-color.mp4')}?v=3`
+      peekVideo.addEventListener('seeked', () => {
+        peekSeeking = false
+        peekCanvas.getContext('2d')?.drawImage(peekVideo, 0, 0, peekCanvas.width, peekCanvas.height)
+        peekFrameReady = true
+        window.dispatchEvent(new CustomEvent('map:peek-frame'))
+        if (Math.abs(peekVideo.currentTime - peekWanted) > 1 / 48) syncPeek(peekWanted)
+      })
+      peekVideo.addEventListener('loadeddata', () => {
+        peekCanvas.getContext('2d')?.drawImage(peekVideo, 0, 0, peekCanvas.width, peekCanvas.height)
+        peekFrameReady = true
+        window.dispatchEvent(new CustomEvent('map:peek-frame'))
+      })
+      peekVideo.load()
+      globe?.setPeekVideoSource(peekCanvas)
+    }
+    // For the lasso: draw the view in colour (only if colour is not already what is shown).
+    rootNode.__mapPeek = {
+      ensure: ensurePeek,
+      isColour: () => colorOn,
+      draw(use) {
+        if (!globe || colorOn) return false
+        ensurePeek()
+        globe.setPeekVideoSource(peekCanvas)
+        const inVideo = mode === 'video'
+        if (inVideo && !peekFrameReady) return false
+        return globe.peekColour(use, inVideo)
+      },
+    }
+
     const renderVideoFrame = (progress) => {
       const state = applyCameraFrame(rootNode, nodes, progress)
+      if (peekVideo) syncPeek(state.time)
       syncGlobeSize(state)
       if (mode === 'video') updateGlobeHandoff(progress)
       return state
@@ -540,8 +595,13 @@ export function DeepZoomMap() {
     window.addEventListener('map:layers', readLayers)
     window.addEventListener('map:reset', handleReset)
     // The clip comes in two looks: the line drawing and the coloured one.
+    let colorOn = false
     const setClipStyle = (color) => {
-      const wanted = assetPath((color ? '/maps/zoom-color.mp4' : ZOOM_VIDEO.src).slice(1))
+      colorOn = color
+      // The version tag keeps a browser from showing an older copy of the colour clip.
+      const wanted = color
+        ? `${assetPath('maps/zoom-color.mp4')}?v=3`
+        : assetPath(ZOOM_VIDEO.src.slice(1))
       if (videoNode.getAttribute('src') === wanted) return
       videoNode.setAttribute('src', wanted)
       videoNode.load()

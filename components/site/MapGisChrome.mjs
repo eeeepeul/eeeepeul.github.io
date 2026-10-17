@@ -3,6 +3,7 @@
 import { createElement, useEffect, useRef, useState } from 'react'
 import { PageNavigation } from './PageNavigation.mjs'
 import { MapIntroCard } from './FigmaHomeSidebarContent.mjs'
+import { MapLassoLayer, LASSO_COLORS } from './MapLassoLayer.mjs'
 
 // Pixels of wheel that carry the map from the small planet to the last frame of the
 // clip: the planet's growth is 2.4 / 2800 per pixel, the clip's progress 1 / 2800.
@@ -58,6 +59,14 @@ const ICONS = {
     }),
     createElement('path', { key: 'b', d: 'M9 13.6c-1 1.4-.3 3 1 3.4 1.8.5 2.6 1.5 1.8 3' }),
   ],
+  undo: [
+    createElement('path', { key: 'a', d: 'M9 7 4.5 11.5 9 16' }),
+    createElement('path', { key: 'b', d: 'M5 11.5h9.5a4.5 4.5 0 0 1 0 9H11' }),
+  ],
+  trash: [
+    createElement('path', { key: 'a', d: 'M5 7h14M10 4h4M7 7l.8 12.5h8.4L17 7' }),
+    createElement('path', { key: 'b', d: 'M10.2 10.5v6M13.8 10.5v6' }),
+  ],
   info: [
     createElement('circle', { key: 'a', cx: 12, cy: 12, r: 8.5 }),
     createElement('path', { key: 'b', d: 'M12 11v5.5M12 7.6v.2' }),
@@ -83,6 +92,8 @@ function ToolButton({ label, icon, pressed, onClick, href, extraClass = '' }) {
 export function MapGisChrome({ homeHref = '/', cctvHref = '/experience/' }) {
   const [infoOpen, setInfoOpen] = useState(false)
   const [satelliteOn, setSatelliteOn] = useState(true)
+  const [lassoOn, setLassoOn] = useState(false)
+  const [lassoColor, setLassoColor] = useState('green')
   const [zoom, setZoom] = useState(0)
   const draggingRef = useRef(false)
 
@@ -161,7 +172,45 @@ export function MapGisChrome({ homeHref = '/', cctvHref = '/experience/' }) {
         pressed: !satelliteOn,
         onClick: toggleSatellite,
       }),
-      createElement(ToolButton, { label: 'CCTV 화면으로 이동', icon: 'lasso', href: cctvHref }),
+      createElement(
+        'div',
+        { className: 'map-gis-lasso' },
+        createElement(ToolButton, {
+          label: lassoOn ? '올가미 도구 끄기' : '올가미 도구 켜기',
+          icon: 'lasso',
+          pressed: lassoOn,
+          onClick: () => setLassoOn((on) => !on),
+        }),
+        lassoOn
+          ? createElement(
+              'div',
+              { className: 'map-gis-lasso__bar', role: 'group', 'aria-label': '올가미 도구 옵션' },
+              createElement(ToolButton, {
+                label: '마지막 면 되돌리기',
+                icon: 'undo',
+                onClick: () => window.dispatchEvent(new CustomEvent('map:lasso-undo')),
+              }),
+              createElement(ToolButton, {
+                label: '그린 면 모두 지우기',
+                icon: 'trash',
+                onClick: () => window.dispatchEvent(new CustomEvent('map:lasso-clear')),
+              }),
+              createElement('span', { className: 'map-gis-lasso__sep', 'aria-hidden': 'true' }),
+              ...Object.entries(LASSO_COLORS).map(([name, palette]) =>
+                createElement('button', {
+                  key: name,
+                  type: 'button',
+                  className: `map-gis-swatch${lassoColor === name ? ' is-selected' : ''}`,
+                  style: { background: palette.swatch },
+                  'aria-label': `색연필 색: ${name}`,
+                  'aria-pressed': lassoColor === name,
+                  title: name,
+                  onClick: () => setLassoColor(name),
+                })
+              ),
+            )
+          : null
+      ),
       createElement(ToolButton, {
         label: '정보와 범례',
         icon: 'info',
@@ -169,6 +218,7 @@ export function MapGisChrome({ homeHref = '/', cctvHref = '/experience/' }) {
         onClick: () => setInfoOpen((open) => !open),
       })
     ),
+    createElement(MapLassoLayer, { active: lassoOn, color: lassoColor }),
     createElement(
       'section',
       { className: `map-gis-info${infoOpen ? ' is-open' : ''}`, 'aria-label': '정보와 범례', hidden: !infoOpen },

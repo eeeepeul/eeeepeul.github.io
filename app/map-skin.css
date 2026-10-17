@@ -435,3 +435,46 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
     height: 28px;
   }
 }
+
+/* ---- lasso tool: freehand loops filled like coloured pencil --------------------- */
+.map-lasso-layer {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.map-gis-lasso {
+  position: relative;
+  display: grid;
+}
+.map-gis-lasso__bar {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: calc(100% + 14px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  background: var(--gis-gray);
+  white-space: nowrap;
+}
+.map-gis-lasso__sep {
+  width: 1px;
+  height: 22px;
+  margin: 0 3px;
+  background: rgba(0, 0, 0, 0.28);
+}
+.map-gis-swatch {
+  box-sizing: border-box;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.map-gis-swatch.is-selected {
+  outline: 2px solid var(--gis-ink);
+  outline-offset: 2px;
+}
