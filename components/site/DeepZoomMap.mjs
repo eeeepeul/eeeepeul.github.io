@@ -22,8 +22,6 @@ import {
   VIDEO_FRAME_CODE,
   getVideoLimbRatio,
   getVideoPlanetScale,
-  isVideoSeekCurrent,
-  shouldRequestVideoSeek,
   getShortestYawDelta,
   getZoomAnchorTurn,
   setCameraProgress,
@@ -33,14 +31,8 @@ const WHEEL_PROGRESS_PER_PIXEL = 1 / 2800
 const TOUCH_PROGRESS_PER_PIXEL = 1 / 600
 const PINCH_PROGRESS_PER_PIXEL = 1 / 500
 const WHEEL_SMOOTHING_MS = 180
-// Seeking a paused video is much more expensive than drawing the 3D globe. Do
-// not ask the decoder for changes smaller than one video frame at 24fps; the
-// final seek is still sent when scrolling settles.
-const MIN_SEEK_SECONDS = 1 / 24
-// Keep the WebGL/canvas work below the display rate while the wheel is noisy.
-// The globe remains visible until its requested video frame is ready, so this
-// throttling cannot expose a stale detail frame during the handoff.
-const VIDEO_RENDER_INTERVAL_MS = 1000 / 30
+// Skip seeks smaller than a few frames' worth of drift to keep scrubbing cheap.
+const MIN_SEEK_SECONDS = 1 / 60
 // How quickly a released drag stops spinning (ms for the speed to fall by 1/e).
 const SPIN_DECAY_MS = 260
 const MIN_SPIN_SPEED = 0.002
@@ -100,7 +92,7 @@ function setHotspotGeometry(hotspotNodes, state) {
   })
 }
 
-function applyCameraFrame(rootNode, nodes, progress, requestVideoSeek) {
+function applyCameraFrame(rootNode, nodes, progress) {
   if (!rootNode) return null
 
   const rect = rootNode.getBoundingClientRect()
@@ -117,9 +109,8 @@ function applyCameraFrame(rootNode, nodes, progress, requestVideoSeek) {
     nodes.legendNumbered.style.opacity = String(numbered)
     nodes.legendSymbols.style.opacity = String(1 - numbered)
   }
-  if (nodes.video && shouldRequestVideoSeek(nodes.video.currentTime, state.time, MIN_SEEK_SECONDS)) {
-    if (requestVideoSeek) requestVideoSeek(state.time)
-    else nodes.video.currentTime = state.time
+  if (nodes.video && Math.abs(nodes.video.currentTime - state.time) > MIN_SEEK_SECONDS) {
+    nodes.video.currentTime = state.time
   }
 
   rootNode.dataset.mapProgress = state.progress.toFixed(4)
@@ -160,7 +151,6 @@ export function DeepZoomMap() {
     let globeFrameId = 0
     let targetProgress = 0
     let lastTimestamp = 0
-    let lastVideoRenderTimestamp = 0
     let globe = null
     let globeSize = ''
     // 'loading' until the planet is ready; 'globe' lets it be dragged round and
@@ -181,13 +171,6 @@ export function DeepZoomMap() {
     let lastPointer = null
     let align = null
     let pendingZoom = 0
-    let requestedVideoTime = 0
-    // Time of the frame that was actually copied into the visible canvas. A
-    // null value deliberately blocks the detail handoff until a fresh seek has
-    // been painted; this matters when the user scrolls back and then forward.
-    let drawnVideoTime = null
-    let pendingVideoTime = null
-    let videoSeekInFlight = false
     let globeTimestamp = 0
     // Where the pointer last zoomed, in video-frame pixels from the planet's
     // centre; the planet turns as it grows so that point stays under the pointer.
@@ -254,33 +237,8 @@ export function DeepZoomMap() {
       globe.render()
     }
 
-    const flushVideoSeek = () => {
-      if (cancelled || videoSeekInFlight || pendingVideoTime === null) return
-      const nextTime = pendingVideoTime
-      pendingVideoTime = null
-      if (!shouldRequestVideoSeek(videoNode.currentTime, nextTime)) return
-      videoSeekInFlight = true
-      videoNode.currentTime = nextTime
-    }
-
-    const requestVideoSeek = (time) => {
-      requestedVideoTime = time
-      // A seek back over an already drawn frame invalidates that old canvas
-      // image. Without this reset, reversing direction could briefly reveal a
-      // future detail frame while the globe was still moving back toward it.
-      if (
-        Number.isFinite(drawnVideoTime) &&
-        time < drawnVideoTime - MIN_SEEK_SECONDS
-      ) {
-        drawnVideoTime = null
-        if (globe && mode === 'video') updateGlobeHandoff(progressRef.current)
-      }
-      pendingVideoTime = time
-      flushVideoSeek()
-    }
-
     const renderVideoFrame = (progress) => {
-      const state = applyCameraFrame(rootNode, nodes, progress, requestVideoSeek)
+      const state = applyCameraFrame(rootNode, nodes, progress)
       syncGlobeSize(state)
       if (mode === 'video') updateGlobeHandoff(progress)
       return state
@@ -309,19 +267,11 @@ export function DeepZoomMap() {
       const progress =
         Math.abs(gap) < 0.0002 ? targetProgress : progressRef.current + gap * smoothing
       progressRef.current = progress
-      const renderDue =
-        !lastVideoRenderTimestamp ||
-        timestamp - lastVideoRenderTimestamp >= VIDEO_RENDER_INTERVAL_MS ||
-        progress === targetProgress
-      if (renderDue) {
-        lastVideoRenderTimestamp = timestamp
-        renderVideoFrame(progress)
-      }
+      renderVideoFrame(progress)
       if (progress !== targetProgress) {
         frameId = window.requestAnimationFrame(renderVideo)
       } else {
         lastTimestamp = 0
-        lastVideoRenderTimestamp = 0
         // Zoomed all the way back out: hand the planet back to the pointer.
         if (progress === 0 && mode === 'video') enterGlobeMode(1)
       }
@@ -451,12 +401,7 @@ export function DeepZoomMap() {
       event.preventDefault()
       // deltaMode 1 = lines; normalize to pixels.
       const pixels = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY
-      // The supplied reference frames are a fixed camera push toward the home
-      // view. Do not turn the planet based on the mouse's incidental position
-      // during a wheel gesture; that changes the map orientation between frames
-      // and makes the handoff look like a jump. Pinch zoom still uses an anchor
-      // because its centre is an intentional touch gesture.
-      if (mode === 'globe') zoomAnchor = null
+      if (mode === 'globe') zoomAnchor = toFramePoint(event.clientX, event.clientY)
       zoomBy(pixels * WHEEL_PROGRESS_PER_PIXEL)
     }
 
@@ -541,7 +486,7 @@ export function DeepZoomMap() {
     }
 
     const handleResize = () => {
-      const state = applyCameraFrame(rootNode, nodes, progressRef.current, requestVideoSeek)
+      const state = applyCameraFrame(rootNode, nodes, progressRef.current)
       syncGlobeSize(state)
     }
 
@@ -584,9 +529,6 @@ export function DeepZoomMap() {
         requestGlobeFrame()
       } else if (mode === 'video') {
         targetProgress = 0
-        requestedVideoTime = 0
-        pendingVideoTime = 0
-        drawnVideoTime = null
         requestVideoFrame()
       }
     }
@@ -660,8 +602,9 @@ export function DeepZoomMap() {
           setMode('video')
         }
       })
-      .catch(() => {
+      .catch((error) => {
         // No WebGL or texture: the clip's own first frame stands in for the planet.
+        console.error('globe failed to start', error)
         if (!cancelled) setMode('video')
       })
 
