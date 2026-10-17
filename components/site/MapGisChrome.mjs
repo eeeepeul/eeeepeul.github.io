@@ -3,6 +3,8 @@
 import { createElement, useEffect, useRef, useState } from 'react'
 import { PageNavigation } from './PageNavigation.mjs'
 import { MapIntroCard } from './FigmaHomeSidebarContent.mjs'
+import { MapHeatTrail } from './MapHeatTrail.mjs'
+import { MapLassoLayer, LASSO_DEFAULT_LEVEL, lassoPaletteAt } from './MapLassoLayer.mjs'
 
 // Pixels of wheel that carry the map from the small planet to the last frame of the
 // clip: the planet's growth is 2.4 / 2800 per pixel, the clip's progress 1 / 2800.
@@ -58,10 +60,79 @@ const ICONS = {
     }),
     createElement('path', { key: 'b', d: 'M9 13.6c-1 1.4-.3 3 1 3.4 1.8.5 2.6 1.5 1.8 3' }),
   ],
+  undo: [
+    createElement('path', { key: 'a', d: 'M9 7 4.5 11.5 9 16' }),
+    createElement('path', { key: 'b', d: 'M5 11.5h9.5a4.5 4.5 0 0 1 0 9H11' }),
+  ],
+  trash: [
+    createElement('path', { key: 'a', d: 'M5 7h14M10 4h4M7 7l.8 12.5h8.4L17 7' }),
+    createElement('path', { key: 'b', d: 'M10.2 10.5v6M13.8 10.5v6' }),
+  ],
   info: [
     createElement('circle', { key: 'a', cx: 12, cy: 12, r: 8.5 }),
     createElement('path', { key: 'b', d: 'M12 11v5.5M12 7.6v.2' }),
   ],
+}
+
+// The colour scale of the lasso: drag the handle up or down to change the colour.
+function LassoPanel() {
+  const [level, setLevel] = useState(() =>
+    typeof window !== 'undefined' && window.__mapLassoLevel != null ? window.__mapLassoLevel : LASSO_DEFAULT_LEVEL
+  )
+  const trackRef = useRef(null)
+  const apply = (next) => {
+    const clamped = Math.min(1, Math.max(0, next))
+    setLevel(clamped)
+    window.__mapLassoLevel = clamped
+    window.dispatchEvent(new CustomEvent('map:lasso-level', { detail: { level: clamped } }))
+  }
+  const fromPointer = (event) => {
+    const box = trackRef.current.getBoundingClientRect()
+    apply(1 - (event.clientY - box.top) / box.height)
+  }
+  // The bar shows each palette as a short run of its colours, rim to core.
+  const stops = []
+  for (let i = 0; i <= 28; i += 1) {
+    const palette = lassoPaletteAt(i / 28)
+    stops.push(`rgb(${palette[2].map(Math.round).join(', ')}) ${Math.round((i / 28) * 100)}%`)
+  }
+  const gradient = `linear-gradient(to top, ${stops.join(', ')})`
+  const stop = (k) => `rgb(${lassoPaletteAt(level)[k].map(Math.round).join(', ')})`
+  const preview = `radial-gradient(circle at 42% 38%, ${stop(3)} 0%, ${stop(2)} 36%, ${stop(1)} 64%, ${stop(0)} 90%, transparent 100%)`
+  return createElement(
+    'div',
+    { className: 'map-gis-lasso__panel' },
+    createElement('span', { className: 'map-gis-lasso__preview', style: { background: preview }, 'aria-hidden': 'true' }),
+    createElement(
+    'div',
+    {
+      className: 'map-gis-scale',
+      role: 'slider',
+      tabIndex: 0,
+      'aria-label': '올가미 색',
+      'aria-orientation': 'vertical',
+      'aria-valuemin': 0,
+      'aria-valuemax': 100,
+      'aria-valuenow': Math.round(level * 100),
+      onPointerDown: (event) => {
+        event.currentTarget.setPointerCapture?.(event.pointerId)
+        fromPointer(event)
+      },
+      onPointerMove: (event) => {
+        if (event.buttons) fromPointer(event)
+      },
+      onKeyDown: (event) => {
+        if (event.key === 'ArrowUp') apply(level + 0.03)
+        if (event.key === 'ArrowDown') apply(level - 0.03)
+      },
+    },
+    createElement('span', { className: 'map-gis-scale__track', ref: trackRef, style: { background: gradient } }),
+    createElement('span', {
+      className: 'map-gis-scale__handle',
+      style: { bottom: `${level * 100}%` },
+    })
+    )
+  )
 }
 
 function ToolButton({ label, icon, pressed, onClick, href, extraClass = '' }) {
@@ -83,6 +154,7 @@ function ToolButton({ label, icon, pressed, onClick, href, extraClass = '' }) {
 export function MapGisChrome({ homeHref = '/', cctvHref = '/experience/' }) {
   const [infoOpen, setInfoOpen] = useState(false)
   const [satelliteOn, setSatelliteOn] = useState(true)
+  const [lassoOn, setLassoOn] = useState(false)
   const [zoom, setZoom] = useState(0)
   const draggingRef = useRef(false)
 
@@ -161,7 +233,33 @@ export function MapGisChrome({ homeHref = '/', cctvHref = '/experience/' }) {
         pressed: !satelliteOn,
         onClick: toggleSatellite,
       }),
-      createElement(ToolButton, { label: 'CCTV 화면으로 이동', icon: 'lasso', href: cctvHref }),
+      createElement(
+        'div',
+        { className: 'map-gis-lasso' },
+        createElement(ToolButton, {
+          label: lassoOn ? '올가미 도구 끄기' : '올가미 도구 켜기',
+          icon: 'lasso',
+          pressed: lassoOn,
+          onClick: () => setLassoOn((on) => !on),
+        }),
+        lassoOn
+          ? createElement(
+              'div',
+              { className: 'map-gis-lasso__bar', role: 'group', 'aria-label': '올가미 도구 옵션' },
+              createElement(ToolButton, {
+                label: '마지막 면 되돌리기',
+                icon: 'undo',
+                onClick: () => window.dispatchEvent(new CustomEvent('map:lasso-undo')),
+              }),
+              createElement(ToolButton, {
+                label: '그린 면 모두 지우기',
+                icon: 'trash',
+                onClick: () => window.dispatchEvent(new CustomEvent('map:lasso-clear')),
+              }),
+            )
+          : null,
+        lassoOn ? createElement(LassoPanel) : null
+      ),
       createElement(ToolButton, {
         label: '정보와 범례',
         icon: 'info',
@@ -169,6 +267,8 @@ export function MapGisChrome({ homeHref = '/', cctvHref = '/experience/' }) {
         onClick: () => setInfoOpen((open) => !open),
       })
     ),
+    createElement(MapHeatTrail, { active: true }),
+    createElement(MapLassoLayer, { active: lassoOn }),
     createElement(
       'section',
       { className: `map-gis-info${infoOpen ? ' is-open' : ''}`, 'aria-label': '정보와 범례', hidden: !infoOpen },

@@ -61,7 +61,7 @@ test('the main page renders the Figma sidebar as native UI instead of a flattene
   assert.match(html, /class="map-gis-toolbar"/)
   assert.match(html, /aria-label="시점 초기화"/)
   assert.match(html, /aria-label="색 지도 켜기"/)
-  assert.match(html, /aria-label="CCTV 화면으로 이동"/)
+  assert.match(html, /aria-label="올가미 도구 켜기"/)
   assert.match(html, /class="map-gis-zoombar"/)
   assert.match(html, /class="map-mini-globe"/)
   assert.match(html, /class="map-layers"/)
