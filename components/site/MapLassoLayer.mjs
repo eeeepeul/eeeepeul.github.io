@@ -55,115 +55,132 @@ function bounds(points) {
   return { minX, minY, maxX, maxY }
 }
 
-function distanceToEdge(points, x, y) {
-  let best = Infinity
-  for (let i = 0; i < points.length; i += 3) {
-    const point = points[i]
-    best = Math.min(best, Math.hypot(point.x - x, point.y - y))
+// A loop drawn with the lasso tool is a soft gradient blur: four colours from the rim to
+// the core, feathered at the edge, with the core a little off-centre like a lit bubble.
+// The handle on the colour bar slides through a run of palettes, blending between them.
+// Each palette: rim, outer ring, inner ring, core.
+export const LASSO_PALETTES = [
+  [[255, 238, 120], [255, 170, 70], [222, 60, 140], [50, 60, 170]],
+  [[255, 196, 70], [250, 112, 60], [198, 30, 120], [40, 10, 70]],
+  [[255, 214, 90], [255, 150, 50], [232, 40, 60], [214, 20, 36]],
+  [[176, 224, 140], [250, 168, 196], [236, 14, 140], [250, 60, 170]],
+  [[130, 200, 100], [40, 176, 204], [50, 84, 176], [84, 22, 96]],
+  [[96, 202, 242], [44, 112, 212], [118, 42, 166], [246, 52, 124]],
+  [[40, 170, 232], [30, 100, 220], [112, 30, 150], [40, 10, 52]],
+  [[204, 236, 246], [172, 152, 222], [132, 42, 152], [52, 10, 72]],
+]
+export const LASSO_DEFAULT_LEVEL = 0.07
+const FIELD_SCALE = 0.35
+
+export function lassoPaletteAt(level) {
+  const f = Math.min(1, Math.max(0, level)) * (LASSO_PALETTES.length - 1)
+  const i = Math.min(LASSO_PALETTES.length - 2, Math.floor(f))
+  const t = f - i
+  return LASSO_PALETTES[i].map((colour, k) =>
+    colour.map((value, c) => value + (LASSO_PALETTES[i + 1][k][c] - value) * t)
+  )
+}
+
+const smoothstep = (t) => t * t * (3 - 2 * t)
+
+function paletteLut(level) {
+  const stops = lassoPaletteAt(level)
+  const lut = new Uint8ClampedArray(256 * 3)
+  for (let i = 0; i < 256; i += 1) {
+    const f = (i / 255) * 3
+    const k = Math.min(2, Math.floor(f))
+    const t = smoothstep(f - k)
+    for (let c = 0; c < 3; c += 1) lut[i * 3 + c] = stops[k][c] + (stops[k + 1][c] - stops[k][c]) * t
   }
-  return best
+  return lut
 }
 
-// Pencil sets: yellow-ish top → cooler bottom, and the outline pencil.
-export const LASSO_COLORS = {
-  green: { top: [[168, 212, 108], [150, 204, 98], [184, 220, 124]], bottom: [[96, 184, 140], [84, 174, 130], [112, 192, 150]], line: ['#3f8a55', '#2f6f45'], swatch: '#7cc07a' },
-  blue: { top: [[150, 200, 232], [136, 190, 228], [170, 210, 238]], bottom: [[88, 130, 206], [78, 120, 200], [104, 144, 214]], line: ['#3a63a8', '#2c4f90'], swatch: '#6a9ad8' },
-  pink: { top: [[246, 188, 200], [242, 172, 190], [250, 204, 212]], bottom: [[222, 112, 150], [214, 100, 140], [232, 132, 164]], line: ['#b8456f', '#9a3359'], swatch: '#e88aa8' },
-  orange: { top: [[250, 214, 120], [248, 200, 96], [252, 224, 140]], bottom: [[238, 140, 70], [232, 126, 58], [244, 156, 88]], line: ['#c0652a', '#a04f1c'], swatch: '#f0a050' },
-  violet: { top: [[200, 186, 232], [188, 172, 226], [212, 200, 238]], bottom: [[130, 100, 196], [118, 88, 188], [144, 116, 206]], line: ['#6a4aa8', '#53378c'], swatch: '#9a82d0' },
-}
-
-export function paintPencilShape(context, shape, amount = 1) {
-  const points = shape.points
-  if (points.length < 3) return
-  const random = mulberry(shape.seed)
+// How deep inside the loop each point is (0 at the rim, 1 at the core) and how solid the
+// paint is there, read from a blurred copy of the loop; the blur also feathers the edge.
+function buildField(points) {
   const box = bounds(points)
-  const size = Math.max(box.maxX - box.minX, box.maxY - box.minY)
-  const spacing = Math.max(1.9, Math.min(3.2, size / 160))
-  const reach = Math.hypot(box.maxX - box.minX, box.maxY - box.minY)
-  context.save()
-  tracePath(context, points)
-  context.clip()
-  context.lineCap = 'round'
-  // Two layers of hatching at slightly different angles, lighter green over a
-  // yellower one, the way a pencil is gone over twice.
-  // Yellow-green at the top of the shape, going to a cooler sea-green at the bottom,
-  // as in the reference drawing.
-  const palette = LASSO_COLORS[shape.color] || LASSO_COLORS.green
-  const topColors = palette.top
-  const bottomColors = palette.bottom
-  const colourAt = (t, pick) => {
-    const a = topColors[pick % topColors.length]
-    const b = bottomColors[pick % bottomColors.length]
-    const k = Math.min(1, Math.max(0, (t - 0.25) / 0.5))
-    return `rgb(${Math.round(a[0] + (b[0] - a[0]) * k)}, ${Math.round(a[1] + (b[1] - a[1]) * k)}, ${Math.round(a[2] + (b[2] - a[2]) * k)})`
-  }
-  const layers = [
-    { angle: -0.62, alpha: 0.78, width: 2.0, shade: 1 },
-    { angle: -0.44, alpha: 0.55, width: 1.6, shade: 0.8 },
-  ]
-  for (const layer of layers) {
-    const cos = Math.cos(layer.angle)
-    const sin = Math.sin(layer.angle)
-    const centreX = (box.minX + box.maxX) / 2
-    const centreY = (box.minY + box.maxY) / 2
-    for (let offset = -reach / 2; offset <= reach / 2; offset += spacing) {
-      // A hatch line is drawn as a run of short strokes with small gaps.
-      let along = -reach / 2
-      while (along < reach / 2) {
-        const length = 14 + random() * 34
-        const jitterAngle = layer.angle + (random() - 0.5) * 0.08
-        const jitterOffset = offset + (random() - 0.5) * spacing * 0.9
-        const startX = centreX - sin * jitterOffset + cos * along
-        const startY = centreY + cos * jitterOffset + sin * along
-        const endX = startX + Math.cos(jitterAngle) * length
-        const endY = startY + Math.sin(jitterAngle) * length
-        // Pressed harder (denser, darker) within a few pixels of the outline.
-        const nearEdge = distanceToEdge(points, (startX + endX) / 2, (startY + endY) / 2)
-        const press = 1 - Math.min(1, nearEdge / 40) * 0.55
-        context.globalAlpha = Math.min(1, layer.alpha * press * (0.55 + random() * 0.7) * amount)
-        const along01 = (((startY + endY) / 2) - box.minY) / Math.max(1, box.maxY - box.minY)
-        context.strokeStyle = colourAt(along01, Math.floor(random() * 3))
-        context.lineWidth = layer.width * (0.7 + random() * 0.7)
-        context.beginPath()
-        context.moveTo(startX, startY)
-        context.lineTo(endX, endY)
-        context.stroke()
-        along += length * (0.7 + random() * 0.5) + random() * 5
-      }
+  const spanX = (box.maxX - box.minX) * FIELD_SCALE
+  const spanY = (box.maxY - box.minY) * FIELD_SCALE
+  const blur = Math.max(1.5, Math.min(spanX, spanY) * 0.2)
+  const pad = Math.ceil(blur * 2.4)
+  const w = Math.max(4, Math.ceil(spanX + 2)) + pad * 2
+  const h = Math.max(4, Math.ceil(spanY + 2)) + pad * 2
+  const left = Math.floor(box.minX) - pad / FIELD_SCALE
+  const top = Math.floor(box.minY) - pad / FIELD_SCALE
+  const sharp = document.createElement('canvas')
+  sharp.width = w
+  sharp.height = h
+  const sc = sharp.getContext('2d')
+  sc.setTransform(FIELD_SCALE, 0, 0, FIELD_SCALE, -left * FIELD_SCALE, -top * FIELD_SCALE)
+  sc.fillStyle = '#fff'
+  tracePath(sc, points)
+  sc.fill()
+  const soft = document.createElement('canvas')
+  soft.width = w
+  soft.height = h
+  const bc = soft.getContext('2d')
+  bc.filter = `blur(${blur}px)`
+  bc.drawImage(sharp, 0, 0)
+  const blurred = bc.getImageData(0, 0, w, h).data
+  let peak = 0.5
+  for (let i = 0; i < w * h; i += 1) peak = Math.max(peak, blurred[i * 4 + 3] / 255)
+  const depth = new Uint8Array(w * h)
+  const alpha = new Uint8Array(w * h)
+  const midX = w / 2
+  const midY = h / 2
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      const i = y * w + x
+      const b = blurred[i * 4 + 3] / 255
+      // Deepest where the loop is thickest, nudged up and to the left.
+      const lean = (-(x - midX) / w - (y - midY) / h) * 0.28
+      const d = Math.min(1, Math.max(0, (b - 0.3) / (peak - 0.3) + lean * Math.min(1, b * 1.4)))
+      depth[i] = Math.round(255 * d)
+      alpha[i] = Math.round(255 * smoothstep(Math.min(1, Math.max(0, (b - 0.1) / 0.5))))
     }
   }
-  context.restore()
-  // The outline: traced twice with a hand that wanders a little.
-  context.save()
-  context.lineJoin = 'round'
-  context.lineCap = 'round'
-  for (let pass = 0; pass < 2; pass += 1) {
-    context.globalAlpha = (pass === 0 ? 0.85 : 0.5) * amount
-    context.strokeStyle = palette.line[pass]
-    context.lineWidth = pass === 0 ? 1.8 : 1.2
-    context.beginPath()
-    points.forEach((point, index) => {
-      const wobble = pass === 0 ? 0 : (random() - 0.5) * 1.6
-      const x = point.x + wobble
-      const y = point.y + wobble
-      if (index === 0) context.moveTo(x, y)
-      else context.lineTo(x, y)
-    })
-    context.closePath()
-    context.stroke()
+  return { left, top, w, h, depth, alpha, image: null, level: null, canvas: null }
+}
+
+export function paintHeatShape(context, shape, amount = 1) {
+  if (shape.points.length < 3) return
+  if (!shape.field) shape.field = buildField(shape.points)
+  const field = shape.field
+  const level = shape.level == null ? LASSO_DEFAULT_LEVEL : shape.level
+  if (field.level !== level) {
+    if (!field.canvas) {
+      field.canvas = document.createElement('canvas')
+      field.canvas.width = field.w
+      field.canvas.height = field.h
+      field.image = field.canvas.getContext('2d').createImageData(field.w, field.h)
+    }
+    const lut = paletteLut(level)
+    const data = field.image.data
+    for (let i = 0; i < field.w * field.h; i += 1) {
+      const k = field.depth[i] * 3
+      data[i * 4] = lut[k]
+      data[i * 4 + 1] = lut[k + 1]
+      data[i * 4 + 2] = lut[k + 2]
+      data[i * 4 + 3] = field.alpha[i]
+    }
+    field.canvas.getContext('2d').putImageData(field.image, 0, 0)
+    field.level = level
   }
+  context.save()
+  context.globalAlpha = amount
+  context.imageSmoothingEnabled = true
+  context.imageSmoothingQuality = 'high'
+  context.drawImage(field.canvas, field.left, field.top, field.w / FIELD_SCALE, field.h / FIELD_SCALE)
   context.restore()
 }
 
-export function MapLassoLayer({ active, color = 'green' }) {
-  const colorRef = useRef(color)
-  colorRef.current = color
+export function MapLassoLayer({ active }) {
   const canvasRef = useRef(null)
   const activeRef = useRef(active)
   const shapesRef = useRef([])
   const strokeRef = useRef(null)
   const fadeRef = useRef(null)
+  const levelRef = useRef(typeof window !== 'undefined' && window.__mapLassoLevel != null ? window.__mapLassoLevel : LASSO_DEFAULT_LEVEL)
 
   useEffect(() => {
     activeRef.current = active
@@ -199,7 +216,7 @@ export function MapLassoLayer({ active, color = 'green' }) {
       context.clearRect(0, 0, rect.width, rect.height)
       shapesRef.current.forEach((shape, index) => {
         const fading = fadeRef.current && fadeRef.current.index === index
-        paintPencilShape(context, shape, fading ? fadeRef.current.amount : 1)
+        paintHeatShape(context, shape, fading ? fadeRef.current.amount : 1)
       })
       const stroke = strokeRef.current
       if (stroke && stroke.length > 1) {
@@ -238,7 +255,7 @@ export function MapLassoLayer({ active, color = 'green' }) {
 
     const onDown = (event) => {
       if (!activeRef.current || event.button > 0 || !inMap(event)) return
-      if (event.target.closest?.('.map-gis-toolbar, .map-gis-zoombar, .map-gis-info, a, button, input, aside')) return
+      if (event.target.closest?.('.map-gis-toolbar, .map-gis-zoombar, .map-gis-info, .map-gis-scale, a, button, input, aside')) return
       // The map must not turn under the pen.
       event.stopPropagation()
       event.preventDefault()
@@ -276,7 +293,7 @@ export function MapLassoLayer({ active, color = 'green' }) {
         shapesRef.current.push({
           points: smoothPath(stroke),
           seed: Math.floor(Math.random() * 1e9),
-          color: colorRef.current,
+          level: levelRef.current,
         })
         fadeIn(shapesRef.current.length - 1)
       } else {
@@ -301,6 +318,12 @@ export function MapLassoLayer({ active, color = 'green' }) {
       strokeRef.current = null
       redraw()
     }
+    const onLevel = (event) => {
+      levelRef.current = event.detail.level
+      const last = shapesRef.current[shapesRef.current.length - 1]
+      if (last) last.level = event.detail.level
+      redraw()
+    }
     const onUndo = () => {
       shapesRef.current.pop()
       redraw()
@@ -316,6 +339,7 @@ export function MapLassoLayer({ active, color = 'green' }) {
     window.addEventListener('map:reset', onReset)
     window.addEventListener('map:lasso-clear', onReset)
     window.addEventListener('map:lasso-undo', onUndo)
+    window.addEventListener('map:lasso-level', onLevel)
     const watcher = new window.ResizeObserver(sizeToMap)
     const map = document.querySelector('.figma-deep-zoom-map')
     if (map) watcher.observe(map)
@@ -329,6 +353,7 @@ export function MapLassoLayer({ active, color = 'green' }) {
       window.removeEventListener('map:reset', onReset)
       window.removeEventListener('map:lasso-clear', onReset)
       window.removeEventListener('map:lasso-undo', onUndo)
+      window.removeEventListener('map:lasso-level', onLevel)
       watcher.disconnect()
     }
   }, [])
