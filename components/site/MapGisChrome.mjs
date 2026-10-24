@@ -68,6 +68,10 @@ const ICONS = {
     createElement('path', { key: 'a', d: 'M5 7h14M10 4h4M7 7l.8 12.5h8.4L17 7' }),
     createElement('path', { key: 'b', d: 'M10.2 10.5v6M13.8 10.5v6' }),
   ],
+  camera: [
+    createElement('path', { key: 'a', d: 'M4 8.5h3l1.4-2h7.2l1.4 2h3v10H4z' }),
+    createElement('circle', { key: 'b', cx: 12, cy: 13.2, r: 3.2 }),
+  ],
   info: [
     createElement('circle', { key: 'a', cx: 12, cy: 12, r: 8.5 }),
     createElement('path', { key: 'b', d: 'M12 11v5.5M12 7.6v.2' }),
@@ -132,6 +136,98 @@ function LassoPanel() {
       style: { bottom: `${level * 100}%` },
     })
     )
+  )
+}
+
+// The computer's camera, in the foot of the bar: a small mirrored picture of whoever is there.
+// It only asks for the camera when the button is pressed, and lets go of it when pressed again.
+function CameraTile() {
+  const videoRef = useRef(null)
+  const canvasRef = useRef(null)
+  const streamRef = useRef(null)
+  const frameRef = useRef(0)
+  const [state, setState] = useState('off') // off | on | denied
+
+  // The picture is drawn small and blown up with no smoothing, so it comes out as a mosaic.
+  const startMosaic = () => {
+    const canvas = canvasRef.current
+    const video = videoRef.current
+    if (!canvas || !video) return
+    const columns = 9
+    const rows = 12
+    const small = document.createElement('canvas')
+    small.width = columns
+    small.height = rows
+    const smallContext = small.getContext('2d', { willReadFrequently: true })
+    const context = canvas.getContext('2d')
+    canvas.width = 80
+    canvas.height = 104
+    context.imageSmoothingEnabled = false
+    const tick = () => {
+      frameRef.current = window.requestAnimationFrame(tick)
+      if (video.readyState < 2 || !video.videoWidth) return
+      // cover the tile, taking the middle of the picture
+      const aspect = columns / rows
+      let sw = video.videoHeight * aspect
+      let sh = video.videoHeight
+      if (sw > video.videoWidth) {
+        sw = video.videoWidth
+        sh = sw / aspect
+      }
+      smallContext.drawImage(video, (video.videoWidth - sw) / 2, (video.videoHeight - sh) / 2, sw, sh, 0, 0, columns, rows)
+      context.drawImage(small, 0, 0, columns, rows, 0, 0, canvas.width, canvas.height)
+    }
+    frameRef.current = window.requestAnimationFrame(tick)
+  }
+
+  const stop = () => {
+    if (frameRef.current) window.cancelAnimationFrame(frameRef.current)
+    frameRef.current = 0
+    if (streamRef.current) streamRef.current.getTracks().forEach((track) => track.stop())
+    streamRef.current = null
+    if (videoRef.current) videoRef.current.srcObject = null
+  }
+
+  useEffect(() => stop, [])
+
+  const toggle = async () => {
+    if (state === 'on') {
+      stop()
+      setState('off')
+      return
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 320 }, audio: false })
+      streamRef.current = stream
+      setState('on')
+      // The video element exists once the state has changed.
+      window.requestAnimationFrame(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          videoRef.current.play().catch(() => {})
+          startMosaic()
+        }
+      })
+    } catch {
+      setState('denied')
+    }
+  }
+
+  return createElement(
+    'button',
+    {
+      type: 'button',
+      className: `map-gis-camera${state === 'on' ? ' is-on' : ''}${state === 'denied' ? ' is-denied' : ''}`,
+      'aria-label': state === 'on' ? '카메라 끄기' : state === 'denied' ? '카메라를 사용할 수 없습니다' : '카메라 켜기',
+      title: state === 'denied' ? '카메라 권한이 없거나 카메라를 찾지 못했습니다' : state === 'on' ? '카메라 끄기' : '카메라 켜기',
+      onClick: toggle,
+    },
+    state === 'on'
+      ? [
+          createElement('video', { key: 'v', ref: videoRef, className: 'map-gis-camera__source', muted: true, playsInline: true, autoPlay: true }),
+          createElement('canvas', { key: 'c', ref: canvasRef, className: 'map-gis-camera__video' }),
+        ]
+      : createElement(Icon, null, ICONS.camera)
   )
 }
 
@@ -265,7 +361,8 @@ export function MapGisChrome({ homeHref = '/', cctvHref = '/experience/' }) {
         icon: 'info',
         pressed: infoOpen,
         onClick: () => setInfoOpen((open) => !open),
-      })
+      }),
+      createElement(CameraTile)
     ),
     createElement(MapHeatTrail, { active: true }),
     createElement(MapLassoLayer, { active: lassoOn }),

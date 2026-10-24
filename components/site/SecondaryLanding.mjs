@@ -1,6 +1,6 @@
 'use client'
 
-import { createElement, useEffect, useRef, useState } from 'react'
+import { Fragment, createElement, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { assetPath } from '../../lib/asset-path.mjs'
 import {
@@ -11,6 +11,8 @@ import {
   startSharedCharacterFeed,
 } from '../../lib/shared-characters.mjs'
 import { getSharedCharacterStore } from '../../lib/supabase-browser.mjs'
+import { getAccessories } from '../../lib/character-accessories.mjs'
+import { DrawingPad } from './DrawingPad.mjs'
 import { CustomSidebarContent } from './CustomSidebarContent.mjs'
 import { HouseInteriorWorld } from './HouseInteriorWorld.mjs'
 import { LandingFrame } from './LandingFrame.mjs'
@@ -33,6 +35,8 @@ export function SecondaryLanding({ initialCustomView = false }) {
   const [activeCharacterId, setActiveCharacterId] = useState(null)
   const [characterIds, setCharacterIds] = useState(INITIAL_CHARACTER_IDS)
   const [characterCustomizations, setCharacterCustomizations] = useState({})
+  // What was drawn and put on the match, worn by the characters this visitor added.
+  const [characterAccessories, setCharacterAccessories] = useState({})
   const nextCharacterNumber = useRef(7)
 
   useEffect(() => {
@@ -115,6 +119,9 @@ export function SecondaryLanding({ initialCustomView = false }) {
     }
     const localCharacterId = `character-${nextCharacterNumber.current}`
     nextCharacterNumber.current += 1
+    // The match as dressed in the sidebar at this moment goes into the room with it.
+    const worn = getAccessories().map((item) => ({ ...item }))
+    if (worn.length) setCharacterAccessories((current) => ({ ...current, [localCharacterId]: worn }))
     setCharacterIds((currentIds) => [...currentIds, localCharacterId])
     setCharacterCustomizations((currentCustomizations) => ({
       ...currentCustomizations,
@@ -138,6 +145,11 @@ export function SecondaryLanding({ initialCustomView = false }) {
           delete nextCustomizations[localCharacterId]
           return nextCustomizations
         })
+        setCharacterAccessories((current) => {
+          if (!current[localCharacterId]) return current
+          const { [localCharacterId]: worn, ...rest } = current
+          return { ...rest, [sharedCharacterId]: worn }
+        })
         setActiveCharacterId(sharedCharacterId)
         window.dispatchEvent(new CustomEvent(SHARED_CHARACTER_EVENT, { detail: { character } }))
       })
@@ -151,11 +163,17 @@ export function SecondaryLanding({ initialCustomView = false }) {
     houseLabel: '메인 화면으로 이동',
     navigationCurrent: isCustomView ? 'custom' : '',
     onRouteSelect: handleRouteSelect,
-    playfield: createElement(HouseInteriorWorld, {
-      activeCharacterId,
-      characterIds,
-      characterCustomizations,
-    }),
+    playfield: createElement(
+      Fragment,
+      null,
+      createElement(HouseInteriorWorld, {
+        activeCharacterId,
+        characterIds,
+        characterCustomizations,
+        characterAccessories,
+      }),
+      isCustomView ? createElement(DrawingPad) : null
+    ),
     panelLabel: isCustomView ? '캐릭터 커스터마이징 사이드바' : '캐릭터 선택 패널',
     panel: isCustomView
       ? createElement(CustomSidebarContent, { onInput: addCharacter })

@@ -21,7 +21,7 @@
   align-items: center;
   gap: 8px;
   width: 52px;
-  min-height: 316px;
+  min-height: 382px;
   padding: 8px 0;
   background: var(--gis-gray);
 }
@@ -70,7 +70,7 @@
 .experience-shell:has(.map-gis-toolbar) > .house-link:has(.house-mark--figma) {
   position: fixed;
   z-index: 76;
-  top: 270px;
+  top: 336px;
   bottom: auto;
   left: 23px;
   width: 34px;
@@ -330,6 +330,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 
 /* ---- ground profile ------------------------------------------------------------- */
 .map-profile {
+  position: relative;
   box-sizing: border-box;
   background: var(--gis-panel, #fbfbfb);
   border: 1px solid #b9b9b9;
@@ -338,7 +339,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .map-profile__chart {
   display: block;
   width: 100%;
-  height: 120px;
+  height: auto;
 }
 
 /* ---- phones: the toolbar and zoom bar stay, smaller ------------------------------ */
@@ -403,7 +404,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
     left: 8px;
     width: 40px;
     min-height: 0;
-    padding: 6px 0;
+    padding: 6px 0 40px;
   }
 
   .map-gis-tool {
@@ -429,7 +430,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   }
 
   .experience-shell:has(.map-gis-toolbar) > .house-link:has(.house-mark--figma) {
-    top: 250px;
+    top: 306px;
     left: 14px;
     width: 28px;
     height: 28px;
@@ -549,4 +550,58 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   width: 8px;
   height: 2px;
   background: var(--gis-ink);
+}
+
+.map-contour {
+  box-sizing: border-box;
+  background: #f4f4f2;
+}
+
+.map-contour__chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+
+/* The camera at the foot of the left bar. */
+.map-gis-camera {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 52px;
+  margin-top: 4px;
+  padding: 0;
+  overflow: hidden;
+  background: #ececec;
+  border: 1px solid #111;
+  border-radius: 6px;
+  color: #111;
+  cursor: pointer;
+}
+
+.map-gis-camera.is-denied {
+  color: #999;
+  cursor: not-allowed;
+}
+
+.map-gis-camera__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(-1);
+  image-rendering: pixelated;
+  filter: grayscale(1) contrast(1.15);
+}
+
+/* The raw picture is only read from; it is never shown. */
+.map-gis-camera__source {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }

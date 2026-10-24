@@ -57,6 +57,7 @@ export function FollowingCharacterWorld({
   activeCharacterId,
   characterIds,
   characterCustomizations = {},
+  characterAccessories = {},
   map = HOUSE_INTERIOR_MAP,
   cameraWorldRef,
   viewportRef,
@@ -253,6 +254,27 @@ export function FollowingCharacterWorld({
                 '--character-shoe-width': SHOE_WIDTHS[shoeIndex] ?? '73%',
               },
             })
+          : null,
+        characterAccessories[characterId]?.length
+          ? createElement(
+              'span',
+              { className: 'wandering-character-accessories', 'aria-hidden': 'true' },
+              characterAccessories[characterId].map((item) =>
+                createElement('img', {
+                  key: item.id,
+                  className: 'wandering-character-accessory',
+                  src: item.src,
+                  alt: '',
+                  draggable: false,
+                  style: {
+                    left: `${item.x * 100}%`,
+                    top: `${item.y * 100}%`,
+                    width: `${item.width * 100}%`,
+                    aspectRatio: String(item.aspect),
+                  },
+                })
+              )
+            )
           : null
       )
     })

@@ -14,6 +14,7 @@ export function HouseInteriorWorld({
   activeCharacterId,
   characterIds,
   characterCustomizations = {},
+  characterAccessories = {},
   map = HOUSE_INTERIOR_MAP,
 }) {
   const viewportRef = useRef(null)
@@ -45,6 +46,7 @@ export function HouseInteriorWorld({
             activeCharacterId,
             characterIds,
             characterCustomizations,
+            characterAccessories,
             map,
             cameraWorldRef,
             viewportRef,

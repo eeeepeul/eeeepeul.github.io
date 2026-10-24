@@ -7,7 +7,7 @@ import { LASSO_DEFAULT_LEVEL, lassoPaletteAt } from './MapLassoLayer.mjs'
 // spreads, swells and cools away. The heat is shown through a thermal palette (lavender
 // haze, pink, hot red, and a pale pink where it is hottest), so it reads as a thermal
 // camera looking at something fluid.
-const CELL = 3 // screen pixels per simulation cell
+const MAX_CELLS = 90000 // keeps the simulation light on large screens
 const LUT_SIZE = 256
 const LUT_MAX = 1.6
 const ALPHA_STOPS = [[0, 0], [0.05, 0.16], [0.2, 0.6], [0.4, 0.92], [0.55, 1]]
@@ -46,6 +46,7 @@ export function MapHeatTrail({ active = true }) {
     const canvas = canvasRef.current
     if (!canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
     const context = canvas.getContext('2d')
+    let CELL = 3 // screen pixels per simulation cell
     let cols = 0
     let rows = 0
     let heat
@@ -64,6 +65,7 @@ export function MapHeatTrail({ active = true }) {
     let previous = null
 
     const resize = () => {
+      CELL = Math.max(3, Math.ceil(Math.sqrt((window.innerWidth * window.innerHeight) / MAX_CELLS)))
       cols = Math.max(8, Math.ceil(window.innerWidth / CELL))
       rows = Math.max(8, Math.ceil(window.innerHeight / CELL))
       canvas.width = cols
@@ -79,7 +81,7 @@ export function MapHeatTrail({ active = true }) {
     }
 
     const splat = (x, y, dx, dy, strength) => {
-      const radius = 3.3
+      const radius = 10 / CELL
       const reach = Math.ceil(radius * 2)
       const cx = x / CELL
       const cy = y / CELL
@@ -133,6 +135,22 @@ export function MapHeatTrail({ active = true }) {
           if (heatNext[at] > peak) peak = heatNext[at]
         }
       }
+      // The edge cells are never updated by the loop above: keep them empty, or heat and
+      // motion left there would stay for good and the effect would never settle.
+      for (let i = 0; i < cols; i += 1) {
+        for (const at of [i, (rows - 1) * cols + i]) {
+          heatNext[at] = 0
+          vxNext[at] = 0
+          vyNext[at] = 0
+        }
+      }
+      for (let j = 0; j < rows; j += 1) {
+        for (const at of [j * cols, j * cols + cols - 1]) {
+          heatNext[at] = 0
+          vxNext[at] = 0
+          vyNext[at] = 0
+        }
+      }
       ;[heat, heatNext] = [heatNext, heat]
       ;[vx, vxNext] = [vxNext, vx]
       ;[vy, vyNext] = [vyNext, vy]
@@ -172,7 +190,7 @@ export function MapHeatTrail({ active = true }) {
         const distance = Math.hypot(dx, dy)
         if (distance > 0.3) {
           // Stamp along the way so a fast move leaves one unbroken smear.
-          const stamps = Math.max(1, Math.ceil(distance / (CELL * 0.8)))
+          const stamps = Math.min(40, Math.max(1, Math.ceil(distance / (CELL * 0.8))))
           const speed = distance / (dt * 60)
           const strength = Math.min(0.3, 0.09 + speed * 0.03) / Math.sqrt(stamps) * 1.6
           for (let s = 1; s <= stamps; s += 1) {
@@ -201,7 +219,12 @@ export function MapHeatTrail({ active = true }) {
 
     const onMove = (event) => {
       if (!activeRef.current || event.pointerType === 'touch' || event.buttons) return
-      pointer = { x: event.clientX, y: event.clientY }
+      if (!pointer) smooth = null // coming back in: start from here, not from where it left
+      const margin = CELL * 2
+      pointer = {
+        x: Math.min(window.innerWidth - margin, Math.max(margin, event.clientX)),
+        y: Math.min(window.innerHeight - margin, Math.max(margin, event.clientY)),
+      }
       start()
     }
 
@@ -211,11 +234,20 @@ export function MapHeatTrail({ active = true }) {
       lut = buildLut(event.detail.level)
     }
     window.addEventListener('map:lasso-level', onLevel)
+    const onLeave = (event) => {
+      // The pointer left the page: stop stirring where it left, let the heat fade.
+      if (!event.relatedTarget) pointer = null
+    }
     window.addEventListener('pointermove', onMove, { passive: true })
+    document.addEventListener('mouseout', onLeave)
+    window.addEventListener('blur', () => {
+      pointer = null
+    })
     return () => {
       window.removeEventListener('resize', resize)
       window.removeEventListener('map:lasso-level', onLevel)
       window.removeEventListener('pointermove', onMove)
+      document.removeEventListener('mouseout', onLeave)
       if (frame) window.cancelAnimationFrame(frame)
     }
   }, [])
