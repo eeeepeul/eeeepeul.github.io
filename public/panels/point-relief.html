@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Atlantic Point Relief</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one flat relief plate centred on the page, flipping front to back; a hairline caption at the foot. */
+:root{--bg:#cbcbcb;--ink:#0b0b0a;--ink-soft:#8d8d86;--ink-faint:#bdbdb6;--ui:#0b0b0a;--font:"Space Mono",ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d0d0c;--ink:#f1f1ea;--ink-soft:#8a8a83;--ink-faint:#4a4a46;--ui:#f1f1ea;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d0d0c;--ink:#f1f1ea;--ink-soft:#8a8a83;--ink-faint:#4a4a46;--ui:#f1f1ea;color-scheme:dark}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ui);font-family:var(--font);overflow:hidden;
+ padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-sizing:border-box}
+#stage{position:absolute;inset:0;cursor:grab;touch-action:none}
+#stage:active{cursor:grabbing}
+canvas{display:block;width:100%;height:100%}
+.bar{position:absolute;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;pointer-events:none}
+.bar span{color:var(--ink-soft)}
+button{pointer-events:auto;font:inherit;letter-spacing:inherit;text-transform:inherit;background:none;color:var(--ui);border:1px solid var(--ink-faint);padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--ui)}
+button:focus-visible{outline:2px solid var(--ui);outline-offset:2px}
+/* In the stage only the picture is wanted: no caption, no button. */
+.bar{display:none}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono&display=swap">
+</head>
+<body>
+<div id="stage"></div>
+<div class="bar"><span id="coord">FRONT 0°</span><button id="flip" type="button" aria-pressed="true">Spin on</button></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const MASK="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADg/wEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADA/v8/AOD//z8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+///D/////5//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAH/j/+//////8PAAAAgB0AAHgAAAAAAH8AAAAAAAAAAAAAAAAAAAAAAAAAAOD//wP8//////8BAACAfx4AAAAAAAAAAP4AAAAAAAAAAAAAAAAAAAAAAAA4+I73//n///////8AAAAAfwAAAAAAAAAAAAAfAAAAAAAAAAAAAAAAAAAAAOAQACDwP4D///////8BAAAAPAQAAAAAAAAAAAAYAAAAAAAAAAAAAAAAAAAAADzAgPP5H8D//////38AAAAAAAAAAAAA4AEAAAD+DwAAAAAAAAAAAAAAAAAAAIC/g7PfBwAA/v////8AAAAAAAAAAADgBwAAwP//PwAA4B8AAAAAAAAAAAAAAAAMAAB8AgAA+P////8AAAAAAAAAAABwAAAA/P//AwAAAAAAAAAAAAAAAAAAAP8Ahvc5OwAA8P///38AAAAAAAAAAAAcAADg////34cHAAcAAAAAAAAAAAAAgN9/xzf8RwAA4P///z8AAAAAAAAAAAAPAB7g//////8fgD8AAAAAAQAAAAAAAO//B3f8/wsA4P///z8AAAAAAAAAAAAPAG////////8f2f8HAAAAAAD4HwAAAAD4H/D4/38A4P///xMAAAAAAPAHAAAAgN//////////////DwAAAAD+///h/4//H+/Bg/8BwP7//w8AAAAAwP8fAAAAj9///////////////88/A+D///////8DB8TPB/4AAP///wAAAAAA8P//AwDjf77/////////////////DwD////////////vh/kPwP//BwAAAAAA/P//H/P//5//////////////////34H8////////////Afw/gP//AQAQAAAA/v8fH////+///////////////////vD///////////9fAPwYgP8PAOA/AAAA/+N/8P//////////////////////QID4///////////Pw/0DAP8HAMAfAACA//F//v////////////////////8/AAP4///////////BBPAHAP4HAAAAAADg//z///////////////////////9/AID///////////8AQ4ABAPwBAAAAAAD8P/7///////////////////////9fAMD//////////z8AwA8AAPgBAAAAAAD+H/7/////////////////////Of8BAID///z//////z8AwD8AAMABAAAAAAD+P/z///////////////////9/wH8AAAD8MwD//////x8AwH8MAAAAAAAAAAD+P2D///////////////////95cAAAAACAAwD8/////38AwP8eAAAAAAAAgAGcH/D//////////////////wEAOAAAAADADgDA/////38AgP8/AAAAAAAAwANAH/T//////////////////wAAfgAAAAAwAAAA//////8PgP8/AAAAAAAAwAFwD/7/////////////////PwAAfwAAAAAGAAAA//////8/wP//AAAAAAAAwAOwA/7/////////////////DwCAPwAAAIAAAAAA/v//////8///BwAAAAAAOAcgcP//////////////////HwAAHwAAAAAAAACA+P//////4///DwAAAAAAOA74/////////////////////wUADwAAAAAAAAAA8P//////4///DwAAAAAAGD///////////////////////wUAAwAAAAAAAAAA8P//////7///FwAAAAAAAB///////////////////////wUAAgAAAAAAAAAA0P//////////DAAAAAAAgOH//////////////////////w0AAAAAAAAAAAAAYP////////8xLAAAAAAAAPz//////////////////////wwAAAAAAAAAAAAAAP7//////38HfgAAAAAAgP///////////////////////wQAAAAAAAAAAAAAAP3///////8HUAAAAAAAAP7/////////////////////fwQAAAAAAAAAAAAAAP////////+XAAAAAAAAAPz///93/D/+////////////PwwAAAAAAAAAAAAAAP////////9/AAAAAAAAAPj//f9j/g/+////////////HwAAAAAAAAAAAAAAAP////////8MAAAAAAAAAPj/+P8B/Mf/////////////DwQAAAAAAAAAAAAAAP///////z8AAAAAAAAAcPzH8/8A8I//////////////Bx4AAAAAAAAAAAAAAP///////x8AAAAAAAAA+H+Aw/8AwA/+//////////9/AA8AAAAAAAAAAAAAAP///////x8AAAAAAAAA+D8Aj//w4R/8//////////8/AAAAAAAAAAAAAAAAAP///////wMAAAAAAAAA+B8wuE/+/z/+/////////98fAAMAAAAAAAAAAAAAAP///////wMAAAAAAAAA+A8wEMf//x/+/////////0cOAAMAAAAAAAAAAAAAAP7//////wEAAAAAAAAA+A8AAM7//x/8/////////wMOAAEAAAAAAAAAAAAAAP7//////wAAAAAAAAAA+AcABob//z/8/////////zccwAEAAAAAAAAAAAAAAPz//////wAAAAAAAAAAQOB/AAQ2/////////////x8c8AEAAAAAAAAAAAAAAPj//////wAAAAAAAAAAQPx/AAAA/////////////w8Y/gEAAAAAAAAAAAAAAPD/////fwAAAAAAAAAA4P8/AAAA/////////////w+EGwAAAAAAAAAAAAAAAMD/////HwAAAAAAAAAA8P9/AACA/////////////x/AAwAAAAAAAAAAAAAAAID/////DwAAAAAAAAAA+P//BwaA/////////////x/AAAAAAAAAAAAAAAAAAID9////BwAAAAAAAAAA/P//D3+E/////////////z9AAAAAAAAAAAAAAAAAAAD5////BwAAAAAAAAAA/P//f////////////////x8AAAAAAAAAAAAAAAAAAADy/x8GBgAAAAAAAAAA/P/////v/8///////////z8AAAAAAAAAAAAAAAAAAAD0/w8ABgAAAAAAAAAA/v////+//4///////////z8AAAAAAAAAAAAAAAAAAADu/wcADgAAAAAAAACA//////8f/x/+/////////x8AAAAAAAAAAAAAAAAAAACI/wcALAAAAAAAAADA//////8//z/g/////////w8AAAAAAAAAAAAAAAAAAACQ/wcACAAAAAAAAADg//////9//r+A/////////wcAAAAAAAAAAAAAAAAAAAAQ/wMAAAAAAAAAAADg//////9//n8cgP///////ycAAAAAAAAAAAAAAAAAAAAA/gMAAAAAAAAAAADw////////+P9/AP///////xEAAAAAAAAAAAAAAAAAAAAA/AMAHQAAAAAAAADw////////+P//APz/f///fxAAAAAAAAAAAAAAAAAAAAAA+AcAYAAAAAAAAAD4////////+f9/APz/B///BgAAAAAAAAAAAAAAAAAAAAAA/AccgAEAAAAAAADw////////8f9/AOD/B/5/AAAAAAAAAAAAAAAAAQAAAAAA+A8eADgAAAAAAADw////////4f8/AOD/Afw/BgAAAAAAAAAAAAAAAAAAAAAA8J8PAPwCAAAAAADw////////4/8fAOD/APw/AgAAAAAAAAAAAAAAAAAAAAAAgP8PAAAAAAAAAADw////////x/8HAOB/APx/ADAAAAAAAAAAAAAAAAAAAAAAAP4PAAAAAAAAAAD4////////h/8BAOA/APz/ADAAAAAAAAAAAAAAAAAAAAAAAID/AAAAAAAAAAD4////////j/8AAMAPAMD/ATAAAAAAAAAAAAAAAAAAAAAAAAD/AQAAAAAAAAD4////////nx8AAMAPAMD/ATAAAAAAAAAAAAAAAAAAAAAAAAD8AAAAAAAAAAD4////////vwcAAIAPAMD/AcAAAAAAAAAAAAAAAAAAAAAAAADgAQAAAAAAAAD4////////fwAAAIAPAMD8AQABAAAAAAAAAAAAAAAAAAAAAADAAAgAAAAAAADw////////f2AAAAAPAID4AUACAAAAAAAAAAAAAAAAAAAAAADAAe9TAAAAAADg/////////34AAAAPAEBwAAgAAAAAAAAAAAAAAAAAAAAAAAAAE+9/AAAAAADA/////////38AAAAXAEAgAAQCAAAAAAAAAAAAAAAAAAAAAAAAz///AAAAAACA/////////z8AAAASAMAAAIACAAAAAAAAAAAAAAAAAAAAAAAAyP//AQAAAACA/////////z8AAAAwAIAAAEAHAAAAAAAAAAAAAAAAAAAAAAAAgP//AwAAAAAA/v///////x8AAAAwAAADAAMBAAAAAAAAAAAAAAAAAAAAAAAAwP//fwAAAAAA/A/+/////x8AAAAAAAAHAAcAAAAAAAAAAAAAAAAAAAAAAAAAgP///wAAAAAAEAD8/////w8AAAAAADAGwAcAAAAAAAAAAAAAAAAAAAAAAAAAgP///wEAAAAAAADA/////wcAAAAAAGAG4AEAAAAAAAAAAAAAAAAAAAAAAAAA4P///wEAAAAAAADA/////wMAAAAAAMAM+AMAAAAAAAAAAAAAAAAAAAAAAAAA4P///wMAAAAAAADg/////wEAAAAAAIAL/gMQAAAAAAAAAAAAAAAAAAAAAAAA8P///wMAAAAAAADg////fwAAAAAAAIAH/vMQAAAAAAAAAAAAAAAAAAAAAAAA8P///wcAAAAAAADg////PwAAAAAAAAAP/gMAAQAAAAAAAAAAAAAAAAAAAAAA+P///38AAAAAAADg////PwAAAAAAAAAO/DmAAwAAAAAAAAAAAAAAAAAAAAAA+P///38BAAAAAADA////HwAAAAAAAAA+/DkA8gAAAAAAAAAAAAAAAAAAAAAA8P////8fAAAAAACA////DwAAAAAAAAA8wChE/gcAAAAAAAAAAAAAAAAAAAAA+P////8/AAAAAACA////BwAAAAAAAAA4AEAA8B8AAAAAAAAAAAAAAAAAAAAA+P//////AQAAAAAA////BwAAAAAAAAAwAEAAxD8NAAAAAAAAAAAAAAAAAAAA+P//////AQAAAAAA////BwAAAAAAAADAAQAAxP+AAAAAAAAAAAAAAAAAAAAA8P//////AQAAAAAA/v//BwAAAAAAAACAHwAAwH8ABAAAAAAAAAAAAAAAAAAA4P//////AQAAAAAA/v//BwAAAAAAAAAAQFYEAMcAAAAAAAAAAAAAAAAAAAAA4P//////AAAAAAAA/v//DwAAAAAAAAAAAAgBAIABMAAAAAAAAAAAAAAAAAAAwP//////AAAAAAAA/v//DwAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAgP////9/AAAAAAAA/P//DwAAAAAAAAAAAAAAAQQAAAAAAAAAAAAAAAAAAAAAgP////8/AAAAAAAA/v//HyAAAAAAAAAAAACAHwQAAAAAAAAAAAAAAAAAAAAAAP////8fAAAAAAAA/v//HyAAAAAAAAAAAADADwwAAAAAAAAAAAAAAAAAAAAAAP////8fAAAAAAAA////HzAAAAAAAAAAAADsDxwAAAAAAAAAAAAAAAAAAAAAAP7///8fAAAAAAAA////DzgAAAAAAAAAAAD/DxwAAAAAAAAAAAAAAAAAAAAAAPj///8fAAAAAAAA////Dz8AAAAAAAAAAAD/Pz4AAAiAAAAAAAAAAAAAAAAAAOD///8fAAAAAAAA////Ax8AAAAAAAAAAMD//z4AAABAAAAAAAAAAAAAAAAAAMD///8PAAAAAAAA////AB8AAAAAAAAAAMD//z8AAAAAAAAAAAAAAAAAAAAAAMD///8PAAAAAAAA/v9/AB8AAAAAAAAAAOD//38AAAAAAAAAAAAAAAAAAAAAAMD///8PAAAAAAAA/v9/AB8AAAAAAAAAAPz///8BAAEAAAAAAAAAAAAAAAAAAMD///8HAAAAAAAA/P9/gA8AAAAAAAAAgP////8BAAIAAAAAAAAAAAAAAAAAAMD///8DAAAAAAAA/P//gA8AAAAAAAAAwP////8DAAAAAAAAAAAAAAAAAAAAAMD//38AAAAAAAAA/P9/AA8AAAAAAAAAwP////8HAAAAAAAAAAAAAAAAAAAAAOD//x8AAAAAAAAA+P9/AAcAAAAAAAAA4P////8PAAAAAAAAAAAAAAAAAAAAAOD//w8AAAAAAAAA+P8fAAIAAAAAAAAAwP////8fAAAAAAAAAAAAAAAAAAAAAOD//wcAAAAAAAAA+P8fAAAAAAAAAAAA4P////8fAAAAAAAAAAAAAAAAAAAAAOD//wcAAAAAAAAA+P8fAAAAAAAAAAAAwP////8fAAAAAAAAAAAAAAAAAAAAAOD//wcAAAAAAAAA8P8PAAAAAAAAAAAAgP////8/AAAAAAAAAAAAAAAAAAAAAOD//wMAAAAAAAAA4P8HAAAAAAAAAAAAgP////8fAAAAAAAAAAAAAAAAAAAAAPD//wMAAAAAAAAA4P8HAAAAAAAAAAAAgP////8fAAAAAAAAAAAAAAAAAAAAAPD//wEAAAAAAAAAwP8DAAAAAAAAAAAAAP////8fAAAAAAAAAAAAAAAAAAAAAOD//wAAAAAAAAAAwP8BAAAAAAAAAAAAAP8D/P8PAAAAAAAAAAAAAAAAAAAAAPD/fwAAAAAAAAAAwH8AAAAAAAAAAAAAgP8A2P8HAAAAAAAAAAAAAAAAAAAAAPD/OwAAAAAAAAAAgAEAAAAAAAAAAAAAAAcA6P8HAAAAAAAAAAAAAAAAAAAAAPj/BwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwP8DAAACAAAAAAAAAAAAAAAAAPj/BwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP8DAAAEAAAAAAAAAAAAAAAAAPz/BwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP8DAAAIAAAAAAAAAAAAAAAAAPj/AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGgAAAA4AAAAAAAAAAAAAAAAAPg/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAAAAPw/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAAAAPwHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOAAAAALAAAAAAAAAAAAAAAAAPwfAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOAAAIADAAAAAAAAAAAAAAAAAPgHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAMABAAAAAAAAAAAAAAAAAPwHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHAAAAAAAAAAAAAAAAAAAP4BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHgAAAAAAAAAAAAAAAAAAP4BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAAAAAAAAAAAAAAAAP4DAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP8BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP8AAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH4AAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAOAAAAAAAAAAAAAAAAAIAfAAAAAAAeeADADwAAAAAAAAAAAAAAAAAAAAAAAAAHAAAAAAAAAAAAAAAAAPD/AADA/////////z8AAAAAAAAAAAAAAAAAAAAAAAAHAAAAAAAAAAAAAAAAgP///wH4//////////8DAAAAAAAAAAAAAAAAAAAAADAfAAAAAAAAAAAAAADw8////wP+////////////AwAAAAAAAAAAAAAAAAAAAHA/AAAAAAAAAAA8//P//////+D/////////////HwAAAAAAAAAAAAAAAAAAAP5+AAAAAAAA5v////////////D//////////////38AAAAAAAAAAAAAAAAAAAB+AAAAAACA/////////////////////////////38AAAAAAAAAYAYA4ON/OPh/AAAAAADw/////////////////////////////x8AAAAAAADwv/EXgP////8fAAAAAADw/////////////////////////////wMAAAAAAPz///////////8HAAAAAAD+/////////////////////////////wAAAAAAAPz//////////z8AAAAAAP///////////////////////////////wAAAADA/////////////wEAAAAA8P///////////////////////////////wAAAACH////////////PwAAAPgA/////////////////////////////////wcAAAAcgP//////////fwAAAP4BwP//////////////////////////////HwAAAAAAAP7//////////wf8wD8AwP//////////////////////////////DwAAAAAA/v////////////8HAAD4////////////////////////////////HwAAAAAA+P//////////////4f///////////////////////////////////wAAAAAA/P///////////////////////////////////////////////////x8A3x8AAP7///////////////////////////////////////////////////8/////f///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////";
+(function(){
+const D=Math.PI/180, stage=document.getElementById('stage');
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+stage.appendChild(renderer.domElement);
+const scene=new THREE.Scene(), cam=new THREE.PerspectiveCamera(30,1,.1,50); cam.position.z=5.4;
+const plate=new THREE.Group(); scene.add(plate);
+
+let seed=11;const rnd=()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646};
+// land mask: 360x180 bits, 1 degree cells
+const raw=atob(MASK),W=360,H=180,land=new Float32Array(W*H);
+for(let i=0;i<W*H;i++)land[i]=(raw.charCodeAt(i>>3)>>(i&7))&1;
+function blur(src,r){const o=new Float32Array(W*H),t=new Float32Array(W*H);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){let s=0;for(let k=-r;k<=r;k++)s+=src[y*W+((x+k+W)%W)];t[y*W+x]=s/(2*r+1)}
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){let s=0;for(let k=-r;k<=r;k++)s+=t[Math.min(H-1,Math.max(0,y+k))*W+x];o[y*W+x]=s/(2*r+1)}
+  return o}
+const soft=blur(blur(land,3),3);
+const NG=14,ng=Float32Array.from({length:NG*NG},()=>rnd());
+const noise=(u,v)=>{u*=NG;v*=NG;const x=Math.floor(u),y=Math.floor(v),fx=u-x,fy=v-y,s=q=>q*q*(3-2*q);
+  const g=(i,j)=>ng[((j%NG+NG)%NG)*NG+((i%NG+NG)%NG)];
+  return (g(x,y)*(1-s(fx))+g(x+1,y)*s(fx))*(1-s(fy))+(g(x,y+1)*(1-s(fx))+g(x+1,y+1)*s(fx))*s(fy)};
+
+// The sphere is sampled on a flat disc, row by row. The front face shows the
+// Atlantic hemisphere; the back face shows the opposite side, mirrored so it reads right from behind.
+const LON0=-22.5*D,LAT0=14*D,cl=Math.cos(LAT0),sl=Math.sin(LAT0),cL=Math.cos(LON0),sL=Math.sin(LON0);
+function toLonLat(x,y,z){
+  const y1=y*cl+z*sl,z1=-y*sl+z*cl;           // Rx(-lat0)
+  const x2=x*cL+z1*sL,z2=-x*sL+z1*cL;          // Ry(lon0)
+  return [Math.atan2(x2,z2)/D,Math.asin(Math.max(-1,Math.min(1,y1)))/D];
+}
+const FIC={polys:[[[-0.0959, 0.1135], [-0.0608, 0.1297], [-0.023, 0.1189], [-0.0041, 0.0919], [0.0149, 0.0568], [0.0257, 0.0203], [0.0284, -0.0162], [0.0149, -0.0432], [-0.0122, -0.0622], [-0.0392, -0.0703], [-0.0662, -0.0649], [-0.0878, -0.0757], [-0.0986, -0.0486], [-0.0851, -0.0243], [-0.0635, -0.0027], [-0.0743, 0.027], [-0.0932, 0.0514], [-0.0865, 0.0811]], [[0.0405, -0.0824], [0.0385, -0.0889], [0.0329, -0.0941], [0.0248, -0.0969], [0.0158, -0.0969], [0.0076, -0.0941], [0.002, -0.0889], [0.0, -0.0824], [0.002, -0.076], [0.0076, -0.0708], [0.0158, -0.0679], [0.0248, -0.0679], [0.0329, -0.0708], [0.0385, -0.076]]],islets:[[-0.1216, 0.1541], [-0.0716, 0.2243], [-0.1311, 0.2216], [-0.0851, 0.0027], [-0.0514, 0.0514]]};
+function segD(px,py,a,b){const dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((px-a[0])*dx+(py-a[1])*dy)/(dx*dx+dy*dy)));return Math.hypot(px-a[0]-t*dx,py-a[1]-t*dy)}
+// the central landmass of the reference, drawn by hand in plate coordinates (front face only)
+function ficLand(px,py){let inside=false,d=9;
+  for(const P of FIC.polys){let ins=false;
+    for(let i=0,j=P.length-1;i<P.length;j=i++){
+      const a=P[i],b=P[j];
+      if((a[1]>py)!==(b[1]>py)&&px<(b[0]-a[0])*(py-a[1])/(b[1]-a[1])+a[0])ins=!ins;
+      d=Math.min(d,segD(px,py,a,b));}
+    if(ins)inside=true;}
+  for(const q of FIC.islets){const dd=Math.hypot(px-q[0],py-q[1])-.006;if(dd<0)inside=true;d=Math.min(d,Math.abs(dd))}
+  return {inside,d}}
+// Depth follows the point-relief reconstruction in the reference file: no raised land and no cliffs.
+// Every dot sits at its own depth. Dark, big dots are pushed back, the whole sheet is bowed and tilted,
+// a slow wobble runs through it, and each dot is jittered, with the odd large jump along a row.
+const ROWSZ=0.02;
+// The depth is a smooth landscape built from undulations of different widths: broad deep basins, medium swells and
+// small shallow dimples, with the strength of each varying from place to place. Neighbouring dots sit at neighbouring depths.
+const smooth=(e0,e1,x)=>{const q=Math.max(0,Math.min(1,(x-e0)/(e1-e0)));return q*q*(3-2*q)};
+function depthOf(x,y,side,b){
+  const o=side*.41;
+  const base=.033+.09*x-.045*y-.06*x*x-.02*y*y+.04*x*y;
+  const broad=smooth(.22,.78,noise(x*.075+o+.5,y*.075+.2));          // wide basins and plateaus
+  const mid=noise(x*.15+o*.7+.3,y*.15+.6);                            // medium swells
+  const fine=noise(x*.34+o+.9,y*.34+.1);                              // small dimples
+  const amp=.5+.95*noise(x*.06+o+.2,y*.06+.77);                       // some areas are deep, others shallow
+  const rough=.3+.9*noise(x*.1+o+.4,y*.1+.5);                         // some areas are crinkled, others calm
+  return base+.62*amp*(broad-.5)+.22*(mid-.5)*amp+.1*(fine-.5)*rough-.15*(1-b);
+}
+function face(side){
+  // Fine grid; how many cells are used depends on how dark the spot is. Dark spots (coasts, inland seas) use every
+  // cell and fuse into solid rows, mid tones use every second cell, light land every third and stays airy.
+  const P=[],ROW=0.0098;const add=(x,y,z,w,h)=>P.push(x,y,z,w,h);
+  let jit=0,col=0;const NI=Math.ceil(2.3/ROW);
+  for(let iy=0;iy<NI;iy++){
+    const y=-1.15+iy*ROW;
+    for(let ix=0;ix<NI;ix++){
+      const x=-1.15+ix*ROW,rr0=x*x+y*y;
+      if(rr0>1.4)continue;
+      if(rr0>1){ // specks torn loose beyond the rim
+        if(rr0<1.3&&rnd()<.012)add(x,y,(rnd()-.5)*.25,ROW*(.5+rnd()*.9),ROW*(.5+rnd()*.9));
+        continue;
+      }
+      const z=Math.sqrt(1-rr0);
+      const [lon,lat]=side>0?toLonLat(x,y,z):toLonLat(-x,y,-z);
+      const xi=Math.min(W-1,Math.max(0,Math.floor(lon+180))),yi=Math.min(H-1,Math.max(0,Math.floor(89.999-lat)));
+      let isLand=land[yi*W+xi]>.5;const b=soft[yi*W+xi];let fe=0;
+      if(side>0){const F=ficLand(x,y);if(F.inside)isLand=true;fe=Math.max(0,1-F.d/.02)}
+      const u=(lon+180)/360,v=(lat+90)/180;
+      const n=noise(u,v),m=noise(u*2.3+.4,v*2.3),m2=noise(u*5.1+.2,v*5.1);
+      const wob=noise(x*.5+side*.37+.5,y*.5+.5+side*.11);
+      const shelf=Math.min(1,Math.max(b*3.8,fe*1.3));
+      // tone 0 (white) .. 1 (solid black)
+      // sea is always a field of dots (denser in places, painted solid by the coasts); land stays pale and airy
+      const lf=noise(u*1.7+.9,v*1.7+.3),lf2=noise(u*3.3+.5,v*3.3+.2);
+      const ss=(e0,e1,x)=>{const q=Math.max(0,Math.min(1,(x-e0)/(e1-e0)));return q*q*(3-2*q)};
+      const patch=ss(.4,.62,lf*.72+lf2*.28);
+      let tone=isLand?(.05+.28*Math.pow(Math.max(fe,1-Math.abs(2*b-1)),1.3)*(.5+n)+.1*ss(.62,.8,lf2))
+                     :(.4+.2*patch+.8*Math.pow(shelf,1.1)*(.4+1.1*m));
+      tone=Math.min(1.2,tone*(.88+.24*m2));
+      const rim=Math.pow(Math.sqrt(rr0),5);
+      if(rnd()<rim*.5)continue;
+      const p=tone>.55?1:tone>.14?2:3;
+      if(ix%p||iy%p)continue;
+      if(p===3&&rnd()>.4)continue;
+      if(p===2&&tone<.3&&rnd()>.75)continue;
+      const px=x+(rnd()-.5)*ROW*p*.45,py=y+(rnd()-.5)*ROW*p*.45,rr=px*px+py*py;
+      let w,h;
+      if(tone>.82){w=ROW*(1.4+.2*rnd());h=ROW*(1+.15*rnd())}              // solid, nearly painted
+      else if(p===1){w=ROW*(1.15+.2*rnd());h=ROW*(.6+.25*rnd())}          // fused rows
+      else if(tone>.3){const s=ROW*2*(.56+.2*rnd());w=s*(.9+.2*rnd());h=s*(.9+.2*rnd())}
+      else if(p===2){const s=ROW*2*(.26+.14*rnd());w=s;h=s*(.9+.3*rnd())} // small and faint
+      else{const s=ROW*3*(.18+.1*rnd());w=s;h=s}                           // specks, almost empty
+      if(rnd()<.03){w*=1.8;h*=1.8}
+      if(col++%3===0)jit=(rnd()<.12?.2:.03)*(rnd()-.5)*2;
+      const zf=depthOf(px,py,side,b);
+      const zz=Math.max(-1.05,Math.min(.8,(zf+.06)*2.1));   // depth scale: how thick the sheet is from the side
+      add(px,py,zz,w,h);
+    }
+  }
+  // Loose crumbs around the sheet. They start on the sheet's own surface and drift off it, most of them
+  // close by and fewer the farther out you go; near ones are bigger, far ones shrink to specks.
+  for(let i=0;i<14000;i++){
+    const r=1.1*Math.sqrt(rnd()),th=rnd()*6.2832,x0=r*Math.cos(th),y0=r*Math.sin(th),rr=x0*x0+y0*y0;
+    let b0=.25;
+    if(rr<1){const [lo,la]=toLonLat(x0,y0,Math.sqrt(1-rr));
+      b0=soft[Math.min(H-1,Math.max(0,Math.floor(89.999-la)))*W+Math.min(W-1,Math.max(0,Math.floor(lo+180)))]}
+    const zs=Math.max(-1.05,Math.min(.8,(depthOf(x0,y0,side,b0)+.06)*2.1));
+    const d=-Math.log(1-rnd())*(rnd()<.14?.34:.085);          // distance from the sheet: mostly small, a long thin tail
+    const keep=1/(1+d*5);                                      // and it thins out with distance
+    if(rnd()>keep)continue;
+    const near=1/(1+d*3.2);
+    let s=ROW*(.16+.6*rnd()*rnd())*(.4+.6*near);
+    if(rnd()<.05)s*=2.2;                                       // the odd bigger chunk
+    const dr=d*.5;                                             // drift a little outward too
+    add(x0*(1+dr*.2)+(rnd()-.5)*.03,y0*(1+dr*.2)+(rnd()-.5)*.03,zs+(rnd()<.5?-d:d),s*(.8+.4*rnd()),s*(.8+.5*rnd()));
+  }
+  // each dot is a square that always faces the viewer, so it stays a crisp square when the sheet is turned
+  // centre the sheet on the turning axis, so it spins in place instead of swinging round it
+  {let sx=0,sz=0;const n=P.length/5;for(let i=0;i<n;i++){sx+=P[5*i];sz+=P[5*i+2]}
+   const cx=sx/n,cz=sz/n;for(let i=0;i<n;i++){P[5*i]-=cx;P[5*i+2]-=cz}}
+  const N=P.length/5,pos=new Float32Array(N*12),cor=new Float32Array(N*8),sz=new Float32Array(N*8),idx=new Uint32Array(N*6);
+  const C=[-1,-1,1,-1,1,1,-1,1];
+  for(let i=0;i<N;i++){
+    for(let c=0;c<4;c++){
+      pos.set([P[5*i],P[5*i+1],P[5*i+2]],i*12+c*3);cor.set([C[2*c],C[2*c+1]],i*8+c*2);sz.set([P[5*i+3],P[5*i+4]],i*8+c*2);
+    }
+    idx.set([4*i,4*i+1,4*i+2,4*i,4*i+2,4*i+3],i*6);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('aCorner',new THREE.BufferAttribute(cor,2));
+  geo.setAttribute('aSize',new THREE.BufferAttribute(sz,2));
+  geo.setIndex(new THREE.BufferAttribute(idx,1));
+  const mat=new THREE.ShaderMaterial({uniforms:{uColor:{value:new THREE.Color(0)}},side:THREE.DoubleSide,
+    vertexShader:'attribute vec2 aCorner;attribute vec2 aSize;void main(){vec4 mv=modelViewMatrix*vec4(position,1.0);mv.xy+=aCorner*aSize*0.5;gl_Position=projectionMatrix*mv;}',
+    fragmentShader:'uniform vec3 uColor;void main(){gl_FragColor=vec4(uColor,1.0);}'});
+  const mesh=new THREE.Mesh(geo,mat);mesh.frustumCulled=false;return mesh;
+}
+const faces=[face(1)];   // one sheet only; seen from behind it reads mirrored
+faces.forEach(f=>plate.add(f));
+function theme(){
+  const ink=new THREE.Color(css('--ink'));
+  faces.forEach(f=>f.material.uniforms.uColor.value.copy(ink));
+}
+theme();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',theme);
+new MutationObserver(theme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+function size(){
+  const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;
+  const s=Math.min(w,h);cam.fov=2*Math.atan(0.1885*(h/s)/0.84)/D;cam.updateProjectionMatrix();
+}
+addEventListener('resize',size);size();
+
+// the plate turns slowly, always in the same direction (about 26 seconds a turn); drag to turn it by hand
+const SPEED=14;
+let angle=0,last=performance.now(),spinning=true,drag=null;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const coord=document.getElementById('coord'),btn=document.getElementById('flip');
+if(reduce){spinning=false;btn.textContent='Spin off';btn.setAttribute('aria-pressed','false')}
+btn.onclick=()=>{spinning=!spinning;btn.textContent=spinning?'Spin on':'Spin off';btn.setAttribute('aria-pressed',String(spinning))};
+stage.addEventListener('pointerdown',e=>{drag={x:e.clientX,a:angle};stage.setPointerCapture(e.pointerId)});
+stage.addEventListener('pointermove',e=>{if(drag)angle=drag.a+(e.clientX-drag.x)*.4});
+const end=()=>{drag=null};
+stage.addEventListener('pointerup',end);stage.addEventListener('pointercancel',end);
+function frame(now){
+  const dt=Math.min(.1,(now-last)/1000);last=now;
+  if(spinning&&!drag)angle+=SPEED*dt;
+  plate.rotation.y=angle*D;
+  plate.rotation.x=reduce?0:.16*Math.sin(now/2300);
+  const a=((angle%360)+360)%360;
+  coord.textContent=((a<90||a>=270)?'FRONT ':'BACK ')+Math.round(a)+'°';
+  renderer.render(scene,cam);requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>

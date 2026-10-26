@@ -3,7 +3,7 @@ import { HouseMapSection } from './HouseMapSection.mjs'
 import { VisitorActivityCard } from './VisitorActivityCard.mjs'
 import { MapElevationProfile } from './MapElevationProfile.mjs'
 import { MapLayersPanel } from './MapLayersPanel.mjs'
-import { MapMiniGlobe } from './MapMiniGlobe.mjs'
+import { MapContourDisc } from './MapContourDisc.mjs'
 
 function SidebarTag({ id, label }) {
   return createElement(
@@ -58,7 +58,7 @@ export function FigmaHomeSidebarContent() {
   return createElement(
     'div',
     { className: 'figma-home-sidebar-content' },
-    createElement(MapMiniGlobe),
+    createElement(MapContourDisc),
     createElement(VisitorActivityCard),
     createElement(MapLayersPanel),
     createElement(HouseMapSection),

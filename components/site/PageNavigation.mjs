@@ -3,7 +3,6 @@ import { assetPath } from '../../lib/asset-path.mjs'
 
 const PAGE_ROUTES = [
   { id: 'map', label: 'map', href: assetPath('') },
-  { id: 'cctv', label: 'cctv', href: `${assetPath('experience')}/` },
   { id: 'custom', label: 'custom', href: `${assetPath('second/custom')}/` },
 ]
 

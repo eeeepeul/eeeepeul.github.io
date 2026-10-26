@@ -1,6 +1,12 @@
 'use client'
 
-import { createElement, useState } from 'react'
+import { createElement, useRef, useState, useSyncExternalStore } from 'react'
+import {
+  getAccessories,
+  removeAccessory,
+  subscribeAccessories,
+  updateAccessory,
+} from '../../lib/character-accessories.mjs'
 import { assetPath } from '../../lib/asset-path.mjs'
 import {
   FLAME_ATTACH_OFFSETS,
@@ -32,6 +38,88 @@ const CUSTOM_SECTIONS = [
   { key: 'flame-shape', label: '불 형태', itemCount: 5 },
   { key: 'shoes', label: '신발', itemCount: 4 },
 ]
+
+// What was drawn on the pad, worn by the match: each piece can be dragged to where it
+// should sit, resized from its corner, and taken off again.
+const NO_ACCESSORIES = []
+const getNoAccessories = () => NO_ACCESSORIES
+
+function AccessoryLayer() {
+  const accessories = useSyncExternalStore(subscribeAccessories, getAccessories, getNoAccessories)
+  const layerRef = useRef(null)
+  const [selected, setSelected] = useState(null)
+
+  const begin = (event, item, mode) => {
+    event.preventDefault()
+    event.stopPropagation()
+    const box = layerRef.current.getBoundingClientRect()
+    const start = { x: event.clientX, y: event.clientY, item, width: item.width }
+    setSelected(item.id)
+    const move = (moveEvent) => {
+      const dx = (moveEvent.clientX - start.x) / box.width
+      const dy = (moveEvent.clientY - start.y) / box.height
+      if (mode === 'move') {
+        updateAccessory(item.id, { x: Math.min(1.1, Math.max(-0.1, start.item.x + dx)), y: Math.min(1.1, Math.max(-0.1, start.item.y + dy)) })
+      } else {
+        updateAccessory(item.id, { width: Math.min(3, Math.max(0.12, start.width + dx * 2)) })
+      }
+    }
+    const end = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', end)
+      window.removeEventListener('pointercancel', end)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', end)
+    window.addEventListener('pointercancel', end)
+  }
+
+  return createElement(
+    'span',
+    {
+      ref: layerRef,
+      className: 'pixel-sidebar-accessories',
+      onPointerDown: (event) => {
+        if (event.target === event.currentTarget) setSelected(null)
+      },
+    },
+    accessories.map((item) =>
+      createElement(
+        'span',
+        {
+          key: item.id,
+          className: `pixel-sidebar-accessory${selected === item.id ? ' is-selected' : ''}`,
+          style: {
+            left: `${item.x * 100}%`,
+            top: `${item.y * 100}%`,
+            width: `${item.width * 100}%`,
+            aspectRatio: String(item.aspect),
+          },
+          onPointerDown: (event) => begin(event, item, 'move'),
+        },
+        createElement('img', { src: item.src, alt: '', draggable: false }),
+        createElement('i', {
+          className: 'pixel-sidebar-accessory-resize',
+          title: '크기 조절',
+          onPointerDown: (event) => begin(event, item, 'resize'),
+        }),
+        createElement(
+          'b',
+          {
+            className: 'pixel-sidebar-accessory-remove',
+            title: '떼기',
+            onPointerDown: (event) => {
+              event.stopPropagation()
+              event.preventDefault()
+              removeAccessory(item.id)
+            },
+          },
+          '×'
+        )
+      )
+    )
+  )
+}
 
 export function getCustomWindowStart(itemCount, page) {
   const maxStart = Math.max(0, itemCount - CUSTOM_PAGE_SIZE)
@@ -229,7 +317,8 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
                 '--character-shoe-width': SHOE_WIDTHS[shoeIndex] ?? '73%',
               },
             })
-          : null
+          : null,
+        createElement(AccessoryLayer)
       ),
       createElement(
         'div',

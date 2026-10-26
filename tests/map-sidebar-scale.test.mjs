@@ -55,10 +55,8 @@ test('opts only the map sidebar into viewport scaling', () => {
     createElement(ResponsiveSidebar, null, createElement('span', null, 'ordinary'))
   )
 
-  assert.match(
-    mapHtml,
-    /<aside[^>]*data-viewport-scaled="true"[^>]*style="--map-sidebar-scale:1;--map-sidebar-width:260px;--map-sidebar-zoom:0\.8857;--map-sidebar-inset:14px"/
-  )
+  // The map page no longer carries a side panel, so nothing there is scaled.
+  assert.doesNotMatch(mapHtml, /<aside/)
   assert.doesNotMatch(ordinaryHtml, /data-viewport-scaled|--map-sidebar-scale/)
 })
 

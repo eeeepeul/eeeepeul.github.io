@@ -202,8 +202,10 @@ export function MapLassoLayer({ active }) {
       const box = map ? map.getBoundingClientRect() : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight }
       rect = { left: box.left, top: box.top, width: box.width, height: box.height }
       const ratio = Math.min(window.devicePixelRatio || 1, 2)
-      canvas.style.left = `${rect.left}px`
-      canvas.style.top = `${rect.top}px`
+      // Placed against whatever it is fixed to (the page, or the cell that holds the map).
+      const holder = canvas.offsetParent && canvas.offsetParent !== document.body ? canvas.offsetParent.getBoundingClientRect() : { left: 0, top: 0 }
+      canvas.style.left = `${rect.left - holder.left}px`
+      canvas.style.top = `${rect.top - holder.top}px`
       canvas.style.width = `${rect.width}px`
       canvas.style.height = `${rect.height}px`
       canvas.width = Math.round(rect.width * ratio)
