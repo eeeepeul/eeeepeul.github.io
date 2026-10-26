@@ -15,31 +15,38 @@ export function LandingFrame({
   onRouteSelect,
   sidebarFooter,
   scaleSidebarToViewport = false,
+  showNavigation = true,
+  showHouseLink = true,
+  showSidebar = true,
 }) {
   return createElement(
     'main',
     { className: 'experience-shell landing-shell' },
-    createElement(PageNavigation, { current: navigationCurrent, onRouteSelect }),
+    showNavigation ? createElement(PageNavigation, { current: navigationCurrent, onRouteSelect }) : null,
     createElement(
       'div',
       { className: 'landing-space', 'aria-hidden': 'true' },
       playfield
     ),
     children,
-    createElement(HouseLink, {
-      assetSrc: houseAssetSrc,
-      href: houseHref,
-      label: houseLabel,
-    }),
-    createElement(
-      ResponsiveSidebar,
-      {
-        className: 'landing-panel',
-        label: panelLabel,
-        footer: sidebarFooter,
-        scaleToViewport: scaleSidebarToViewport,
-      },
-      panel
-    )
+    showHouseLink
+      ? createElement(HouseLink, {
+          assetSrc: houseAssetSrc,
+          href: houseHref,
+          label: houseLabel,
+        })
+      : null,
+    showSidebar
+      ? createElement(
+          ResponsiveSidebar,
+          {
+            className: 'landing-panel',
+            label: panelLabel,
+            footer: sidebarFooter,
+            scaleToViewport: scaleSidebarToViewport,
+          },
+          panel
+        )
+      : null
   )
 }

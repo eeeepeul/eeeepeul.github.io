@@ -3,7 +3,6 @@ import type { ReactNode } from 'react'
 import { CompassCursor } from '../components/site/CompassCursor'
 import { SharedVisitRecorder } from '../components/site/SharedVisitRecorder'
 import './globals.css'
-import './cctv-skin.css'
 import './map-skin.css'
 
 export const metadata: Metadata = {

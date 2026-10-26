@@ -156,13 +156,12 @@ export function HouseMapCard({ distances = [], houseIndex = 0, visitCounts = {} 
         ),
         ...HOUSE_MAP_POINTS.map((house) =>
           createElement(
-            'a',
+            'g',
             {
               className: 'figma-house-map-house-link',
-              href: `${assetPath('experience')}/?house=${house.id}`,
               'data-map-house-link': house.id,
               'data-map-visit-count': Math.max(0, Number(visitCounts?.[house.id]) || 0),
-              'aria-label': `${house.id} CCTV 보기, 최근 방문 ${Math.max(0, Number(visitCounts?.[house.id]) || 0)}회`,
+              'aria-label': `${house.id}, 최근 방문 ${Math.max(0, Number(visitCounts?.[house.id]) || 0)}회`,
               key: `house-link-${house.id}`,
             },
             createElement('circle', {

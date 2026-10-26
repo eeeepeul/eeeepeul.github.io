@@ -1,33 +1,6 @@
 import { createElement } from 'react'
-import { assetPath } from '../../lib/asset-path.mjs'
-import { FigmaHomeScene } from './FigmaHomeScene.mjs'
-import { FigmaHomeSidebarContent } from './FigmaHomeSidebarContent.mjs'
-import { AttentionHeatmap } from './AttentionHeatmap.mjs'
-import { LandingFrame } from './LandingFrame.mjs'
-import { MapGisChrome } from './MapGisChrome.mjs'
+import { HomeStage } from './HomeStage.mjs'
 
 export function MainLanding() {
-  return createElement(
-    LandingFrame,
-    {
-      houseAssetSrc: assetPath('media/figma-home-house.svg'),
-      houseHref: `${assetPath('second')}/`,
-      houseLabel: '두 번째 화면으로 이동',
-      navigationCurrent: 'map',
-      panel: createElement(FigmaHomeSidebarContent),
-      panelLabel: '홈 정보 메뉴',
-      playfield: createElement(FigmaHomeScene),
-      scaleSidebarToViewport: true,
-      sidebarFooter: createElement(AttentionHeatmap),
-    },
-    createElement(MapGisChrome, {
-      homeHref: assetPath(''),
-      cctvHref: `${assetPath('experience')}/`,
-    }),
-    createElement('a', {
-      className: 'landing-enter-link',
-      href: `${assetPath('experience')}/`,
-      'aria-label': 'CCTV 화면으로 이동',
-    })
-  )
+  return createElement(HomeStage)
 }

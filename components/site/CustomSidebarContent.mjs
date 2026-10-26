@@ -41,8 +41,11 @@ const CUSTOM_SECTIONS = [
 
 // What was drawn on the pad, worn by the match: each piece can be dragged to where it
 // should sit, resized from its corner, and taken off again.
+const NO_ACCESSORIES = []
+const getNoAccessories = () => NO_ACCESSORIES
+
 function AccessoryLayer() {
-  const accessories = useSyncExternalStore(subscribeAccessories, getAccessories, () => [])
+  const accessories = useSyncExternalStore(subscribeAccessories, getAccessories, getNoAccessories)
   const layerRef = useRef(null)
   const [selected, setSelected] = useState(null)
 

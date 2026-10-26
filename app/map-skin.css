@@ -21,7 +21,7 @@
   align-items: center;
   gap: 8px;
   width: 52px;
-  min-height: 382px;
+  min-height: 316px;
   padding: 8px 0;
   background: var(--gis-gray);
 }
@@ -404,7 +404,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
     left: 8px;
     width: 40px;
     min-height: 0;
-    padding: 6px 0 40px;
+    padding: 6px 0;
   }
 
   .map-gis-tool {
@@ -480,16 +480,6 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   outline-offset: 2px;
 }
 
-/* Thermal smear that follows the mouse. */
-.map-heat-trail {
-  position: fixed;
-  inset: 0;
-  z-index: 55;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-}
-.map-heat-trail { image-rendering: auto; }
 
 /* Colour panel of the lasso: a preview of the colour mix and a bar to slide through them. */
 .map-gis-lasso__panel {
@@ -604,4 +594,1118 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   height: 1px;
   opacity: 0;
   pointer-events: none;
+}
+
+/* ---- the home page stage: one screen of numbered cells ----------------------------- */
+.stage-shell {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #e6e6e4;
+}
+
+.stage {
+  container-type: inline-size;
+  position: relative;
+  width: min(100vw, calc(100dvh * 2000 / 1126));
+  aspect-ratio: var(--stage-ratio, 2000 / 1126);
+  background: #f4f4f2;
+  box-shadow: 0 0 0 1px #111;
+}
+
+.stage-cell {
+  position: absolute;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* a 1px line in #cbcbcb round every box, drawn over its contents so nothing covers it */
+.stage-cell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid #cbcbcb;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.stage-cell--empty {
+  display: grid;
+  place-items: center;
+  background: #bdbdbb;
+  border: 1px dashed rgba(0, 0, 0, 0.35);
+}
+
+.stage-cell__number {
+  color: rgba(0, 0, 0, 0.4);
+  font: 300 clamp(14px, 3vw, 54px) / 1 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+/* The map cell is the containing block of everything fixed inside it (toolbar, rulers,
+   the lasso layer), so the map and its tools stay in the cell and the zoom stays there. */
+.stage-cell--map {
+  contain: layout paint;
+  background: #f0f0f0;
+}
+
+.stage-map-space {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* A cell that shows a page of its own, under a grey bar. */
+.stage-cell--frame {
+  display: grid;
+  grid-template-rows: 6.14% minmax(0, 1fr);
+  background: #cbcbcb;
+}
+
+/* The picture sits inside a viewfinder frame, with a margin of the cell's grey round it. */
+.stage-cell__view {
+  position: relative;
+  min-height: 0;
+  background: #cbcbcb;
+}
+
+.stage-cell__view .stage-cell__frame {
+  position: absolute;
+  inset: 1.8%;
+  width: auto;
+  height: auto;
+  inline-size: 96.4%;
+  block-size: 96.4%;
+}
+
+.viewfinder {
+  position: absolute;
+  inset: 1.8%;
+  width: 96.4%;
+  height: 96.4%;
+  pointer-events: none;
+}
+
+/* The bar, measured from the made frame (768 wide): 48 high, chips inset 4 on every side,
+   the label chip 86 wide and the reading chip 296 wide, text about 24 high. */
+.stage-bar {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  padding: 0.104cqw;
+  background: #747474;
+  font: 400 0.62cqw / 1 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.stage-bar__chip {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 2.24cqw;
+  padding: 0 0.42cqw;
+  color: #f4f4f4;
+  background: #8b8b8b;
+  white-space: nowrap;
+}
+
+.stage-bar__chip--value {
+  width: 7.7cqw;
+  font-variant-numeric: tabular-nums;
+}
+
+.stage-cell__frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #cbcbcb;
+}
+
+/* Cell 2: the High-to-Low scale, a space for the picture, and the zoom control. */
+.stage-cell--scale {
+  background: #b9b9b8;
+}
+
+.scale-cell {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: #f2f2f0;
+  font: 400 0.82cqw / 1 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  letter-spacing: 0.03em;
+}
+
+/* Whatever goes in the cell is scaled by the zoom control. */
+.scale-cell__content {
+  position: absolute;
+  inset: 0;
+  transform: scale(var(--zoom-scale, 1));
+  transform-origin: 50% 50%;
+  transition: transform 0.25s ease;
+}
+
+.scale-cell__bar {
+  position: absolute;
+  left: 1.5%;
+  top: 3.2%;
+  bottom: 3.2%;
+  width: 6.5%;
+  background: linear-gradient(to bottom, #868685 0%, #b0b0af 45%, #e6e6e4 80%, #fff 100%);
+}
+
+.scale-cell__label {
+  position: absolute;
+  left: 10.5%;
+}
+
+.scale-cell__label--high {
+  top: 5%;
+}
+
+.scale-cell__label--low {
+  bottom: 4.6%;
+}
+
+.scale-cell__zoom {
+  position: absolute;
+  right: 1.4%;
+  bottom: 3.2%;
+  display: flex;
+  align-items: stretch;
+  gap: 0.1cqw;
+  padding: 0.12cqw;
+  background: #a2a2a1;
+}
+
+.scale-cell__step {
+  display: grid;
+  place-items: center;
+  width: 1.45cqw;
+  height: 1.3cqw;
+  padding: 0;
+  background: #b6b6b5;
+  border: 0;
+  cursor: pointer;
+}
+
+.scale-cell__step:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.scale-cell__minus,
+.scale-cell__plus {
+  position: relative;
+  display: block;
+  width: 0.75cqw;
+  height: 0.75cqw;
+}
+
+.scale-cell__minus::before,
+.scale-cell__plus::before,
+.scale-cell__plus::after {
+  position: absolute;
+  content: '';
+  background: #555;
+}
+
+.scale-cell__minus::before,
+.scale-cell__plus::before {
+  left: 0;
+  top: calc(50% - 0.07cqw);
+  width: 100%;
+  height: 0.14cqw;
+}
+
+.scale-cell__plus::after {
+  top: 0;
+  left: calc(50% - 0.07cqw);
+  width: 0.14cqw;
+  height: 100%;
+}
+
+.scale-cell__percent {
+  display: grid;
+  place-items: center;
+  min-width: 3cqw;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cell 11: the flow chart, edge to edge, in a hairline. */
+.stage-cell--chart {
+  background: #f1f1ef;
+  border: 1px solid rgba(0, 0, 0, 0.28);
+}
+
+.stage-cell--chart .stage-cell__frame {
+  background: #f1f1ef;
+}
+
+/* Cell 6: the scanned houses, on the reference's dark grey. */
+.stage-cell--model {
+  background: #5f5f5f;
+}
+
+.stage-cell--model .stage-cell__frame {
+  background: #5f5f5f;
+}
+
+.house-readout {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+}
+
+.stage-cell--model {
+  border: 1px solid #7a7a7a;
+}
+
+/* Cell 8: the click log. Measured from the supplied table (760 wide, rows 28 high): a pale
+   header and first row, dark rows below. The visitor's own presses are pale, others dark. */
+.stage-cell--log {
+  background: #494949;
+}
+
+.event-log {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  color: #f6f6f6;
+  font: 400 0.4cqw / 1 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.event-log th,
+.event-log td {
+  height: 14.28%;
+  padding: 0 0 0 1.2%;
+  overflow: hidden;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: clip;
+  font-weight: 400;
+  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+}
+
+.event-log__head th {
+  color: #1e1e1e;
+  background: #b5b5b5;
+  border-bottom: 1px solid #8a8a8a;
+}
+
+.event-log__row {
+  background: #494949;
+}
+
+.event-log__row.is-own {
+  color: #1e1e1e;
+  background: #b5b5b5;
+}
+
+/* ---- cell 3: Description of Epeul's Data ------------------------------------------------
+   Measured from the supplied panel (650 x 582). --u is one unit of that picture. */
+.stage-cell--about {
+  background: #b9b9b7;
+}
+
+.about {
+  --u: 0.02615cqw;
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 85%;
+  aspect-ratio: 650 / 582;
+  background: #494949;
+  color: #f6f6f6;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.about-panel {
+  position: absolute;
+  left: 2.46%;
+  top: 2.75%;
+  width: 95.08%;
+  height: 94.5%;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: 6.4% 61.5% minmax(0, 1fr);
+  border: calc(2 * var(--u)) solid #f6f6f6;
+  background: #747474;
+}
+
+.about-title {
+  display: flex;
+  align-items: center;
+  padding-left: calc(16 * var(--u));
+  font-size: calc(15 * var(--u));
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  border-bottom: calc(2 * var(--u)) solid #f6f6f6;
+}
+
+.about-body {
+  display: grid;
+  grid-template-columns: 55.4% minmax(0, 1fr);
+  border-bottom: calc(2 * var(--u)) solid #f6f6f6;
+  min-height: 0;
+}
+
+.about-cover {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-right: calc(2 * var(--u)) solid #f6f6f6;
+  box-sizing: border-box;
+}
+
+.about-tree {
+  position: relative;
+  margin: 0;
+  padding: calc(11 * var(--u)) 0 0;
+  list-style: none;
+  background: #8a8a8a;
+  overflow: hidden;
+}
+
+.about-kids {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.about-node {
+  position: relative;
+  --row: calc(22.4 * var(--u));
+  /* x positions per depth (units, from the tree's left edge) */
+  --t: 16;
+  --i: 39;
+  --l: 64;
+}
+
+.about-node[data-depth='1'] { --t: 40; --i: 62; --l: 88; }
+.about-node[data-depth='2'] { --t: 64; --i: 86; --l: 112; }
+.about-node[data-depth='3'] { --t: 112; --i: 112; --l: 134; }
+
+.about-row {
+  position: relative;
+  height: var(--row);
+  display: flex;
+  align-items: center;
+}
+
+.about-row.is-selected::after {
+  position: absolute;
+  inset: 1px 0;
+  background: rgba(255, 255, 255, 0.14);
+  content: '';
+  pointer-events: none;
+}
+
+.about-toggle {
+  position: absolute;
+  left: calc(var(--t) * var(--u));
+  top: 50%;
+  z-index: 2;
+  width: calc(14 * var(--u));
+  height: calc(14 * var(--u));
+  margin: calc(-7 * var(--u)) 0 0;
+  padding: 0;
+  background: #cacaca;
+  border: 0;
+  cursor: pointer;
+}
+
+.about-toggle i,
+.about-toggle i::before {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: #7e7e7e;
+  content: '';
+}
+
+.about-toggle i {
+  width: calc(8 * var(--u));
+  height: calc(2 * var(--u));
+  margin: calc(-1 * var(--u)) 0 0 calc(-4 * var(--u));
+}
+
+.about-toggle i::before {
+  left: calc(3 * var(--u));
+  top: calc(-3 * var(--u));
+  width: calc(2 * var(--u));
+  height: calc(8 * var(--u));
+  margin: 0;
+  display: none;
+}
+
+.about-toggle.is-closed i::before {
+  display: block;
+}
+
+/* the square for a name: white edge round a grey middle; for the last level a plain light square */
+.about-icon {
+  position: absolute;
+  left: calc(var(--i) * var(--u));
+  top: 50%;
+  z-index: 2;
+  box-sizing: border-box;
+  width: calc(18 * var(--u));
+  height: calc(18 * var(--u));
+  margin-top: calc(-9 * var(--u));
+  border: calc(5 * var(--u)) solid #f6f6f6;
+  background: #8e8e8e;
+}
+
+.about-node.is-leaf > .about-row > .about-icon {
+  width: calc(14 * var(--u));
+  height: calc(14 * var(--u));
+  margin-top: calc(-7 * var(--u));
+  border: 0;
+  background: #cfcfcf;
+}
+
+.about-label {
+  position: absolute;
+  left: calc(var(--l) * var(--u));
+  top: 50%;
+  margin: 0;
+  padding: 0;
+  color: #f6f6f6;
+  background: none;
+  border: 0;
+  font: 400 calc(15 * var(--u)) / 1 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  transform: translateY(-52%);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* the lines of the tree: from a name's square down to its children */
+.about-kids > .about-node::before {
+  position: absolute;
+  left: calc((var(--pi, 48) ) * var(--u) - 1 * var(--u));
+  top: 0;
+  bottom: 0;
+  width: calc(2 * var(--u));
+  background: #c4c4c4;
+  content: '';
+}
+
+.about-kids > .about-node.is-last::before {
+  bottom: auto;
+  height: calc(var(--row) / 2 + 1 * var(--u));
+}
+
+.about-node[data-depth='1'] { --pi: 48; }
+.about-node[data-depth='2'] { --pi: 71; }
+.about-node[data-depth='3'] { --pi: 95; }
+
+/* the last level hangs off the line by a short arm */
+.about-node.is-leaf > .about-row::before {
+  position: absolute;
+  left: calc(var(--pi) * var(--u));
+  top: 50%;
+  width: calc((var(--i) - var(--pi)) * var(--u));
+  height: calc(2 * var(--u));
+  margin-top: calc(-1 * var(--u));
+  background: #c4c4c4;
+  content: '';
+}
+
+.about-text {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: calc(12 * var(--u)) calc(16 * var(--u)) 0;
+  background: #747474;
+}
+
+.about-text p {
+  margin: 0;
+  height: calc(24.6 * 5 * var(--u));
+  overflow: hidden;
+  font-size: calc(16.4 * var(--u));
+  line-height: calc(24.6 * var(--u));
+}
+
+.about-foot {
+  display: flex;
+  align-items: center;
+  gap: calc(10 * var(--u));
+  margin-top: calc(10 * var(--u));
+  color: #b7b7b7;
+  font-size: calc(16 * var(--u));
+  font-weight: 500;
+}
+
+.about-foot__play {
+  width: 0;
+  height: 0;
+  border-top: calc(6 * var(--u)) solid transparent;
+  border-bottom: calc(6 * var(--u)) solid transparent;
+  border-left: calc(11 * var(--u)) solid #a8a8a8;
+}
+
+.about-foot__bar {
+  width: calc(166 * var(--u));
+  height: calc(16 * var(--u));
+  background: #b7b7b7;
+}
+
+/* ---- cell 5: the visitor record (measured from the supplied picture, 760 x 314) ------------ */
+.stage-cell--visitors {
+  background: #cfcfcf;
+}
+
+.visitors {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: 15.3% minmax(0, 1fr);
+  color: #f4f4f4;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.visitors-bar {
+  position: relative;
+  background: #747474;
+  font-size: 0.52cqw;
+}
+
+.visitors-chip {
+  position: absolute;
+  top: 8.3%;
+  height: 83.4%;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 0.62cqw;
+  color: #f4f4f4;
+  background: #8b8b8b;
+  border: 0;
+  font: inherit;
+  white-space: nowrap;
+}
+
+.visitors-time {
+  left: 0.53%;
+  width: 11.6%;
+}
+
+.visitors-active {
+  left: 62.4%;
+  width: 20.3%;
+  gap: 0.35cqw;
+  font-variant-numeric: tabular-nums;
+}
+
+.visitors-active span {
+  color: #d6d6d6;
+}
+
+.visitors-active strong {
+  font-weight: 500;
+}
+
+.visitors-range {
+  position: absolute;
+  inset: 0 auto 0 83.4%;
+  width: 16.1%;
+}
+
+.visitors-select {
+  left: 0;
+  width: 100%;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.visitors-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  margin: 0.1cqw 0 0;
+  padding: 0;
+  list-style: none;
+  background: #747474;
+}
+
+.visitors-menu button {
+  display: block;
+  width: 100%;
+  padding: 0.3cqw 0.62cqw;
+  color: #f4f4f4;
+  background: none;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.visitors-menu li[aria-selected='true'] button {
+  background: #8b8b8b;
+}
+
+.visitors-menu button:hover {
+  background: #8b8b8b;
+}
+
+.visitors-chart {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ---- cell 7: the radar and the scope (supplied picture 760 x 314) ----------------------- */
+.stage-cell--radar {
+  background: #202020;
+}
+
+.radar {
+  position: absolute;
+  inset: 0;
+}
+
+.radar-plane {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 58.68%;
+  height: 100%;
+}
+
+.radar-plane text {
+  fill: #f1f1f1;
+  font: 400 8.2px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  letter-spacing: 0.3px;
+}
+
+.radar-plane .radar-mmh {
+  font-size: 8px;
+}
+
+.radar-scope {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 41.32%;
+  height: 100%;
+  background: #202020;
+  cursor: pointer;
+  overflow: hidden;
+  user-select: none;
+}
+
+.radar-scope__photo,
+.radar-scope__sight,
+.radar-scope__mosaic {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.radar-scope__photo {
+  object-fit: cover;
+}
+
+/* With the camera on, the photograph gives way to the mosaic inside the same ring. */
+.radar-scope__sight {
+  opacity: 0;
+}
+
+.radar-scope__mosaic {
+  inset: 7% auto auto 7.3%;
+  width: 85.35%;
+  height: 85.35%;
+  border-radius: 50%;
+  image-rendering: pixelated;
+  transform: scaleX(-1);
+  filter: grayscale(1) contrast(1.12) brightness(1.05);
+  opacity: 0;
+}
+
+.radar-scope__source {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.radar-scope.is-live .radar-scope__photo {
+  opacity: 0;
+}
+
+.radar-scope.is-live .radar-scope__sight,
+.radar-scope.is-live .radar-scope__mosaic {
+  opacity: 1;
+}
+
+/* Cell 9: a looping clip filling its cell. */
+.stage-cell--clip {
+  background: #111;
+}
+
+.stage-cell__clip {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* The volume bars in the strip beside cell 3 (60 of its 400 wide). */
+.about-volume {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 15%;
+}
+
+.volume {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: ns-resize;
+  touch-action: none;
+  outline: none;
+}
+
+/* ---- cell 12: the player (supplied picture 570 x 212) --------------------------------------- */
+.stage-cell--player {
+  background: #8a8a8a;
+  overflow: visible; /* the list of songs opens upward out of the cell */
+}
+
+.player {
+  position: absolute;
+  inset: 0;
+  font: 400 0.44cqw / 1 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #111;
+}
+
+.player-label {
+  position: absolute;
+  left: 2.5%;
+  display: flex;
+  align-items: center;
+}
+
+.player-label--artist { top: 8%; height: 26.4%; }
+.player-label--track { top: 39%; height: 26.4%; }
+
+.player-field {
+  position: absolute;
+  left: 14%;
+  width: 83%;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 0 1.4%;
+  background: #fff;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.player-field--artist { top: 8%; height: 26.4%; }
+.player-field--track { top: 39%; height: 26.4%; padding-right: 10%; }
+
+.player-drop {
+  position: absolute;
+  top: 40.5%;
+  left: 89.1%;
+  width: 7.9%;
+  height: 24.5%;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: #cacaca;
+  border: 0;
+  cursor: pointer;
+}
+
+.player-drop i {
+  width: 0;
+  height: 0;
+  border-left: 0.5cqw solid transparent;
+  border-right: 0.5cqw solid transparent;
+  border-top: 0.55cqw solid #6f6f6f;
+}
+
+.player-menu {
+  position: absolute;
+  left: 14%;
+  bottom: 61%;
+  z-index: 30;
+  width: 83%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: #fff;
+  box-shadow: 0 0 0 1px #8a8a8a, 0 0.5cqw 1.6cqw rgba(0, 0, 0, 0.25);
+}
+
+.player-menu button {
+  display: flex;
+  align-items: center;
+  gap: 0.7cqw;
+  width: 100%;
+  padding: 0.55cqw 1.4%;
+  color: #111;
+  background: none;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.player-menu button:hover:not(:disabled),
+.player-menu li[aria-selected='true'] button {
+  background: #d8d8d8;
+}
+
+.player-menu button:disabled {
+  color: #9a9a9a;
+  cursor: default;
+}
+
+.player-menu__no {
+  color: #888;
+  font-variant-numeric: tabular-nums;
+}
+
+.player-menu em {
+  font-style: normal;
+}
+
+.player-buttons {
+  position: absolute;
+  left: 2.6%;
+  right: 3%;
+  top: 69.8%;
+  height: 22.6%;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.7%;
+}
+
+.player-button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: #cacaca;
+  border: 0;
+  cursor: pointer;
+}
+
+.player-button:disabled {
+  cursor: default;
+}
+
+.player-icon {
+  width: 38%;
+  height: 52%;
+  fill: #8a8a8a;
+}
+
+.player-button.is-on .player-icon {
+  fill: #111;
+}
+
+.player-button.is-pressed {
+  background: #b3b3b3;
+}
+
+/* ---- cell 13: the sound as it goes by (supplied picture 2000 x 131, a pale ground in grey) --- */
+.stage-cell--spectrum {
+  background: #cbcbcb;
+}
+
+.spectrum {
+  position: absolute;
+  left: 0.5%;
+  right: 0.5%;
+  top: 7.6%;
+  bottom: 7.6%;
+  display: block;
+  width: 99%;
+  height: 84.8%;
+  background: #f6f6f6;
+}
+
+/* ---- cell 10: a field picture whose arrows move, filling the cell ---------------------------- */
+.stage-cell--graph {
+  background: #eeeeee;
+}
+
+.fgraph-root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.fgraph-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: block;
+  user-select: none;
+}
+
+.fgraph-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+/* ---- the map's tool bar: the supplied bar (124 x 586) shown at 0.516 of that on the 2000 plan,
+   so it measures about 64 x 303 there (1 unit = 0.0258cqw) --------------------------------- */
+.stage-cell--map .map-gis-toolbar {
+  --u: 0.0258cqw;
+  position: absolute;
+  z-index: 75;
+  top: 0.75cqw;
+  left: 1.6cqw;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  width: calc(124 * var(--u));
+  min-height: 0;
+  padding: 0;
+  background: #a0a0a0;
+}
+
+.stage-cell--map .map-gis-bar__head {
+  position: relative;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  flex: none;
+  height: calc(40 * var(--u));
+  background: #5f5f5f;
+}
+
+.stage-cell--map .map-gis-bar__head:active {
+  cursor: grabbing;
+}
+
+.stage-cell--map .map-gis-bar__fold {
+  position: absolute;
+  top: calc(4 * var(--u));
+  right: calc(4 * var(--u));
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: calc(32 * var(--u));
+  height: calc(32 * var(--u));
+  padding: 0;
+  background: #b5b5b5;
+  border: 0;
+  cursor: pointer;
+}
+
+.stage-cell--map .map-gis-bar__dash {
+  display: block;
+  width: calc(20 * var(--u));
+  height: calc(4 * var(--u));
+  background: #5f5f5f;
+}
+
+.stage-cell--map .map-gis-toolbar.is-folded {
+  background: transparent;
+}
+
+.stage-cell--map .map-gis-bar__body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: calc(12 * var(--u));
+  padding: calc(12 * var(--u)) calc(12 * var(--u)) calc(12 * var(--u));
+}
+
+.stage-cell--map .map-gis-logo {
+  display: block;
+  width: 100%;
+  height: calc(73 * var(--u));
+  margin: 0 0 calc(2 * var(--u));
+}
+
+.stage-cell--map .map-gis-logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+
+.stage-cell--map .map-gis-tool {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: calc(100 * var(--u));
+  height: calc(100 * var(--u));
+  padding: 0;
+  color: #111;
+  background: #cbcbcb;
+  border: 0;
+  border-radius: 0;
+}
+
+.stage-cell--map .map-gis-tool:hover,
+.stage-cell--map .map-gis-tool:focus-visible {
+  background: #d8d8d8;
+  outline: 0;
+}
+
+.stage-cell--map .map-gis-tool.is-pressed {
+  background: #b8b8b8;
+  box-shadow: none;
+}
+
+.stage-cell--map .map-gis-tool .map-gis-icon {
+  width: calc(44 * var(--u));
+  height: calc(44 * var(--u));
+}
+
+.stage-cell--map .map-gis-lasso__bar {
+  left: calc(100% + 0.7cqw);
+}
+
+.stage-cell--map .map-gis-lasso__panel {
+  left: calc(100% + 0.7cqw);
+  top: calc(56 * var(--u));
+}
+
+.stage-cell--map .map-gis-info {
+  top: 0.75cqw;
+  left: 5.5cqw;
 }

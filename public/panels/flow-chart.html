@@ -1,0 +1,310 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FlowChart 540x145</title>
+<style>
+  /* In the stage the chart fills its cell instead of sitting in a fixed box. */
+  html,body{margin:0;height:100%;background:#f1f1ef;overflow:hidden}
+  #chart{position:absolute;inset:0}
+</style>
+<div id="chart"></div>
+<script>
+/*!
+ * FlowChart — 540 x 145 animated 2D data-texture chart (canvas, zero dependencies).
+ *
+ * Usage (any site builder / framework):
+ *   1. Add a div with id "chart" and load this file with a script tag.
+ *   2. Call FlowChart.mount("#chart") once the page has loaded.
+ *
+ * ES module:   import { mount } from "./flow-chart.js"
+ *
+ * mount(target, options) -> { play, pause, destroy, canvas }
+ *   target  : CSS selector, element (a <canvas> or a container to append into)
+ *   options : width=540, height=145, ink="#2b2b2b", background=null (transparent),
+ *             speed=1, seed=7
+ * Pauses off-screen / in hidden tabs, renders a still frame when the user
+ * prefers reduced motion, and is crisp on retina screens.
+ */
+(function (root, factory) {
+  var api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  else root.FlowChart = api;
+})(typeof self !== "undefined" ? self : this, function () {
+  var TAU = Math.PI * 2;
+
+  function rng(seed) {
+    var s = seed >>> 0 || 1;
+    return function () {
+      s = (s + 0x6d2b79f5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  var clamp = function (v, a, b) { return v < a ? a : v > b ? b : v; };
+  var lerp = function (a, b, t) { return a + (b - a) * t; };
+  var fract = function (v) { return v - Math.floor(v); };
+  var hash = function (a, b) { return fract(Math.sin(a * 127.1 + b * 311.7) * 43758.5453); };
+  var smoother = function (t) { t = clamp(t, 0, 1); return t * t * t * (t * (t * 6 - 15) + 10); };
+
+  // Panel x-ranges as fractions of the full width (derived from the reference art).
+  var LAYOUT = {
+    flow: [0, 0.385],
+    dots: [0.4, 0.69],
+    bars: [0.71, 0.9],
+    mesh: [0.915, 1],
+  };
+
+  // Constants below were tuned at 382 x 89; U/S/D scale them to any size.
+  function build(W, H, seed) {
+    var U = W / 382, S = H / 89, D = Math.sqrt(U * S);
+    var r = rng(seed);
+    var span = function (k) { return [LAYOUT[k][0] * W, LAYOUT[k][1] * W]; };
+
+    var flow = span("flow");
+    var flowLines = [];
+    var nFlow = Math.round(44 * S);
+    for (var i = 0; i < nFlow; i++) {
+      flowLines.push({
+        row: 2 + (i / (nFlow - 1)) * (H - 4),
+        spread: (r() - 0.5) * 2.2,
+        ph: r() * TAU,
+        sp: 0.25 + r() * 0.5,
+        amp: (3 + r() * 9) * S,
+        x0: r() * 14 * U,
+      });
+    }
+
+    var dots = span("dots");
+    var nCols = Math.round(21 * U);
+    var cols = [];
+    for (var c = 0; c < nCols; c++) {
+      var sats = [];
+      for (var k = 0; k < 8; k++) sats.push({ dy: (r() - 0.5) * 14 * S, rad: (0.3 + r() * 0.5) * (1 + (D - 1) * 0.5) });
+      cols.push({ x: dots[0] + 2 + (c / (nCols - 1)) * (dots[1] - dots[0] - 4), sats: sats });
+    }
+
+    var bars = span("bars");
+    var nBarCols = Math.round(9 * U);
+    var gap = 1.5 * U;
+    var bw = (bars[1] - bars[0] - gap * (nBarCols - 1)) / nBarCols;
+
+    var mesh = span("mesh");
+    var nMesh = Math.round(46 * S);
+
+    return { flowLines: flowLines, flow: flow, dots: dots, cols: cols, bars: bars, nBarCols: nBarCols, gap: gap, bw: bw, mesh: mesh, nMesh: nMesh };
+  }
+
+  function draw(ctx, m, W, H, T, K, ink) {
+    var t, k;
+    var U = W / 382, S = H / 89, D = Math.sqrt(U * S), Dl = 1 + (D - 1) * 0.5;
+    ctx.strokeStyle = ink;
+    ctx.fillStyle = ink;
+    ctx.lineCap = "butt";
+
+    // 1 — converging flow lines
+    t = T[0]; k = K[0];
+    var fw = m.flow[1] - m.flow[0];
+    var cy = H / 2;
+    ctx.lineWidth = 0.45 * Dl;
+    ctx.globalAlpha = 0.75;
+    ctx.beginPath();
+    m.flowLines.forEach(function (L) {
+      var s = cy + L.spread * (H * 0.5) * (0.85 + 0.2 * Math.sin(t * 0.35 + L.ph));
+      var steps = 36;
+      for (var i = 0; i <= steps; i++) {
+        var u = i / steps;
+        var e = smoother((u - 0.02) / 0.8);
+        var y = lerp(s, L.row, e);
+        var pinch = 1 - 0.72 * Math.exp(-Math.pow((u - 0.52 + 0.06 * Math.sin(t * 0.4)) / 0.2, 2));
+        y = cy + (y - cy) * pinch;
+        y += Math.sin(u * 5 + t * L.sp + L.ph) * L.amp * (1 - e) * 0.45;
+        y += (hash(L.row, k) - 0.5) * 5 * S * (1 - e) * (1 - e);
+        var x = m.flow[0] + L.x0 * (1 - u) + u * (fw - L.x0 * (1 - u));
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      // flat comb at the right edge
+      ctx.moveTo(m.flow[0] + fw * 0.86, L.row);
+      ctx.lineTo(m.flow[1], L.row);
+    });
+    ctx.stroke();
+
+    // 2 — dotted vertical columns riding a slow wave
+    t = T[1]; k = K[1];
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = 0.4 * Dl;
+    ctx.beginPath();
+    m.cols.forEach(function (c) { ctx.moveTo(c.x, 0); ctx.lineTo(c.x, H); });
+    ctx.stroke();
+    ctx.globalAlpha = 0.9;
+    m.cols.forEach(function (c, i) {
+      var p = i / (m.cols.length - 1);
+      [0, 0.5].forEach(function (off, n) {
+        var y = H * (0.5 - 0.4 * Math.sin(TAU * (p * 0.5 - t * 0.04 + off * 0.5)));
+        y += (hash(i + n * 40, k) - 0.5) * 9 * S;
+        var main = (n === 0 ? 1.7 : 1.1) * Dl;
+        ctx.beginPath();
+        ctx.arc(c.x, y, main, 0, TAU);
+        ctx.fill();
+        c.sats.forEach(function (s, si) {
+          var sy = y + s.dy * (0.4 + 1.2 * hash(i * 7 + si, k));
+          ctx.beginPath();
+          ctx.arc(c.x, sy, s.rad, 0, TAU);
+          ctx.fill();
+          if (si % 2 === 0) { ctx.fillRect(c.x - 1.5 * U, sy, 3 * U, 0.4 * D); }
+        });
+      });
+    });
+
+    // 3 — mirrored histogram combs (layered waves, finer rows)
+    t = T[2]; k = K[2];
+    ctx.globalAlpha = 0.85;
+    ctx.lineWidth = 0.4 * Dl;
+    var rows = Math.floor((H - 2) / (0.9 * Dl));
+    for (var b = 0; b < m.nBarCols; b++) {
+      var x0 = m.bars[0] + b * (m.bw + m.gap);
+      var left = b % 2 === 0;
+      var base = left ? x0 : x0 + m.bw;
+      ctx.beginPath();
+      ctx.moveTo(base, 0);
+      ctx.lineTo(base, H);
+      for (var j = 0; j < rows; j++) {
+        var y = 1 + (j / (rows - 1)) * (H - 2);
+        var v = 0.5 + 0.5 * Math.sin(j * 0.17 + b * 1.4 - t * 0.7);
+        v *= 0.6 + 0.4 * Math.sin(j * 0.06 + b * 2.1 + t * 0.3);
+        v += 0.22 * Math.sin(j * 0.55 - b * 0.9 + t * 1.3) * Math.sin(j * 0.09 + t * 0.4 + b);
+        v += 0.12 * Math.sin(j * 1.9 + b * 3 - t * 2.1);
+        v += (hash(j + b * 131, k) - 0.5) * 0.3;
+        var len = clamp(v, 0.03, 1) * m.bw;
+        ctx.moveTo(base, y);
+        ctx.lineTo(left ? base + len : base - len, y);
+      }
+      ctx.stroke();
+    }
+
+    // 4 — dense braided link: two combs joined by crossing hairlines
+    t = T[3]; k = K[3];
+    var mx0 = m.mesh[0], mx1 = m.mesh[1];
+    var mid = (mx0 + mx1) / 2;
+    ctx.globalAlpha = 0.6;
+    ctx.lineWidth = 0.35 * Dl;
+    ctx.beginPath();
+    for (var q = 0; q < m.nMesh; q++) {
+      var f = q / (m.nMesh - 1);
+      var ly = 1.5 + f * (H - 3);
+      var ry = ly + Math.sin(q * 0.5 + t * 0.55) * 14 * S + Math.sin(q * 1.3 - t * 0.9) * 7 * S + (hash(q, k) - 0.5) * 8 * S;
+      ry = Math.abs(((ry % (2 * (H - 3))) + 2 * (H - 3)) % (2 * (H - 3)));
+      ry = 1.5 + (ry > H - 3 ? 2 * (H - 3) - ry : ry);
+      ctx.moveTo(mx0, ly);
+      ctx.lineTo(mx0 + (3 + (q % 3)) * U, ly);
+      ctx.moveTo(mx0 + (3 + (q % 3)) * U, ly);
+      ctx.bezierCurveTo(mid + Math.sin(t * 0.6 + q) * 2 * U, ly, mid - Math.sin(t * 0.5 + q) * 2 * U, ry, mx1 - (3 + (q % 2) * 2) * U, ry);
+      ctx.moveTo(mx1 - (3 + (q % 2) * 2) * U, ry);
+      ctx.lineTo(mx1, ry);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  function mount(target, options) {
+    var o = options || {};
+    var W = o.width || 540;
+    var H = o.height || 145;
+    var ink = o.ink || "#2b2b2b";
+    var speed = o.speed == null ? 1 : o.speed;
+    var el = typeof target === "string" ? document.querySelector(target) : target;
+    if (!el) throw new Error("FlowChart: target not found");
+
+    var canvas = el.tagName === "CANVAS" ? el : document.createElement("canvas");
+    if (canvas !== el) el.appendChild(canvas);
+    var dpr = Math.min(window.devicePixelRatio || 1, 3);
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    canvas.style.display = "block";
+    canvas.setAttribute("role", "img");
+    canvas.setAttribute("aria-label", "Animated data chart");
+
+    var ctx = canvas.getContext("2d");
+    ctx.scale(dpr, dpr);
+    var model = build(W, H, o.seed || 7);
+
+    var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Each panel has its own stuttering clock: it holds still, then jumps
+    // forward by a random amount after a random pause, so motion is choppy
+    // and out of sync between panels.
+    var raf = 0, visible = true, running = false, destroyed = false, drawn = false;
+    var R = rng((o.seed || 7) + 99);
+    var T = [20, 31, 12, 44], K = [0, 0, 0, 0], NEXT = [0, 0, 0, 0];
+
+    function advance(now) {
+      var changed = false;
+      for (var i = 0; i < 4; i++) {
+        if (now < NEXT[i]) continue;
+        var burst = R() < 0.3;
+        T[i] += (burst ? 0.05 + R() * 0.25 : 0.2 + R() * 1.1) * (R() < 0.08 ? 3 : 1) * speed;
+        K[i]++;
+        NEXT[i] = now + (burst ? 50 + R() * 90 : 160 + R() * 560) / Math.max(speed, 0.05);
+        changed = true;
+      }
+      return changed;
+    }
+    function render() {
+      ctx.clearRect(0, 0, W, H);
+      if (o.background) { ctx.fillStyle = o.background; ctx.fillRect(0, 0, W, H); }
+      draw(ctx, model, W, H, T, K, ink);
+      drawn = true;
+    }
+    function frame(now) {
+      raf = 0;
+      if (destroyed) return;
+      if (advance(now) || !drawn) render();
+      if (running && visible && !document.hidden) raf = requestAnimationFrame(frame);
+    }
+    function kick() { if (!raf && !destroyed) raf = requestAnimationFrame(frame); }
+
+    var io = null;
+    if ("IntersectionObserver" in window) {
+      io = new IntersectionObserver(function (e) {
+        visible = e[0].isIntersecting;
+        if (visible && running) kick();
+      });
+      io.observe(canvas);
+    }
+    function onVis() { if (!document.hidden && running) kick(); }
+    document.addEventListener("visibilitychange", onVis);
+
+    running = !reduce;
+    kick();
+
+    return {
+      canvas: canvas,
+      play: function () { running = true; kick(); },
+      pause: function () { running = false; },
+      destroy: function () {
+        destroyed = true; running = false;
+        if (raf) cancelAnimationFrame(raf);
+        if (io) io.disconnect();
+        document.removeEventListener("visibilitychange", onVis);
+        if (canvas.parentNode === el) el.removeChild(canvas);
+      },
+    };
+  }
+
+  return { mount: mount };
+});
+(function () {
+  var el = document.getElementById("chart");
+  var chart = null, timer = 0;
+  function draw() {
+    var w = Math.round(el.clientWidth), h = Math.round(el.clientHeight);
+    if (!w || !h) return;
+    if (chart) chart.destroy();
+    chart = FlowChart.mount("#chart", { width: w, height: h, background: "#f1f1ef" });
+  }
+  draw();
+  new ResizeObserver(function () { clearTimeout(timer); timer = setTimeout(draw, 120); }).observe(el);
+})();
+</script>

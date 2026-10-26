@@ -15,21 +15,16 @@ const landingFrame = readFileSync(
   new URL('../components/site/LandingFrame.mjs', import.meta.url),
   'utf8'
 )
-const experienceFrame = readFileSync(
-  new URL('../components/pixel-experience/ExperienceFrame.mjs', import.meta.url),
-  'utf8'
-)
 const secondaryLanding = readFileSync(
   new URL('../components/site/SecondaryLanding.mjs', import.meta.url),
   'utf8'
 )
 
-test('connects the map, CCTV, and custom pages without merging their layouts', () => {
-  assert.match(navigation, /assetPath\('experience'\)/)
+test('connects the map and custom pages without merging their layouts', () => {
+  assert.doesNotMatch(navigation, /experience/)
   assert.match(navigation, /assetPath\('second\/custom'\)/)
   assert.match(navigation, /페이지 이동/)
   assert.match(landingFrame, /PageNavigation/)
-  assert.match(experienceFrame, /PageNavigation/)
 })
 
 test('keeps the custom page world as the shared second-page house interior', () => {

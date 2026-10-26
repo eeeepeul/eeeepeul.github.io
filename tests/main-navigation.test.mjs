@@ -2,57 +2,22 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { ExperienceFrame } from '../components/pixel-experience/ExperienceFrame.mjs'
 
-test('turns the lower-left mark into a link back to the main page', () => {
-  const html = renderToStaticMarkup(
-    createElement(
-      ExperienceFrame,
-      {
-        mark: createElement('span', null, 'mark'),
-        panel: createElement('aside', null),
-        homeHref: '/',
-      },
-      createElement('section', null, 'stage')
-    )
-  )
-
-  assert.match(
-    html,
-    /<a[^>]*class="experience-home-link"[^>]*href="\/"[^>]*aria-label="메인 화면으로 이동"[^>]*>.*mark.*<\/a>/
-  )
-})
-
-test('renders a silent square link to the CCTV page beside the Figma home panel', async () => {
+test('renders the map page as a stage of numbered cells with the map in cell 4', async () => {
   const landingModule = await import('../components/site/MainLanding.mjs').catch(() => ({}))
 
   assert.equal(typeof landingModule.MainLanding, 'function')
 
   const html = renderToStaticMarkup(createElement(landingModule.MainLanding))
-  assert.match(html, /<main class="experience-shell landing-shell">/)
-  assert.match(
-    html,
-    /<a class="landing-enter-link" href="\/experience\/" aria-label="CCTV 화면으로 이동"><\/a>/
-  )
-  assert.match(
-    html,
-    /<a class="house-link" href="\/second\/" aria-label="두 번째 화면으로 이동">.*<\/a>/
-  )
-  assert.match(html, /<aside[^>]*class="color-panel sidebar-panel landing-panel"[^>]*>/)
-  assert.match(html, /<img class="sidebar-wordmark"[^>]*alt="M:MH"/)
-  assert.match(html, /<div class="sidebar-content"><div class="figma-home-sidebar-content"[^>]*>/)
-  assert.match(html, /class="figma-sidebar-card figma-sidebar-intro"/)
-  assert.match(html, /class="figma-sidebar-card figma-sidebar-activity"/)
-  assert.match(html, /class="figma-sidebar-card figma-sidebar-distance"/)
-  assert.match(html, /class="figma-sidebar-card figma-sidebar-network figma-house-map"/)
-  assert.doesNotMatch(html, /figma-home-sidebar-artwork|figma-home-sidebar\.png/)
-  assert.match(html, /class="house-mark house-mark--figma"/)
-  assert.match(html, /src="\/media\/figma-home-house\.svg"/)
-  assert.match(
-    html,
-    /<div class="sidebar-footer-content"><section class="attention-heatmap" aria-label="Attention heatmap">/
-  )
-  assert.doesNotMatch(html, /character-spawn-button|palette-presets|settings-panel/)
+  assert.match(html, /<main class="stage-shell">/)
+  for (let cell = 1; cell <= 13; cell += 1) {
+    assert.match(html, new RegExp(`data-stage-cell="${cell}"`))
+  }
+  // The map (and its tools) live in cell 4 alone.
+  const mapCell = html.match(/<section[^>]*data-stage-cell="4"[\s\S]*?<\/section>/)?.[0] ?? ''
+  assert.match(mapCell, /figma-deep-zoom-map/)
+  assert.match(mapCell, /map-gis-toolbar/)
+  assert.doesNotMatch(html, /class="house-link"|<aside|landing-enter-link|\/experience\//)
 })
 
 test('renders the second page with six NPCs and a character-add control', async () => {
