@@ -4,7 +4,7 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 
 import { MainLanding } from '../components/site/MainLanding.mjs'
-import { FigmaHomeSidebarContent } from '../components/site/FigmaHomeSidebarContent.mjs'
+import { FigmaHomeSidebarContent, MapIntroCard } from '../components/site/FigmaHomeSidebarContent.mjs'
 import { HouseMapCard } from '../components/site/HouseMapCard.mjs'
 
 test('the main page renders the Figma sidebar as native UI instead of a flattened image', () => {
@@ -27,8 +27,10 @@ test('the main page renders the Figma sidebar as native UI instead of a flattene
   // What the side panel holds is still built, and tested here on its own.
   const sidebar = renderToStaticMarkup(createElement(FigmaHomeSidebarContent))
   assert.match(sidebar, /class="figma-home-sidebar-content"/)
-  assert.match(html, /class="figma-sidebar-card figma-sidebar-intro"/)
-  assert.match(html, /Rather than the moment of radiant bloom/)
+  // The intro card is no longer on the page itself (the info button opens the guide); it is still built.
+  const intro = renderToStaticMarkup(createElement(MapIntroCard))
+  assert.match(intro, /class="figma-sidebar-card figma-sidebar-intro"/)
+  assert.match(intro, /Rather than the moment of radiant bloom/)
   assert.match(sidebar, /class="figma-sidebar-card figma-sidebar-activity"/)
   assert.match(sidebar, /class="figma-sidebar-status-chip figma-sidebar-time"/)
   assert.match(sidebar, /class="figma-sidebar-status-chip figma-sidebar-active"/)
@@ -75,7 +77,7 @@ test('the main page renders the Figma sidebar as native UI instead of a flattene
 })
 
 test('each intro tag exposes its label through a keyboard-accessible tooltip', () => {
-  const html = renderToStaticMarkup(createElement(MainLanding))
+  const html = renderToStaticMarkup(createElement(MapIntroCard))
 
   assert.equal((html.match(/class="figma-sidebar-tag"/g) ?? []).length, 3)
   assert.equal((html.match(/role="tooltip"/g) ?? []).length, 3)
@@ -125,4 +127,13 @@ test('the simplified map renders four houses, synchronized routes, selection rin
   assert.match(html, /data-map-pan-enabled="false"/)
   assert.match(html, /class="figma-house-map-canvas"/)
   assert.match(html, /<strong[^>]*>1%<\/strong>/)
+})
+
+test('the info button asks for the guide that lies over the stage, and the guide starts closed', () => {
+  const html = renderToStaticMarkup(createElement(MainLanding))
+
+  assert.match(html, /aria-label="정보와 범례"/)
+  // the guide itself is only drawn once it is opened
+  assert.doesNotMatch(html, /class="guide"/)
+  assert.doesNotMatch(html, /map-gis-info/)
 })

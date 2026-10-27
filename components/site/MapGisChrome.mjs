@@ -2,8 +2,6 @@
 
 import { createElement, useEffect, useRef, useState } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
-import { PageNavigation } from './PageNavigation.mjs'
-import { MapIntroCard } from './FigmaHomeSidebarContent.mjs'
 import { MapLassoLayer, LASSO_DEFAULT_LEVEL, lassoPaletteAt } from './MapLassoLayer.mjs'
 
 function Icon({ children, label }) {
@@ -175,12 +173,13 @@ export function MapGisChrome({ homeHref = '/' }) {
     if (drag.current && drag.current.pointer === event.pointerId) drag.current = null
   }
 
+  // The info button opens the guide that lies over the whole stage (StageGuide). It only asks for
+  // it; the guide says back whether it is open, so the button can show that it is pressed.
   useEffect(() => {
-    document.body.dataset.mapInfo = infoOpen ? 'open' : 'closed'
-    return () => {
-      delete document.body.dataset.mapInfo
-    }
-  }, [infoOpen])
+    const onState = (event) => setInfoOpen(Boolean(event.detail?.open))
+    window.addEventListener('stage:guide-state', onState)
+    return () => window.removeEventListener('stage:guide-state', onState)
+  }, [])
 
   return createElement(
     'div',
@@ -262,24 +261,12 @@ export function MapGisChrome({ homeHref = '/' }) {
               label: '정보와 범례',
               icon: 'info',
               pressed: infoOpen,
-              onClick: () => setInfoOpen((open) => !open),
+              onClick: () => window.dispatchEvent(new CustomEvent('stage:guide', { detail: { toggle: true } })),
             }),
             // the fourth place is kept empty, as in the supplied bar
             createElement('span', { className: 'map-gis-tool map-gis-tool--empty', 'aria-hidden': 'true' })
           )
     ),
-    createElement(MapLassoLayer, { active: lassoOn }),
-    createElement(
-      'section',
-      {
-        className: `map-gis-info${infoOpen ? ' is-open' : ''}`,
-        'aria-label': '정보와 범례',
-        hidden: !infoOpen,
-        // it opens beside the bar, wherever the bar has been moved to
-        style: place ? { left: `${place.x + 3.9}cqw`, top: `${place.y}cqw` } : undefined,
-      },
-      createElement(MapIntroCard),
-      createElement(PageNavigation, { current: 'map' })
-    )
+    createElement(MapLassoLayer, { active: lassoOn })
   )
 }

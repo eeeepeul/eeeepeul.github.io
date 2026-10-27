@@ -1709,3 +1709,227 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   top: 0.75cqw;
   left: 5.5cqw;
 }
+
+/* ---- the welcome card: the stage dimmed, a question in the middle (1 unit = 0.05cqw) --------- */
+.welcome {
+  --u: 0.05cqw;
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, 'Apple SD Gothic Neo', sans-serif;
+}
+
+/* Every measure below is read off the supplied card (1200 x 1114) and shown at 0.5183 of it, so
+   the card is 622 x 577 on the 2000 plan. */
+.welcome__card {
+  position: relative;
+  box-sizing: border-box;
+  width: calc(622 * var(--u));
+  height: calc(577 * var(--u));
+  margin: 0;
+  background: #f6f6f6;
+  color: #1c1c1c;
+  overflow: hidden;
+}
+
+/* its dark outline (2px of 1200) is drawn over everything, flush with the edge */
+.welcome__card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: max(1px, calc(1.04 * var(--u))) solid #1e1e1e;
+  pointer-events: none;
+}
+
+.welcome__head {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: calc(51 * var(--u));
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 0 0 calc(26.4 * var(--u));
+  display: flex;
+  align-items: center;
+  background: #cbcbcb;
+  border-bottom: max(1px, calc(1.04 * var(--u))) solid #a0a0a0;
+  font-size: calc(19.9 * var(--u));
+  font-weight: 700;
+  color: #444;
+  white-space: nowrap;
+}
+
+.welcome__picture {
+  position: absolute;
+  left: calc(21.8 * var(--u));
+  top: calc(72.6 * var(--u));
+  width: calc(578.4 * var(--u));
+  height: calc(362.8 * var(--u));
+  box-sizing: border-box;
+  background: #fff;
+  border: max(1px, calc(1.04 * var(--u))) solid #a0a0a0;
+  border-radius: calc(4 * var(--u));
+}
+
+.welcome__title {
+  position: absolute;
+  left: 7.5%;
+  top: 8%;
+  width: 85%;
+  height: 74%;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  animation: welcome-write 0.9s ease both;
+}
+
+@keyframes welcome-write {
+  from {
+    opacity: 0;
+    transform: translateY(calc(8 * var(--u))) rotate(-1.2deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* the supplied icon: 62 x 52 of 1200, 41 from the picture's right edge and 32 from its foot */
+.welcome__again {
+  position: absolute;
+  left: calc(547.3 * var(--u));
+  top: calc(392.4 * var(--u));
+  width: calc(32.1 * var(--u));
+  height: calc(27 * var(--u));
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.welcome__again img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+
+.welcome__label {
+  position: absolute;
+  left: calc(31.1 * var(--u));
+  top: calc(452 * var(--u));
+  height: calc(41.5 * var(--u));
+  display: flex;
+  align-items: center;
+  font-size: calc(19.1 * var(--u));
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.welcome__field {
+  position: absolute;
+  left: calc(143.1 * var(--u));
+  top: calc(452 * var(--u));
+  width: calc(457.2 * var(--u));
+  height: calc(41.5 * var(--u));
+  box-sizing: border-box;
+  padding: 0 calc(15 * var(--u));
+  background: #fff;
+  border: max(1px, calc(1.04 * var(--u))) solid #a0a0a0;
+  border-radius: calc(5 * var(--u));
+  font: inherit;
+  font-size: calc(19.4 * var(--u));
+  color: #1c1c1c;
+  outline: none;
+}
+
+.welcome__field::placeholder {
+  color: #777;
+}
+
+.welcome__field:focus {
+  border-color: #5f5f5f;
+}
+
+.welcome__enter {
+  position: absolute;
+  left: calc(21.8 * var(--u));
+  top: calc(510 * var(--u));
+  width: calc(578.4 * var(--u));
+  height: calc(45.6 * var(--u));
+  border: 0;
+  border-radius: calc(4 * var(--u));
+  background: #5f5f5f;
+  color: #fff;
+  font: inherit;
+  font-size: calc(19.4 * var(--u));
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.welcome__enter:hover,
+.welcome__enter:focus-visible {
+  background: #4a4a4a;
+  outline: 0;
+}
+
+/* ---- the guide: the stage dimmed, a note over each box (1 unit = 0.05cqw) ---------------------- */
+.guide {
+  --u: 0.05cqw;
+  position: absolute;
+  inset: 0;
+  z-index: 150;
+  background: rgba(0, 0, 0, 0.74);
+  cursor: pointer;
+  font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, 'Apple SD Gothic Neo', sans-serif;
+}
+
+.guide__note {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 0 calc(11 * var(--u)) 0 calc(8 * var(--u));
+  background: #4b4b4b;
+  border: max(1px, calc(1 * var(--u))) solid #d3d3d3;
+  color: #f0f0f0;
+  font-size: calc(16 * var(--u));
+  letter-spacing: -0.075em;
+}
+
+/* the white tab to the left of the frame's top corner */
+.guide__tab {
+  position: absolute;
+  left: calc(-16 * var(--u));
+  top: calc(-1 * var(--u));
+  width: calc(16 * var(--u));
+  height: calc(24 * var(--u));
+  background: #f6f6f6;
+}
+
+.guide__line {
+  display: flex;
+  align-items: center;
+  gap: calc(11 * var(--u));
+  height: calc(30 * var(--u));
+  margin: 0;
+  line-height: calc(20 * var(--u));
+  white-space: nowrap;
+}
+
+.guide__dots {
+  flex: 1;
+  height: calc(10 * var(--u));
+  background-image: radial-gradient(circle, #c8c8c8 0, #c8c8c8 calc(0.9 * var(--u)), transparent calc(1.1 * var(--u)));
+  background-size: calc(7 * var(--u)) 100%;
+  background-position: left center;
+  background-repeat: repeat-x;
+}
+
+.guide__text {
+  margin: calc(2 * var(--u)) 0 0;
+  line-height: calc(20 * var(--u));
+}
