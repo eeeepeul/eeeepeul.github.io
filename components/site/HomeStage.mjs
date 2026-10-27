@@ -8,6 +8,8 @@ import { StagePlayer } from './StagePlayer.mjs'
 import { StageRadar } from './StageRadar.mjs'
 import { StageScaleCell } from './StageScaleCell.mjs'
 import { StageFunctionGraph } from './StageFunctionGraph.mjs'
+import { StageGuide } from './StageGuide.mjs'
+import { StageWelcome } from './StageWelcome.mjs'
 import { StageSpectrum } from './StageSpectrum.mjs'
 import { StageVisitors } from './StageVisitors.mjs'
 import { StageVolume } from './StageVolume.mjs'
@@ -317,7 +319,9 @@ export function HomeStage() {
           },
           createElement('span', { className: 'stage-cell__number', 'aria-hidden': 'true' }, number)
         )
-      })
+      }),
+      createElement(StageGuide),
+      createElement(StageWelcome)
     )
   )
 }
