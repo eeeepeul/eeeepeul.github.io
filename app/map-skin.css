@@ -767,6 +767,18 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   transition: transform 0.25s ease;
 }
 
+/* the picture keeps its own proportions: it fills the cell and is trimmed at the edges, never stretched */
+.scale-cell__picture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+  display: block;
+  user-select: none;
+}
+
 .scale-cell__bar {
   position: absolute;
   left: 1.5%;
@@ -795,16 +807,16 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   bottom: 3.2%;
   display: flex;
   align-items: stretch;
-  gap: 0.1cqw;
-  padding: 0.12cqw;
+  gap: 0.07cqw;
+  padding: 0.08cqw;
   background: #a2a2a1;
 }
 
 .scale-cell__step {
   display: grid;
   place-items: center;
-  width: 1.45cqw;
-  height: 1.3cqw;
+  width: 0.95cqw;
+  height: 0.85cqw;
   padding: 0;
   background: #b6b6b5;
   border: 0;
@@ -820,8 +832,8 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .scale-cell__plus {
   position: relative;
   display: block;
-  width: 0.75cqw;
-  height: 0.75cqw;
+  width: 0.5cqw;
+  height: 0.5cqw;
 }
 
 .scale-cell__minus::before,
@@ -835,23 +847,24 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .scale-cell__minus::before,
 .scale-cell__plus::before {
   left: 0;
-  top: calc(50% - 0.07cqw);
+  top: calc(50% - 0.05cqw);
   width: 100%;
-  height: 0.14cqw;
+  height: 0.1cqw;
 }
 
 .scale-cell__plus::after {
   top: 0;
-  left: calc(50% - 0.07cqw);
-  width: 0.14cqw;
+  left: calc(50% - 0.05cqw);
+  width: 0.1cqw;
   height: 100%;
 }
 
 .scale-cell__percent {
   display: grid;
   place-items: center;
-  min-width: 3cqw;
+  min-width: 2cqw;
   color: #fff;
+  font-size: 0.58cqw;
   font-variant-numeric: tabular-nums;
 }
 
