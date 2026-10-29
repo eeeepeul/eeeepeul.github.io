@@ -10,7 +10,7 @@ test('renders the map page as a stage of numbered cells with the map in cell 4',
 
   const html = renderToStaticMarkup(createElement(landingModule.MainLanding))
   assert.match(html, /<main class="stage-shell">/)
-  for (let cell = 1; cell <= 13; cell += 1) {
+  for (let cell = 1; cell <= 18; cell += 1) {
     assert.match(html, new RegExp(`data-stage-cell="${cell}"`))
   }
   // The map (and its tools) live in cell 4 alone.
