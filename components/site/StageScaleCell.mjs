@@ -2,6 +2,7 @@
 
 import { createElement, useEffect, useRef, useState } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
+import { StageHeat } from './StageHeat.mjs'
 
 // Cell 2: a High-to-Low scale down the left edge, the picture of the cell (an aerial view, 1610 x 977,
 // laid in the space to fill the cell without being stretched), and a zoom control at the foot. The control sets the scale of that space (a CSS
@@ -84,7 +85,9 @@ export function StageScaleCell() {
         src: assetPath('media/cell-2-aerial.webp'),
         alt: '',
         draggable: false,
-      })
+      }),
+      // the heat over the houses, in the same box as the picture so that it zooms with it
+      createElement(StageHeat)
     ),
     createElement('span', { className: 'scale-cell__bar', 'aria-hidden': 'true' }),
     createElement('span', { className: 'scale-cell__label scale-cell__label--high' }, 'High'),

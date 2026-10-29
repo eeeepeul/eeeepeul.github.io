@@ -767,6 +767,19 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   transition: transform 0.25s ease;
 }
 
+/* the heat over the houses fits the cell exactly as the picture does, so it stays on the houses */
+.scale-cell__heat {
+  position: absolute;
+  inset: 0;
+  opacity: 0.7; /* the heat at 70% of its full strength */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+  display: block;
+  pointer-events: none;
+}
+
 /* the picture keeps its own proportions: it fills the cell and is trimmed at the edges, never stretched */
 .scale-cell__picture {
   position: absolute;
@@ -2133,5 +2146,18 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   height: 100%;
   object-fit: fill;
   display: block;
+  user-select: none;
+}
+
+/* the gel picture in the upper right of cell 9, where it stands in the supplied picture of the cell
+   (from the cell's left: 58.8%, from its top: 0.4%, 40.9% of its width wide) */
+.clip-gel {
+  position: absolute;
+  left: 58.8%;
+  top: 0.4%;
+  width: 40.9%;
+  height: auto;
+  display: block;
+  pointer-events: none;
   user-select: none;
 }

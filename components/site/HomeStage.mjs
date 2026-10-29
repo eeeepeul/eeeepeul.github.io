@@ -24,8 +24,8 @@ import { StageVolume } from './StageVolume.mjs'
 export const STAGE_WIDTH = 2000
 export const STAGE_HEIGHT = 1126
 
-// The welcome card that opens on arrival is switched off for now; set this to true to bring it back.
-const SHOW_WELCOME = false
+// The welcome card that opens on arrival; set this to false to switch it off.
+const SHOW_WELCOME = true
 
 // [number, left, top, right, bottom] on the plan.
 export const STAGE_CELLS = [
@@ -263,6 +263,14 @@ export function HomeStage() {
               'aria-hidden': 'true',
               tabIndex: -1,
               disablePictureInPicture: true,
+            }),
+            // the small picture of gel bands in the upper right corner of the clip (191 x 56)
+            createElement('img', {
+              className: 'clip-gel',
+              src: assetPath('media/gel-9.png'),
+              alt: '',
+              draggable: false,
+              'aria-hidden': 'true',
             })
           )
         }
