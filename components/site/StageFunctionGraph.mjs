@@ -2,45 +2,18 @@
 
 import { createElement as h, useEffect, useRef } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
-import { ARROWS, FIELD_ASPECT, FIELD_ORIGIN } from '../../lib/arrow-field.mjs'
+import { ARROW_GRID } from '../../lib/arrow-grid.mjs'
 
-// Cell 10: the supplied field picture (a grid of curves with an arrow at each of many points),
-// with a score of its arrows alive, filling the cell edge to edge. The picture's own arrows are
-// rubbed out of public/panels/arrows-grid.webp and drawn again here, solid and thin, at the place
-// and in the direction they had. Each arrow appears all at once where it was, travels outward
-// along its own line, and is cut off by the cell's outer edge as if the cell were a mask; when it
-// is gone it appears again. The starts are staggered by how far the arrow is from O, so the
-// motion leaves O in rings.
-const COUNT = 20
-const SPEED = 0.17 // cell widths per second
-const RIPPLE = 2.2 // seconds between the arrows nearest to O and the farthest, at the start
-const PAUSE = 0.35 // seconds an arrow stays gone before it appears again
-
-// the arrows kept: spread over the picture, taking the longest first and then always the one
-// farthest from those already taken
-function spread(list, count) {
-  const middle = ([x1, y1, x2, y2]) => [(x1 + x2) / 2, (y1 + y2) / 2]
-  const length = ([x1, y1, x2, y2]) => Math.hypot((x2 - x1) * FIELD_ASPECT, y2 - y1)
-  const rest = [...list].sort((a, b) => length(b) - length(a))
-  const taken = [rest.shift()]
-  while (taken.length < count && rest.length) {
-    let best = 0
-    let bestGap = -1
-    rest.forEach((arrow, index) => {
-      const [mx, my] = middle(arrow)
-      const gap = Math.min(...taken.map((other) => {
-        const [ox, oy] = middle(other)
-        return Math.hypot((mx - ox) * FIELD_ASPECT, my - oy)
-      }))
-      if (gap > bestGap) {
-        bestGap = gap
-        best = index
-      }
-    })
-    taken.push(rest.splice(best, 1)[0])
-  }
-  return taken
-}
+// Cell 10: the supplied field picture (a grid of curves) with its own arrows rubbed out of
+// public/panels/arrows-grid.webp, filling the cell edge to edge. Over it a field of arrows is drawn
+// as in the supplied vector-field picture: the same number of arrows (lib/arrow-grid.mjs), set at
+// the same places across the cell, each as long as it is there. Every arrow turns to point at the
+// pointer wherever it is on the screen, easing round (and the long way never, always the short
+// way) so the whole field swings together with the mouse. While there is no pointer to follow the
+// arrows rest in the directions they have in the supplied picture.
+const SIZE = 0.55 // the arrows are drawn at this share of the length they have in the supplied picture
+const EASE = 0.14 // seconds an arrow takes to cover most of a turn
+const RESTING = 6 // seconds without the pointer moving before the arrows settle back
 
 export function StageFunctionGraph() {
   const rootRef = useRef(null)
@@ -55,65 +28,63 @@ export function StageFunctionGraph() {
     let frame = 0
     let width = 0
     let height = 0
+    let last = performance.now()
+    let pointer = null // where the pointer is, in the cell's own pixels
+    let movedAt = -1e9
+    const turned = ARROW_GRID.map(([, , angle]) => angle)
 
     const fit = () => {
       const box = root.getBoundingClientRect()
-      const dpr = Math.min(2, window.devicePixelRatio || 1)
+      const ratio = Math.min(3, (window.devicePixelRatio || 1) * 2)
       width = box.width
       height = box.height
-      canvas.width = Math.max(1, Math.round(width * dpr))
-      canvas.height = Math.max(1, Math.round(height * dpr))
+      canvas.width = Math.max(1, Math.round(width * ratio))
+      canvas.height = Math.max(1, Math.round(height * ratio))
     }
     const observer = new ResizeObserver(fit)
     observer.observe(root)
     fit()
 
-    // each arrow: where it starts, its length and direction as fractions of the cell, and when its
-    // first appearance falls
-    const [ox, oy] = FIELD_ORIGIN
-    const kept = spread(ARROWS, COUNT)
-    const reach = Math.max(...kept.map(([x1, y1]) => Math.hypot((x1 - ox) * FIELD_ASPECT, y1 - oy)))
-    const arrows = kept.map(([x1, y1, x2, y2]) => ({
-      x1,
-      y1,
-      dx: x2 - x1,
-      dy: y2 - y1,
-      delay: (Math.hypot((x1 - ox) * FIELD_ASPECT, y1 - oy) / reach) * RIPPLE,
-    }))
+    const onMove = (event) => {
+      const box = root.getBoundingClientRect()
+      pointer = { x: event.clientX - box.left, y: event.clientY - box.top }
+      movedAt = performance.now()
+    }
+    const onLeave = () => {
+      movedAt = -1e9
+    }
+    window.addEventListener('pointermove', onMove, { passive: true })
+    document.documentElement.addEventListener('pointerleave', onLeave)
 
     const draw = (now) => {
-      const time = reduced ? 1.2 : now / 1000
-      const dpr = canvas.width / Math.max(1, width)
-      context.setTransform(dpr, 0, 0, dpr, 0, 0)
+      const dt = Math.min(0.1, (now - last) / 1000)
+      last = now
+      const follow = pointer && now - movedAt < RESTING * 1000 && !reduced
+      const ratio = canvas.width / Math.max(1, width)
+      context.setTransform(ratio, 0, 0, ratio, 0, 0)
       context.clearRect(0, 0, width, height)
       context.lineCap = 'round'
       context.fillStyle = '#0d0d0d'
       context.strokeStyle = '#0d0d0d'
-      const line = Math.max(0.5, width * 0.0032)
-      const headSize = Math.max(2.2, width * 0.02)
-      const speed = SPEED * width
-      for (const arrow of arrows) {
-        const startX = arrow.x1 * width
-        const startY = arrow.y1 * height
-        const vx = arrow.dx * width
-        const vy = arrow.dy * height
-        const length = Math.hypot(vx, vy)
-        if (length < 1) continue
-        const ux = vx / length
-        const uy = vy / length
-        // how far it must go before its tail has left the cell, and so how long one round takes
-        const toX = ux > 0 ? (width - startX) / ux : ux < 0 ? -startX / ux : Infinity
-        const toY = uy > 0 ? (height - startY) / uy : uy < 0 ? -startY / uy : Infinity
-        const way = Math.min(toX, toY) + 1
-        const round = way / speed + PAUSE
-        const clock = (((time - arrow.delay) % round) + round) % round
-        const travelled = clock * speed
-        if (travelled > way) continue
-        const tailX = startX + ux * travelled
-        const tailY = startY + uy * travelled
-        const headX = tailX + vx
-        const headY = tailY + vy
-        const size = Math.min(headSize, length * 0.45)
+      const line = Math.max(0.4, height * 0.0034)
+      const k = 1 - Math.exp(-dt / EASE)
+      ARROW_GRID.forEach(([fx, fy, rest, fl], index) => {
+        const cx = fx * width
+        const cy = fy * height
+        const target = follow ? Math.atan2(pointer.y - cy, pointer.x - cx) : rest
+        let turn = target - turned[index]
+        while (turn > Math.PI) turn -= Math.PI * 2
+        while (turn < -Math.PI) turn += Math.PI * 2
+        turned[index] += turn * k
+        const angle = turned[index]
+        const length = fl * height * SIZE
+        const ux = Math.cos(angle)
+        const uy = Math.sin(angle)
+        const tailX = cx - (ux * length) / 2
+        const tailY = cy - (uy * length) / 2
+        const headX = cx + (ux * length) / 2
+        const headY = cy + (uy * length) / 2
+        const size = Math.max(1.4, length * 0.26)
         context.lineWidth = line
         context.beginPath()
         context.moveTo(tailX, tailY)
@@ -125,7 +96,7 @@ export function StageFunctionGraph() {
         context.lineTo(headX - ux * size + uy * size * 0.45, headY - uy * size - ux * size * 0.45)
         context.closePath()
         context.fill()
-      }
+      })
       if (!reduced) frame = window.requestAnimationFrame(draw)
     }
     frame = window.requestAnimationFrame(draw)
@@ -133,6 +104,8 @@ export function StageFunctionGraph() {
     return () => {
       window.cancelAnimationFrame(frame)
       observer.disconnect()
+      window.removeEventListener('pointermove', onMove)
+      document.documentElement.removeEventListener('pointerleave', onLeave)
     }
   }, [])
 
@@ -140,6 +113,6 @@ export function StageFunctionGraph() {
     'div',
     { ref: rootRef, className: 'fgraph-root' },
     h('img', { className: 'fgraph-img', src: assetPath('panels/arrows-grid.webp'), alt: '', draggable: false }),
-    h('canvas', { ref: canvasRef, className: 'fgraph-canvas', role: 'img', 'aria-label': 'O에서 퍼져 나가는 화살표가 계속 움직이는 그래프' })
+    h('canvas', { ref: canvasRef, className: 'fgraph-canvas', role: 'img', 'aria-label': '마우스를 가리키는 화살표들' })
   )
 }

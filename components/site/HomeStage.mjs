@@ -7,8 +7,11 @@ import { StageEventLog } from './StageEventLog.mjs'
 import { StagePlayer } from './StagePlayer.mjs'
 import { StageRadar } from './StageRadar.mjs'
 import { StageScaleCell } from './StageScaleCell.mjs'
+import { StageSequence } from './StageSequence.mjs'
 import { StageFunctionGraph } from './StageFunctionGraph.mjs'
+import { StageDomino } from './StageDomino.mjs'
 import { StageGuide } from './StageGuide.mjs'
+import { StagePanel15 } from './StagePanel15.mjs'
 import { StageWelcome } from './StageWelcome.mjs'
 import { StageSpectrum } from './StageSpectrum.mjs'
 import { StageVisitors } from './StageVisitors.mjs'
@@ -21,6 +24,9 @@ import { StageVolume } from './StageVolume.mjs'
 export const STAGE_WIDTH = 2000
 export const STAGE_HEIGHT = 1126
 
+// The welcome card that opens on arrival is switched off for now; set this to true to bring it back.
+const SHOW_WELCOME = false
+
 // [number, left, top, right, bottom] on the plan.
 export const STAGE_CELLS = [
   [1, 12, 14, 412, 418],
@@ -31,11 +37,20 @@ export const STAGE_CELLS = [
   [6, 1592, 188, 1988, 528],
   [7, 1592, 540, 1988, 704],
   [8, 1592, 704, 1988, 806],
-  [9, 426, 806, 718, 992],
-  [10, 718, 806, 1010, 992],
-  [11, 1036, 806, 1988, 992],
-  [12, 12, 1004, 308, 1112],
-  [13, 318, 1004, 1988, 1112],
+  [9, 424, 813, 706, 992],
+  [10, 706, 813, 988, 992],
+  [11, 1286, 805, 1972, 941],
+  [12, 12, 1004, 309, 1113],
+  [13, 309, 1003, 1972, 1113],
+  // the new boxes of the lower band: 14 a strip of small squares, 15 a picture in three parts, 16 the
+  // dominoes, 17 the lines of letters, 18 a plain bar
+  // (14: the supplied strip on white, its tiles running from 735 to 988 across, laid on the page's own
+  // colour; the picture is cut to a hair outside its tiles, so the box is 254 x 16)
+  [14, 734.5, 795.7, 988.5, 811.8],
+  [15, 1038, 805, 1286, 1003],
+  [16, 1286, 941, 1972, 977],
+  [17, 1286, 977, 1972, 1003],
+  [18, 1972, 806, 1988, 1113],
 ]
 
 // The place the panel reads out (to be tied to the map's own view later).
@@ -119,8 +134,86 @@ export function HomeStage() {
               'aria-label': '칸 10, 움직이는 함수 그래프',
               style: getCellStyle(cell),
             },
-            createElement(StageFunctionGraph)
+            createElement(StageFunctionGraph),
+            // the small map set in the lower right corner of the picture, with its black frame
+            createElement('img', {
+              className: 'map-inset',
+              src: assetPath('media/map-inset-thin.png'),
+              alt: '',
+              draggable: false,
+              'aria-hidden': 'true',
+            })
           )
+        }
+        if (number === 14) {
+          // the strip of small squares above the picture of cell 10
+          return createElement(
+            'section',
+            {
+              key: number,
+              className: 'stage-cell stage-cell--strip14',
+              'data-stage-cell': number,
+              'aria-label': '칸 14, 띠',
+              style: getCellStyle(cell),
+            },
+            createElement('img', {
+              className: 'stage-cell__picture',
+              src: assetPath('media/strip-14-grey.png'),
+              alt: '',
+              draggable: false,
+            })
+          )
+        }
+        if (number === 15) {
+          // the supplied picture of three parts (15-1, 15-2, 15-3)
+          return createElement(
+            'section',
+            {
+              key: number,
+              className: 'stage-cell stage-cell--panel15',
+              'data-stage-cell': number,
+              'aria-label': '칸 15',
+              style: getCellStyle(cell),
+            },
+            createElement(StagePanel15)
+          )
+        }
+        if (number === 16) {
+          // seventeen tiles whose movement goes along the row like dominoes
+          return createElement(
+            'section',
+            {
+              key: number,
+              className: 'stage-cell stage-cell--domino',
+              'data-stage-cell': number,
+              'aria-label': '칸 16, 도미노',
+              style: getCellStyle(cell),
+            },
+            createElement(StageDomino)
+          )
+        }
+        if (number === 17) {
+          return createElement(
+            'section',
+            {
+              key: number,
+              className: 'stage-cell stage-cell--sequence',
+              'data-stage-cell': number,
+              'aria-label': '칸 17, 서열',
+              style: getCellStyle(cell),
+            },
+            createElement(StageSequence)
+          )
+        }
+        if (number === 18) {
+          // the plain dark bar down the right edge of the lower band
+          return createElement('section', {
+            key: number,
+            className: 'stage-cell stage-cell--solid',
+            'data-stage-cell': number,
+            'aria-hidden': 'true',
+            style: getCellStyle(cell),
+          })
         }
         if (number === 13) {
           return createElement(
@@ -262,6 +355,16 @@ export function HomeStage() {
               src: assetPath('panels/flow-chart.html'),
               title: 'Flow chart',
               loading: 'eager',
+            }),
+            // the line of letters over the top left of the chart (picture and chart share one size,
+            // 1324 x 264, so the letters sit at their own fractions of the box)
+            createElement('span', { className: 'chart-rule', 'aria-hidden': 'true' }),
+            createElement('img', {
+              className: 'chart-text',
+              src: assetPath('media/chart-text.png'),
+              alt: '',
+              draggable: false,
+              'aria-hidden': 'true',
             })
           )
         }
@@ -321,7 +424,7 @@ export function HomeStage() {
         )
       }),
       createElement(StageGuide),
-      createElement(StageWelcome)
+      SHOW_WELCOME ? createElement(StageWelcome) : null
     )
   )
 }

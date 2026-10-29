@@ -621,13 +621,34 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   overflow: hidden;
 }
 
-/* a 1px line in #cbcbcb round every box, drawn over its contents so nothing covers it */
-.stage-cell::after {
+/* The edges of the boxes, as in the supplied picture (read off it, pixel by pixel): no outline is
+   drawn round the boxes. Where a box is dark (the house view, the radar, the table's header) a
+   one-pixel lighter edge shows round its inside, which is a stroke of white at 37% laid over its
+   own edge; on the pale boxes it is hardly seen, and on the white between boxes not at all. The
+   map has a plain 1px grey line (#a0a0a0). The boxes of the lower band (9 to 18) have no edge:
+   they stand against each other, their pictures filling them completely. */
+.stage-cell:is(
+    [data-stage-cell='1'],
+    [data-stage-cell='2'],
+    [data-stage-cell='3'],
+    [data-stage-cell='5'],
+    [data-stage-cell='6'],
+    [data-stage-cell='7'],
+    [data-stage-cell='8']
+  )::after {
   content: '';
   position: absolute;
   inset: 0;
-  border: 1px solid #cbcbcb;
-  box-sizing: border-box;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.37);
+  pointer-events: none;
+  z-index: 50;
+}
+
+.stage-cell[data-stage-cell='4']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 1px #a0a0a0;
   pointer-events: none;
   z-index: 50;
 }
@@ -636,7 +657,6 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   display: grid;
   place-items: center;
   background: #bdbdbb;
-  border: 1px dashed rgba(0, 0, 0, 0.35);
 }
 
 .stage-cell__number {
@@ -838,7 +858,6 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 /* Cell 11: the flow chart, edge to edge, in a hairline. */
 .stage-cell--chart {
   background: #f1f1ef;
-  border: 1px solid rgba(0, 0, 0, 0.28);
 }
 
 .stage-cell--chart .stage-cell__frame {
@@ -863,10 +882,6 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   object-fit: fill;
   pointer-events: none;
   user-select: none;
-}
-
-.stage-cell--model {
-  border: 1px solid #7a7a7a;
 }
 
 /* Cell 8: the click log. Measured from the supplied table (760 wide, rows 28 high): a pale
@@ -1932,4 +1947,178 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .guide__text {
   margin: calc(2 * var(--u)) 0 0;
   line-height: calc(20 * var(--u));
+}
+
+
+/* cell 18: a plain bar of #494949 down the right edge of the lower band */
+.stage-cell--solid {
+  background: #494949;
+}
+
+
+/* ---- cell 17: two lines of an alignment whose letters keep changing (1 unit = 0.05cqw) -------- */
+.stage-cell--sequence {
+  background: #ffffff;
+}
+
+.sequence {
+  --u: 0.05cqw;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: 'Courier New', Courier, 'Nimbus Mono PS', monospace;
+  font-size: calc(11 * var(--u));
+  line-height: calc(11.7 * var(--u));
+  color: #111;
+  user-select: none;
+}
+
+.sequence__row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: calc(11.7 * var(--u));
+  white-space: nowrap;
+}
+
+.sequence__row:nth-child(1) {
+  top: calc(0.6 * var(--u));
+}
+
+.sequence__row:nth-child(2) {
+  top: calc(12.3 * var(--u));
+}
+
+.sequence__name {
+  position: absolute;
+  left: calc(12 * var(--u));
+}
+
+.sequence__start {
+  position: absolute;
+  left: calc(52 * var(--u));
+  width: calc(40 * var(--u));
+  text-align: right;
+  letter-spacing: 0.2em;
+}
+
+.sequence__places {
+  position: absolute;
+  left: calc(100 * var(--u));
+  display: flex;
+}
+
+.sequence__place {
+  flex: none;
+  width: calc(6.6 * var(--u));
+  text-align: center;
+}
+
+/* a place where the two lines agree: a fine dotted shading behind the letter */
+.sequence__place.is-alike {
+  background-image: radial-gradient(circle, #5d5d5d 0, #5d5d5d calc(0.4 * var(--u)), transparent calc(0.52 * var(--u)));
+  background-size: calc(1.8 * var(--u)) calc(1.8 * var(--u));
+}
+
+/* the end number stands at the right edge of the box */
+.sequence__end {
+  position: absolute;
+  right: calc(9 * var(--u));
+  text-align: right;
+  letter-spacing: 0.2em;
+}
+
+/* cell 16: seventeen tiles, each running the same frames a little after the one before it */
+.stage-cell--domino {
+  background: #3f4f52;
+}
+
+.domino {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* the whole box a little brighter than the frames are, and a little less colourful */
+  filter: brightness(1.4) saturate(0.75);
+}
+
+/* cell 15: one picture in three parts, 15-1 (left), 15-2 (top right), 15-3 (bottom right) */
+.stage-cell--panel15 {
+  background: #000000;
+}
+
+.panel15 {
+  position: absolute;
+  inset: 0;
+}
+
+.panel15__part {
+  position: absolute;
+  background-repeat: no-repeat;
+}
+
+/* the moving arrows of 15-2 and 15-3, drawn over the whole picture */
+.panel15__arrows {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* cell 11: the line of letters (picture 542 x 42, its last two letters, MO, taken off) and the dark
+   rule across the top of the box (266 long and 3.1 thick on the 2000 plan, as in the supplied
+   picture, a little longer than the letters), over the chart's top left; the box is the size of the 1324 x 264 picture they were placed on */
+.chart-rule {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 38.78%;
+  height: 2.28%;
+  background: #2b2b2b;
+  pointer-events: none;
+}
+
+.chart-text {
+  position: absolute;
+  left: 0.3%;
+  top: 0.6%;
+  width: 40.94%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* cell 14: a strip of small squares, shown to the shape of its box (253 x 21) */
+.stage-cell--strip14 {
+  background: #f6f6f6;
+}
+
+/* the small map in the lower right corner of cell 10 (positions read off the supplied picture:
+   2.4% from the right, 4.4% from the foot, 16.4% wide and 28% high; its frame is black and about
+   one screen pixel; the picture's own thick black frame is cut off, so this line is the only one) */
+.map-inset {
+  position: absolute;
+  right: 2.4%;
+  bottom: 4.4%;
+  width: 16.4%;
+  height: 28%;
+  box-sizing: border-box;
+  border: 1px solid #000000;
+  background: #ffffff;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* a picture that fills its box exactly (cell 14's strip) */
+.stage-cell__picture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: block;
+  user-select: none;
 }
