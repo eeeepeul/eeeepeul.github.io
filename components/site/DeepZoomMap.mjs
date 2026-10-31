@@ -40,6 +40,10 @@ const MIN_SPIN_SPEED = 0.002
 const MAX_SPIN_SPEED = 0.16
 // A drag that paused this long before release does not coast.
 const SPIN_IDLE_MS = 90
+// Changes with every new set of the map's pictures: browsers keep pictures for minutes, and an old
+// copy of one picture next to the new others (e.g. frames without the land channel) breaks the look.
+const PICTURES = 'v=3'
+const withVersion = (url) => `${url}?${PICTURES}`
 // This close below the hand-over the clip is already sought to its frame, so it is ready.
 const PRESEEK_Z = 0.45
 // Edge of the houses picture faded into the clip's last frame under it (picture pixels).
@@ -573,7 +577,7 @@ export function DeepZoomMap() {
       image.onload = () => {
         if (!cancelled) onLoad(image)
       }
-      image.src = assetPath(src.slice(1))
+      image.src = withVersion(assetPath(src.slice(1)))
     }
     loadImage(ZOOM_PATH.houses.lastFrame, (image) => {
       lastFrame = image
@@ -637,13 +641,13 @@ export function DeepZoomMap() {
           assetPath(GLOBE.texture.slice(1)),
           assetPath(GLOBE.milkyWay.texture.slice(1)),
           ZOOM_PATH.details.map(([frame, scale, x, y]) => ({
-            url: assetPath(ZOOM_PATH.detailSrc(frame).slice(1)),
+            url: withVersion(assetPath(ZOOM_PATH.detailSrc(frame).slice(1))),
             scale,
             x,
             y,
           })),
-          assetPath(GLOBE.landTexture.slice(1)),
-          assetPath(ZOOM_PATH.clipLand.slice(1))
+          withVersion(assetPath(GLOBE.landTexture.slice(1))),
+          withVersion(assetPath(ZOOM_PATH.clipLand.slice(1)))
         )
       )
       .then((created) => {
