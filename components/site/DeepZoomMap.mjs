@@ -51,6 +51,8 @@ const ASLANT_HOLD = 0.4
 // clip then keeps.
 const LINES_FROM = 1.8
 // zoom for an amount of wheel turned, with the rest on the aslant view
+// where the page opens: in the middle of the rest on the aslant view
+const START_TURN = ZOOM_ASLANT + ASLANT_HOLD / 2
 const zoomForTurn = (turn) =>
   turn < ZOOM_ASLANT ? turn : turn < ZOOM_ASLANT + ASLANT_HOLD ? ZOOM_ASLANT : turn - ASLANT_HOLD
 
@@ -272,9 +274,9 @@ export function DeepZoomMap() {
     // The toolbar's satellite button and the layer list's checkboxes.
     let satelliteEnabled = true
     // How far in the view is (see ZOOM_PATH), and where the wheel is taking it.
-    let zoom = 0
+    let zoom = ZOOM_ASLANT
     // how much the wheel has been turned (zoomForTurn makes it a zoom)
-    let turnTarget = 0
+    let turnTarget = START_TURN
     // Where the planet has been dragged to; the zoom turns it home from here.
     let yaw = HOME_ROTATION.yaw
     let pitch = HOME_ROTATION.pitch
@@ -600,7 +602,7 @@ export function DeepZoomMap() {
       pitch = HOME_ROTATION.pitch
       spinYaw = 0
       spinPitch = 0
-      turnTarget = 0
+      turnTarget = START_TURN
       requestFrame()
     }
     const handleSatellite = (event) => {
