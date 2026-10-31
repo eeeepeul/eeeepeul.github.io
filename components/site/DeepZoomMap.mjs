@@ -16,6 +16,7 @@ import {
   clampLatitude,
   easeInOut,
   getClipFrame,
+  getClipZoom,
   getDragDegreesPerPixel,
   getHotspotCenter,
   getHousesView,
@@ -46,7 +47,12 @@ const HOUSES_FEATHER = 28
 // The wheel rests a little on the aslant view (the site's main view): this much turning of the wheel
 // (in z) passes over it without moving.
 const ASLANT_HOLD = 0.4
+// Over these zooms the textured planet brings in the map's fine lines (roads, rivers), which the
+// clip then keeps.
+const LINES_FROM = 1.8
 // zoom for an amount of wheel turned, with the rest on the aslant view
+// where the page opens: in the middle of the rest on the aslant view
+const START_TURN = ZOOM_ASLANT + ASLANT_HOLD / 2
 const zoomForTurn = (turn) =>
   turn < ZOOM_ASLANT ? turn : turn < ZOOM_ASLANT + ASLANT_HOLD ? ZOOM_ASLANT : turn - ASLANT_HOLD
 
@@ -75,7 +81,9 @@ function getPlanetView(z, yaw, pitch) {
     offsetY: turn.y * aslant,
     // the space round the planet is the dark night sky all the way, from the first view on
     space: 1,
-    flat: aslant,
+    lines: easeInOut(clamp01((z - LINES_FROM) / (ZOOM_HAND - LINES_FROM))),
+    // the main land flattened (its far side keeps more of the planet's own tilt, see globe-scene)
+    flat: aslant * turn.flat,
   }
 }
 
@@ -155,11 +163,12 @@ function setFrameGeometry(node, state) {
 // Paused videos are not repainted reliably after a seek in every browser, so the
 // visible frame is a canvas that copies whatever frame the hidden video lands on.
 // Returns the number of the frame that was drawn, read back from the blocks the clip
-// carries in its bottom rows (-1 when they cannot be read).
+// carries in its bottom rows (from the video's time when they cannot be read), or null when
+// nothing was drawn (the canvas still holds the frame it had).
 function drawFrame(canvasNode, videoNode) {
-  if (!canvasNode || !videoNode || videoNode.readyState < 2) return -1
+  if (!canvasNode || !videoNode || videoNode.readyState < 2) return null
   const context = canvasNode.getContext('2d', { willReadFrequently: true })
-  if (!context) return -1
+  if (!context) return null
   context.drawImage(videoNode, 0, 0, canvasNode.width, canvasNode.height)
   try {
     const { bits, blockWidth, row } = VIDEO_FRAME_CODE
@@ -172,7 +181,7 @@ function drawFrame(canvasNode, videoNode) {
     }
     return frame
   } catch {
-    return -1
+    return Math.round(videoNode.currentTime * 24)
   }
 }
 
@@ -215,7 +224,9 @@ function applyCameraFrame(rootNode, nodes, progress, view = null) {
     nodes.legendNumbered.style.opacity = String(numbered)
     nodes.legendSymbols.style.opacity = String(1 - numbered)
   }
-  if (nodes.video && Math.abs(nodes.video.currentTime - state.time) > MIN_SEEK_SECONDS) {
+  // One seek at a time: asking again while the video is still seeking only makes it fall further
+  // behind (backwards most of all). The next one starts as this one lands (see handleSeeked).
+  if (nodes.video && !nodes.video.seeking && Math.abs(nodes.video.currentTime - state.time) > MIN_SEEK_SECONDS) {
     nodes.video.currentTime = state.time
   }
 
@@ -263,9 +274,9 @@ export function DeepZoomMap() {
     // The toolbar's satellite button and the layer list's checkboxes.
     let satelliteEnabled = true
     // How far in the view is (see ZOOM_PATH), and where the wheel is taking it.
-    let zoom = 0
+    let zoom = ZOOM_ASLANT
     // how much the wheel has been turned (zoomForTurn makes it a zoom)
-    let turnTarget = 0
+    let turnTarget = START_TURN
     // Where the planet has been dragged to; the zoom turns it home from here.
     let yaw = HOME_ROTATION.yaw
     let pitch = HOME_ROTATION.pitch
@@ -278,6 +289,8 @@ export function DeepZoomMap() {
     let lastFrame = null
     let houses = null
     let housesDrawn = false
+    // the clip's frame the frame canvas holds just now (read from the frame itself)
+    let shownFrame = -1
 
     const getFrameScale = () => {
       const width = globeCanvasNode.getBoundingClientRect().width
@@ -302,13 +315,15 @@ export function DeepZoomMap() {
     }
 
     // The planet (below the hand-over).
-    const showPlanet = () => {
-      const view = getPlanetView(zoom, yaw, pitch)
+    const showPlanet = (z = zoom) => {
+      const view = getPlanetView(z, yaw, pitch)
       globe.setScale(view.scale)
       globe.setRotation(view.yaw, view.pitch)
       globe.setFocus(view.longitude, view.latitude, view.focus, view.offsetX, view.offsetY)
       globe.setSpace(view.space)
       globe.setFlat(view.flat, ZOOM_PATH.landLongitude, ZOOM_PATH.landLatitude)
+      globe.setStyle(1)
+      globe.setLines(view.lines)
       globe.setLimbRatio(1)
       globe.setVideoPlanet(0)
       globe.setStarsAmount(0)
@@ -319,11 +334,43 @@ export function DeepZoomMap() {
     }
 
     // The clip, and past its last frame the houses picture, drawn as the same sheet.
-    const showClip = () => {
+    const showClip = (housesView) => {
       if (!globe) return
+      // where the view is on the ground, for the textured look
+      if (housesView) {
+        const [, s, x, y] = ZOOM_PATH.clipViews[ZOOM_PATH.clipViews.length - 1]
+        const k = housesView.k
+        globe.setClipView({
+          scale: s * k,
+          x: k * (housesView.x - ZOOM_VIDEO.width / 2 + x),
+          y: k * (ZOOM_VIDEO.height / 2 - housesView.y + y),
+          cell: 80,
+          allLand: true,
+        })
+      } else {
+        // the frame actually on screen (the video may still be seeking towards the zoom's frame), so
+        // the land and the grain sit on the picture that is there
+        const wanted = getClipFrame(zoom)
+        const frame = shownFrame >= ZOOM_PATH.handFrame ? shownFrame : wanted
+        const views = ZOOM_PATH.clipViews
+        let index = 0
+        while (index < views.length - 2 && views[index + 1][0] < frame) index += 1
+        const [f0, s0, x0, y0] = views[index]
+        const [f1, s1, x1, y1] = views[index + 1]
+        const t = clamp01((frame - f0) / (f1 - f0))
+        const scale = Math.exp(getClipZoom(frame))
+        globe.setClipView({
+          scale,
+          x: (x0 / s0 + (x1 / s1 - x0 / s0) * t) * scale,
+          y: (y0 / s0 + (y1 / s1 - y0 / s0) * t) * scale,
+          cell: frame - ZOOM_PATH.handFrame,
+          allLand: false,
+        })
+      }
       globe.setFocus(ZOOM_PATH.handLongitude, ZOOM_PATH.handLatitude, 0)
       globe.setSpace(0)
       globe.setFlat(0, ZOOM_PATH.landLongitude, ZOOM_PATH.landLatitude)
+      globe.setStyle(1)
       globe.setLimbRatio(1)
       globe.setVideoPlanet(0)
       globe.setStarsAmount(0)
@@ -346,17 +393,25 @@ export function DeepZoomMap() {
       const state = applyCameraFrame(rootNode, nodes, progress, view)
       syncGlobeSize(state)
       rootNode.dataset.mapZoom = zoom.toFixed(3)
+      rootNode.dataset.mapShownFrame = String(shownFrame)
       if (view) {
         drawHouses(canvasNode, view, lastFrame, houses)
         housesDrawn = true
       } else if (housesDrawn) {
         housesDrawn = false
-        drawFrame(canvasNode, videoNode)
+        shownFrame = drawFrame(canvasNode, videoNode) ?? shownFrame
       }
       if (!globe) return
-      if (inClip) {
+      // The clip shows only once the frame canvas holds one of its frames from the hand-over on;
+      // until then the planet stays, at the hand-over (whose picture is that frame), so what is
+      // painted and what is drawn are always the same picture, however fast the wheel turns.
+      const clipReady = Boolean(view) || housesDrawn || shownFrame >= ZOOM_PATH.handFrame
+      if (inClip && clipReady) {
         setMode('video')
-        showClip()
+        showClip(view)
+      } else if (inClip) {
+        setMode('globe')
+        showPlanet(Math.min(zoom, ZOOM_HAND - 0.0001))
       } else {
         setMode('globe')
         showPlanet()
@@ -496,14 +551,16 @@ export function DeepZoomMap() {
     const handleSeeked = () => {
       // past the clip's end the frame canvas holds the houses, not the clip
       if (housesDrawn) return
-      drawFrame(canvasNode, videoNode)
-      if (globe && mode === 'video') globe.render()
+      shownFrame = drawFrame(canvasNode, videoNode) ?? shownFrame
+      // show it with its own land and place, and start the next seek if the zoom has moved on
+      if (globe && mode === 'video') show()
+      requestFrame()
     }
     const handleReady = () => {
       if (cancelled) return
       setStatus('ready')
       handleResize()
-      if (!housesDrawn) drawFrame(canvasNode, videoNode)
+      if (!housesDrawn) shownFrame = drawFrame(canvasNode, videoNode) ?? shownFrame
       if (globe && mode === 'video') globe.render()
     }
     const handleError = () => {
@@ -545,7 +602,7 @@ export function DeepZoomMap() {
       pitch = HOME_ROTATION.pitch
       spinYaw = 0
       spinPitch = 0
-      turnTarget = 0
+      turnTarget = START_TURN
       requestFrame()
     }
     const handleSatellite = (event) => {
@@ -584,7 +641,9 @@ export function DeepZoomMap() {
             scale,
             x,
             y,
-          }))
+          })),
+          assetPath(GLOBE.landTexture.slice(1)),
+          assetPath(ZOOM_PATH.clipLand.slice(1))
         )
       )
       .then((created) => {
