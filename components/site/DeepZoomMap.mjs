@@ -31,6 +31,16 @@ const WHEEL_PROGRESS_PER_PIXEL = 1 / 2800
 const TOUCH_PROGRESS_PER_PIXEL = 1 / 600
 const PINCH_PROGRESS_PER_PIXEL = 1 / 500
 const WHEEL_SMOOTHING_MS = 180
+// The closest view: the planet this much bigger than at the clip's first frame, turned this many
+// degrees further round and down, so the main land lies low and to the right on the planet, aslant,
+// with the planet's edge sweeping past below it.
+const DIVE = Object.freeze({ scale: 5, yaw: 40, pitch: 40, closer: 1.36 })
+// Where the clip is handed the picture: the progress at which its main land is the size and place the
+// planet's has at the end of the dive. The planet fades into it over this long (ms).
+const HAND_PROGRESS = 0.5
+const HAND_FADE_MS = 700
+// the main land's place in the clip's frame at that progress, from the middle (frame pixels)
+const HAND_SHIFT = 85
 // Skip seeks smaller than a few frames' worth of drift to keep scrubbing cheap.
 const MIN_SEEK_SECONDS = 1 / 60
 // How quickly a released drag stops spinning (ms for the speed to fall by 1/e).
@@ -159,9 +169,15 @@ export function DeepZoomMap() {
     let mode = 'loading'
     // The toolbar's satellite button and the layer list's checkboxes.
     let satelliteEnabled = true
-    // 0 is the small planet in its stars, 1 the size of the clip's first frame.
-    let growth = 0
-    let growthTarget = 0
+    // 1 is the size of the clip's first frame: where the planet starts, and the smallest it gets.
+    let growth = 1
+    let growthTarget = 1
+    // The last stretch of the zoom, once the planet is the size of the clip's first frame: 0 is that
+    // view, 1 the closest one, the planet seen aslant and large with the main land held in the middle.
+    let dive = 0
+    let diveTarget = 0
+    // 1 right after the handoff, while the planet still shows over the clip; fades to 0
+    let bridge = 0
     let yaw = HOME_ROTATION.yaw
     let pitch = HOME_ROTATION.pitch
     let spinYaw = 0
@@ -194,6 +210,22 @@ export function DeepZoomMap() {
     let shownFrame = -1
     const updateGlobeHandoff = (progress) => {
       if (!globe) return
+      if (bridge > 0) {
+        // the planet as it was at the end of the dive, fading away over the clip's picture
+        globe.setScale(getGlobeScale(1) * DIVE.scale * DIVE.closer)
+        globe.setFocus(GLOBE.homeLongitude, GLOBE.homeLatitude, 1, HAND_SHIFT, 0)
+        globe.setRotation(yaw, pitch)
+        globe.setLimbRatio(1)
+        globe.setVideoPlanet(0)
+        globe.setStarsAmount(0)
+        globe.setGlobeMix(easeInOut(bridge), 0)
+        globe.setSatellite(0)
+        globe.render()
+        globeCanvasNode.style.opacity = '1'
+        return
+      }
+      globe.setFocus(GLOBE.homeLongitude, GLOBE.homeLatitude, 0)
+      globe.setRotation(HOME_ROTATION.yaw, HOME_ROTATION.pitch)
       // The planet dissolves into the clip inside the globe canvas itself, so both
       // are drawn as one sketch; the canvas stays opaque for the whole clip.
       globe.setScale(getVideoPlanetScale(progress))
@@ -256,6 +288,13 @@ export function DeepZoomMap() {
       setMode('globe')
     }
 
+    const enterGlobeModeKeepDive = () => {
+      enterGlobeMode(1)
+      dive = 2
+      diveTarget = 2
+      requestGlobeFrame()
+    }
+
     const renderVideo = (timestamp) => {
       frameId = 0
       if (cancelled) return
@@ -267,8 +306,9 @@ export function DeepZoomMap() {
       const progress =
         Math.abs(gap) < 0.0002 ? targetProgress : progressRef.current + gap * smoothing
       progressRef.current = progress
+      if (bridge > 0) bridge = Math.max(0, bridge - delta / HAND_FADE_MS)
       renderVideoFrame(progress)
-      if (progress !== targetProgress) {
+      if (progress !== targetProgress || bridge > 0) {
         frameId = window.requestAnimationFrame(renderVideo)
       } else {
         lastTimestamp = 0
@@ -305,7 +345,19 @@ export function DeepZoomMap() {
           pitch = clampLatitude(pitch + turn.pitch)
         }
       }
-      globe.setScale(scaleAfter)
+      const diveGap = diveTarget - dive
+      if (Math.abs(diveGap) > 0.0004) {
+        dive += diveGap * (1 - Math.exp(-delta / GLOBE.zoomSmoothingMs))
+        active = true
+      } else {
+        dive = diveTarget
+      }
+      // 0 to 1 is the first stretch (the planet grows and turns aslant); 1 to 2 keeps growing with the
+      // same turn, so the planet's edge sweeps out of the frame and the surface flattens out
+      const dived = easeInOut(Math.min(1, dive))
+      const closer = easeInOut(Math.max(0, dive - 1))
+      globe.setScale(scaleAfter * DIVE.scale ** dived * DIVE.closer ** closer)
+      globe.setFocus(GLOBE.homeLongitude, GLOBE.homeLatitude, dived, HAND_SHIFT * closer, 0)
       rootNode.dataset.mapGrowth = growth.toFixed(3)
       rootNode.dataset.mapRotation = `${yaw.toFixed(1)} ${pitch.toFixed(1)}`
 
@@ -337,7 +389,9 @@ export function DeepZoomMap() {
         active = true
       }
 
-      globe.setRotation(yaw, pitch)
+      // the aslant turn eases out in the second stretch, so the surface lies flat as the clip takes over
+      const aslant = dived * (1 - closer)
+      globe.setRotation(yaw + DIVE.yaw * aslant, pitch + DIVE.pitch * aslant)
       globe.render()
       if (active) globeFrameId = window.requestAnimationFrame(renderGlobe)
       else globeTimestamp = 0
@@ -379,18 +433,39 @@ export function DeepZoomMap() {
       if (mode === 'globe') {
         // The planet grows first; once it is the size of the clip's first
         // frame, the next step turns it to the home view and starts the clip.
-        if (amount > 0 && growthTarget >= 1 && growth >= 0.99) {
-          startAlign(amount)
+        if (amount > 0 && diveTarget >= 2 && dive >= 1.98) {
+          // the planet is as close as it gets: the clip takes the picture from here
+          bridge = 1
+          progressRef.current = HAND_PROGRESS
+          targetProgress = HAND_PROGRESS
+          setMode('video')
+          lastTimestamp = 0
+          requestVideoFrame()
+        } else if (amount > 0 && growthTarget >= 1 && growth >= 0.99) {
+          diveTarget = Math.min(2, diveTarget + amount * GLOBE.zoomPerProgress)
+          requestGlobeFrame()
+        } else if (amount < 0 && diveTarget > 0) {
+          diveTarget = Math.max(0, diveTarget + amount * GLOBE.zoomPerProgress)
+          requestGlobeFrame()
         } else {
-          growthTarget = clampProgress(
-            growthTarget + amount * GLOBE.zoomPerProgress
-          )
+          // never smaller than the first view
+          growthTarget = Math.max(1, clampProgress(growthTarget + amount * GLOBE.zoomPerProgress))
           requestGlobeFrame()
         }
       } else if (mode === 'aligning') {
         pendingZoom = Math.max(0, pendingZoom + amount)
       } else {
         targetProgress = clampProgress(targetProgress + amount)
+        if (targetProgress < HAND_PROGRESS && amount < 0) {
+          // back before where the clip took over: the planet comes back, as close as it was
+          bridge = 0
+          progressRef.current = 0
+          targetProgress = 0
+          dive = 2
+          diveTarget = 2
+          enterGlobeModeKeepDive()
+          return
+        }
         // Close enough to the start counts as the start, so the planet returns.
         if (targetProgress < MIN_PROGRESS) targetProgress = 0
         requestVideoFrame()
@@ -525,7 +600,8 @@ export function DeepZoomMap() {
         pitch = HOME_ROTATION.pitch
         spinYaw = 0
         spinPitch = 0
-        growthTarget = 0
+        growthTarget = 1
+        diveTarget = 0
         requestGlobeFrame()
       } else if (mode === 'video') {
         targetProgress = 0
@@ -575,9 +651,10 @@ export function DeepZoomMap() {
         readLayers()
         globe.setVideoSource(canvasNode)
         handleResize()
-        // Start small, in the stars, unless the clip has already been scrubbed.
+        // Start at the size of the clip's first frame, which is also the smallest the planet gets,
+        // unless the clip has already been scrubbed.
         if (progressRef.current === 0 && targetProgress === 0 && mode === 'loading') {
-          enterGlobeMode(0)
+          enterGlobeMode(1)
         } else if (mode === 'loading') {
           setMode('video')
         }

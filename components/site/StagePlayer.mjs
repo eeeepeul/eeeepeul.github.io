@@ -8,6 +8,13 @@ import { getVolume, setAnalyser, subscribeVolume } from '../../lib/stage-audio.m
 // Cell 12: the player. An artist box, a track box with an arrow that opens the four songs of
 // the record, and five buttons: back, next, play, stop, and loop. Choosing a song plays it. The
 // volume follows the bars beside cell 3 (lib/stage-audio.mjs).
+//
+// While the site is being worked on (the local development server) the music is kept silent: the
+// song still plays and is still listened to, so the frequency picture of cell 13 and the rest move
+// as they would, but the sound is not sent to the speakers. On the built site it is heard as
+// usual. To hear it while working, start the server with NEXT_PUBLIC_PLAY_MUSIC=1.
+const SILENT = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_PLAY_MUSIC !== '1'
+
 export function StagePlayer() {
   const audioRef = useRef(null)
   const contextRef = useRef(null)
@@ -32,7 +39,15 @@ export function StagePlayer() {
       analyser.fftSize = 1024
       analyser.smoothingTimeConstant = 0.55
       source.connect(analyser)
-      analyser.connect(context.destination)
+      if (SILENT) {
+        // heard by the analyser only: a gain of nothing stands between it and the speakers
+        const mute = context.createGain()
+        mute.gain.value = 0
+        analyser.connect(mute)
+        mute.connect(context.destination)
+      } else {
+        analyser.connect(context.destination)
+      }
       contextRef.current = context
       analyserRef.current = analyser
       setAnalyser(analyser)

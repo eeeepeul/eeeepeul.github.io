@@ -13,6 +13,8 @@ import { StageDomino } from './StageDomino.mjs'
 import { StageGuide } from './StageGuide.mjs'
 import { StagePanel15 } from './StagePanel15.mjs'
 import { StageWelcome } from './StageWelcome.mjs'
+import { StageGrain } from './StageGrain.mjs'
+import { StageMargins } from './StageMargins.mjs'
 import { StageSpectrum } from './StageSpectrum.mjs'
 import { StageVisitors } from './StageVisitors.mjs'
 import { StageVolume } from './StageVolume.mjs'
@@ -24,8 +26,10 @@ import { StageVolume } from './StageVolume.mjs'
 export const STAGE_WIDTH = 2000
 export const STAGE_HEIGHT = 1126
 
-// The welcome card that opens on arrival; set this to false to switch it off.
-const SHOW_WELCOME = true
+// The welcome card that opens on arrival. It is left out while the site is being worked on (the
+// local development server) and shown on the built site; to see it while working, set
+// NEXT_PUBLIC_SHOW_WELCOME=1 when starting the server, or change this to true.
+const SHOW_WELCOME = process.env.NODE_ENV !== 'development' || process.env.NEXT_PUBLIC_SHOW_WELCOME === '1'
 
 // [number, left, top, right, bottom] on the plan.
 export const STAGE_CELLS = [
@@ -108,6 +112,8 @@ export function HomeStage() {
     createElement(
       'div',
       { className: 'stage', style: { '--stage-ratio': `${STAGE_WIDTH} / ${STAGE_HEIGHT}` } },
+      // the margins between the boxes, filled with fine ordered graphics (under the boxes)
+      createElement(StageMargins, { boxes: STAGE_CELLS, width: STAGE_WIDTH, height: STAGE_HEIGHT }),
       STAGE_CELLS.map((cell) => {
         const [number] = cell
         if (number === 4) {
@@ -264,6 +270,19 @@ export function HomeStage() {
               tabIndex: -1,
               disablePictureInPicture: true,
             }),
+            // a sonar-chart drawing laid over the clip: multiplied over it (the paper drops out, only ink
+            // shows), fading away softly round the gel picture in the corner instead of stopping at an edge
+            createElement(
+              'div',
+              { className: 'clip-soft', 'aria-hidden': 'true' },
+              createElement('img', {
+                className: 'clip-overlay',
+                src: assetPath('media/clip-9-overlay.webp'),
+                alt: '',
+                draggable: false,
+              }),
+              createElement(StageGrain)
+            ),
             // the small picture of gel bands in the upper right corner of the clip (191 x 56)
             createElement('img', {
               className: 'clip-gel',

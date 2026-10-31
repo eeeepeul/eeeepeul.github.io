@@ -767,6 +767,102 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   transition: transform 0.25s ease;
 }
 
+/* the second picture lies over the first and is shown only to the right of the bar */
+.scale-cell__reveal {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  clip-path: inset(0 0 0 var(--split, 50%));
+  pointer-events: none;
+}
+
+/* the bar: a thin upright line with a round handle, and a wide strip round it to take hold of */
+.scale-cell__divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--split, 50%);
+  width: 1.4cqw;
+  margin-left: -0.7cqw;
+  cursor: ew-resize;
+  touch-action: none;
+  outline: none;
+  z-index: 5;
+}
+
+.scale-cell__divider-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50% - 0.05cqw);
+  width: 0.1cqw;
+  min-width: 1px;
+  background: #ffffff;
+  box-shadow: 0 0 0.2cqw rgba(0, 0, 0, 0.35);
+}
+
+.scale-cell__divider-handle {
+  position: absolute;
+  left: calc(50% - 0.6cqw);
+  top: calc(80% - 0.6cqw);
+  width: 1.2cqw;
+  height: 1.2cqw;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.12cqw;
+  background: rgba(71, 62, 58, 0.92);
+  border: max(1px, 0.09cqw) solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 0.2cqw rgba(0, 0, 0, 0.35);
+}
+
+.scale-cell__divider-left,
+.scale-cell__divider-right {
+  display: block;
+  width: 0;
+  height: 0;
+  border-top: 0.2cqw solid transparent;
+  border-bottom: 0.2cqw solid transparent;
+}
+
+.scale-cell__divider-left {
+  border-right: 0.28cqw solid #ffffff;
+}
+
+.scale-cell__divider-right {
+  border-left: 0.28cqw solid #ffffff;
+}
+
+.scale-cell__divider:focus-visible .scale-cell__divider-handle {
+  outline: 1px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* the visit circles fit the cell exactly as the pictures do, so they stay on the houses */
+.scale-cell__visits {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+  display: block;
+  pointer-events: none;
+}
+
+/* The pencil picture is the same view as the aerial one, but closer in: measured against each other
+   (outlines of roads, trees and houses), the pencil picture shows the aerial one 1.223 times larger,
+   and 2.2% of its height lower. Laying the aerial layer into the pencil picture's frame by that
+   amount makes the two a match cut. The aerial layer then loses a little at its edges. */
+.scale-cell__aerial {
+  position: absolute;
+  inset: 0;
+  transform: translate(0, 2.2%) scale(1.223);
+  transform-origin: 50% 50%;
+}
+
 /* the heat over the houses fits the cell exactly as the picture does, so it stays on the houses */
 .scale-cell__heat {
   position: absolute;
@@ -815,6 +911,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 }
 
 .scale-cell__zoom {
+  z-index: 6;
   position: absolute;
   right: 1.4%;
   bottom: 3.2%;
@@ -2149,14 +2246,62 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   user-select: none;
 }
 
-/* the gel picture in the upper right of cell 9, where it stands in the supplied picture of the cell
-   (from the cell's left: 58.8%, from its top: 0.4%, 40.9% of its width wide) */
+/* the gel picture in the upper right of cell 9: smaller than the supplied picture has it, with room
+   above it (3.6% of the cell's height) and to its right (3%), 34% of the cell's width wide */
 .clip-gel {
   position: absolute;
-  left: 58.8%;
-  top: 0.4%;
-  width: 40.9%;
+  left: 63%;
+  top: 3.6%;
+  width: 34%;
   height: auto;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* The layer over the clip (the chart's drawing) is one group, multiplied
+   over the clip. The group is cut away round the gel picture in the upper right corner, but softly: it
+   is whole to the left of the picture and below it, and fades out over a few per cent of the cell as it
+   comes up to the picture, so there is no hard edge. (Two soft bands, one down the left side of the
+   corner and one under it, added together.) */
+.clip-soft {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  -webkit-mask-image:
+    linear-gradient(to right, #000 0%, #000 53%, transparent 61%),
+    linear-gradient(to bottom, transparent 0%, transparent 20.5%, #000 28%);
+  mask-image:
+    linear-gradient(to right, #000 0%, #000 53%, transparent 61%),
+    linear-gradient(to bottom, transparent 0%, transparent 20.5%, #000 28%);
+  -webkit-mask-composite: source-over;
+  mask-composite: add;
+}
+
+/* the sonar-chart drawing over the clip in cell 9. Multiplied over the clip, so the paper (white) leaves
+   it as it was and only the ink darkens it; the mask keeps it light in the middle, where the drawing
+   of the clip is, and lets it show more towards the edges. */
+.clip-overlay {
+  filter: url(#clip-boil); /* the grain moves: see StageGrain */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-mask-image: radial-gradient(ellipse 55% 55% at 50% 50%, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.55) 100%);
+  mask-image: radial-gradient(ellipse 55% 55% at 50% 50%, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+/* the margins between the boxes, drawn under them */
+.stage-margins {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   display: block;
   pointer-events: none;
   user-select: none;
