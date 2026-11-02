@@ -4,7 +4,7 @@
 <title>FlowChart 540x145</title>
 <style>
   /* In the stage the chart fills its cell instead of sitting in a fixed box. */
-  html,body{margin:0;height:100%;background:#f1f1ef;overflow:hidden}
+  html,body{margin:0;height:100%;background:#eae2c4;overflow:hidden}
   #chart{position:absolute;inset:0}
 </style>
 <div id="chart"></div>
@@ -31,6 +31,8 @@
   else root.FlowChart = api;
 })(typeof self !== "undefined" ? self : this, function () {
   var TAU = Math.PI * 2;
+  // the inks of the stage (see components/site/StagePalette.mjs)
+  var INKS = { blue: "#7fb6c6", red: "#a8080e", cream: "#eae2c4", dark: "#2a1a1b" };
 
   function rng(seed) {
     var s = seed >>> 0 || 1;
@@ -109,8 +111,12 @@
     var cy = H / 2;
     ctx.lineWidth = 0.45 * Dl;
     ctx.globalAlpha = 0.75;
+    // in the stage's inks: most lines pale blue, every third one red
+    [[INKS.blue, 1], [INKS.red, 0]].forEach(function (pass) {
+    ctx.strokeStyle = pass[0];
     ctx.beginPath();
-    m.flowLines.forEach(function (L) {
+    m.flowLines.forEach(function (L, li) {
+      if ((li % 3 !== 0) !== (pass[1] === 1)) return;
       var s = cy + L.spread * (H * 0.5) * (0.85 + 0.2 * Math.sin(t * 0.35 + L.ph));
       var steps = 36;
       for (var i = 0; i <= steps; i++) {
@@ -129,11 +135,14 @@
       ctx.lineTo(m.flow[1], L.row);
     });
     ctx.stroke();
+    });
 
     // 2 — dotted vertical columns riding a slow wave
     t = T[1]; k = K[1];
     ctx.globalAlpha = 0.5;
     ctx.lineWidth = 0.4 * Dl;
+    ctx.strokeStyle = INKS.red;
+    ctx.fillStyle = INKS.cream;
     ctx.beginPath();
     m.cols.forEach(function (c) { ctx.moveTo(c.x, 0); ctx.lineTo(c.x, H); });
     ctx.stroke();
@@ -159,6 +168,7 @@
 
     // 3 — mirrored histogram combs (layered waves, finer rows)
     t = T[2]; k = K[2];
+    ctx.strokeStyle = INKS.cream;
     ctx.globalAlpha = 0.85;
     ctx.lineWidth = 0.4 * Dl;
     var rows = Math.floor((H - 2) / (0.9 * Dl));
@@ -254,6 +264,10 @@
     function render() {
       ctx.clearRect(0, 0, W, H);
       if (o.background) { ctx.fillStyle = o.background; ctx.fillRect(0, 0, W, H); }
+      // the panels after the first stand on a dark ground
+      var split = Math.round(((LAYOUT.flow[1] + LAYOUT.dots[0]) / 2) * W);
+      ctx.fillStyle = INKS.dark;
+      ctx.fillRect(split, 0, W - split, H);
       draw(ctx, model, W, H, T, K, ink);
       drawn = true;
     }
@@ -302,7 +316,7 @@
     var w = Math.round(el.clientWidth), h = Math.round(el.clientHeight);
     if (!w || !h) return;
     if (chart) chart.destroy();
-    chart = FlowChart.mount("#chart", { width: w, height: h, background: "#f1f1ef" });
+    chart = FlowChart.mount("#chart", { width: w, height: h, background: "#eae2c4" });
   }
   draw();
   new ResizeObserver(function () { clearTimeout(timer); timer = setTimeout(draw, 120); }).observe(el);

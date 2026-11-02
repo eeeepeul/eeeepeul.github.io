@@ -70,27 +70,27 @@ export function StageVolume() {
       onPointerCancel: onUp,
       onKeyDown: onKey,
     },
-    createElement('rect', { width: 118, height: 582, fill: '#cbcbcb' }),
+    createElement('rect', { width: 118, height: 582, fill: '#bed7d6' }),
     // the grey the bars stand on, following the curve
     LEFTS.map((left, i) =>
-      createElement('rect', { key: `base${i}`, x: left, y: i * PITCH, width: 86 - left, height: PITCH + 0.4, fill: '#8a8a8a' })
+      createElement('rect', { key: `base${i}`, x: left, y: i * PITCH, width: 86 - left, height: PITCH + 0.4, fill: '#5f9ca0' })
     ),
     // the lines between the bars that are not lit
     LEFTS.map((left, i) =>
       !isLit(i)
-        ? createElement('rect', { key: `line${i}`, x: left, y: 1 + i * PITCH + BAR - 0.4, width: 86 - left, height: 2.2, fill: '#ababab' })
+        ? createElement('rect', { key: `line${i}`, x: left, y: 1 + i * PITCH + BAR - 0.4, width: 86 - left, height: 2.2, fill: '#7fb3b1' })
         : null
     ),
     // the lit bars
     LEFTS.map((left, i) =>
       isLit(i)
-        ? createElement('rect', { key: `bar${i}`, x: left, y: 1 + i * PITCH, width: 80 - (left - 6), height: BAR, fill: '#494949' })
+        ? createElement('rect', { key: `bar${i}`, x: left, y: 1 + i * PITCH, width: 80 - (left - 6), height: BAR, fill: '#1f5b62' })
         : null
     ),
-    createElement('rect', { x: 86, y: 0, width: 32, height: 582, fill: '#747474' }),
+    createElement('rect', { x: 86, y: 0, width: 32, height: 582, fill: '#2c6470' }),
     createElement('path', {
       d: ticks.map((y) => `M96 ${y + 0.8}H118`).join(''),
-      stroke: '#f6f6f6',
+      stroke: '#eae2c4',
       strokeWidth: 1.5,
       fill: 'none',
     })

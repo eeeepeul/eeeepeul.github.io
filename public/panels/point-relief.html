@@ -7,7 +7,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* Layout: one flat relief plate centred on the page, flipping front to back; a hairline caption at the foot. */
-:root{--bg:#cbcbcb;--ink:#0b0b0a;--ink-soft:#8d8d86;--ink-faint:#bdbdb6;--ui:#0b0b0a;--font:"Space Mono",ui-monospace,Menlo,monospace}
+:root{--bg:#060806;--ink:#eae2c4;--ink-soft:#8d8d86;--ink-faint:#bdbdb6;--ui:#0b0b0a;--font:"Space Mono",ui-monospace,Menlo,monospace}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d0d0c;--ink:#f1f1ea;--ink-soft:#8a8a83;--ink-faint:#4a4a46;--ui:#f1f1ea;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#0d0d0c;--ink:#f1f1ea;--ink-soft:#8a8a83;--ink-faint:#4a4a46;--ui:#f1f1ea;color-scheme:dark}
 html,body{height:100%}
@@ -79,6 +79,8 @@ function ficLand(px,py){let inside=false,d=9;
 // Every dot sits at its own depth. Dark, big dots are pushed back, the whole sheet is bowed and tilted,
 // a slow wobble runs through it, and each dot is jittered, with the odd large jump along a row.
 const ROWSZ=0.02;
+// the inks of the stage (see StagePalette), as 0..1
+const INKS={cream:[234/255,226/255,196/255],sea:[42/255,95/255,105/255],teal:[61/255,127/255,136/255],aqua:[157/255,203/255,200/255],red:[192/255,20/255,28/255]};
 // The depth is a smooth landscape built from undulations of different widths: broad deep basins, medium swells and
 // small shallow dimples, with the strength of each varying from place to place. Neighbouring dots sit at neighbouring depths.
 const smooth=(e0,e1,x)=>{const q=Math.max(0,Math.min(1,(x-e0)/(e1-e0)));return q*q*(3-2*q)};
@@ -95,7 +97,7 @@ function depthOf(x,y,side,b){
 function face(side){
   // Fine grid; how many cells are used depends on how dark the spot is. Dark spots (coasts, inland seas) use every
   // cell and fuse into solid rows, mid tones use every second cell, light land every third and stays airy.
-  const P=[],ROW=0.0098;const add=(x,y,z,w,h)=>P.push(x,y,z,w,h);
+  const P=[],TINT=[],ROW=0.0098;const add=(x,y,z,w,h,t)=>{P.push(x,y,z,w,h);TINT.push(t||INKS.sea)};
   let jit=0,col=0;const NI=Math.ceil(2.3/ROW);
   for(let iy=0;iy<NI;iy++){
     const y=-1.15+iy*ROW;
@@ -103,7 +105,7 @@ function face(side){
       const x=-1.15+ix*ROW,rr0=x*x+y*y;
       if(rr0>1.4)continue;
       if(rr0>1){ // specks torn loose beyond the rim
-        if(rr0<1.3&&rnd()<.012)add(x,y,(rnd()-.5)*.25,ROW*(.5+rnd()*.9),ROW*(.5+rnd()*.9));
+        if(rr0<1.3&&rnd()<.012)add(x,y,(rnd()-.5)*.25,ROW*(.5+rnd()*.9),ROW*(.5+rnd()*.9),INKS.red);
         continue;
       }
       const z=Math.sqrt(1-rr0);
@@ -140,7 +142,8 @@ function face(side){
       if(col++%3===0)jit=(rnd()<.12?.2:.03)*(rnd()-.5)*2;
       const zf=depthOf(px,py,side,b);
       const zz=Math.max(-1.05,Math.min(.8,(zf+.06)*2.1));   // depth scale: how thick the sheet is from the side
-      add(px,py,zz,w,h);
+      // its ink: cream land, a teal sea (lighter where it is dense), pale aqua towards the rim
+      add(px,py,zz,w,h,isLand?INKS.cream:Math.sqrt(rr0)>.86?INKS.aqua:tone>.55?INKS.teal:INKS.sea);
     }
   }
   // Loose crumbs around the sheet. They start on the sheet's own surface and drift off it, most of them
@@ -158,17 +161,17 @@ function face(side){
     let s=ROW*(.16+.6*rnd()*rnd())*(.4+.6*near);
     if(rnd()<.05)s*=2.2;                                       // the odd bigger chunk
     const dr=d*.5;                                             // drift a little outward too
-    add(x0*(1+dr*.2)+(rnd()-.5)*.03,y0*(1+dr*.2)+(rnd()-.5)*.03,zs+(rnd()<.5?-d:d),s*(.8+.4*rnd()),s*(.8+.5*rnd()));
+    add(x0*(1+dr*.2)+(rnd()-.5)*.03,y0*(1+dr*.2)+(rnd()-.5)*.03,zs+(rnd()<.5?-d:d),s*(.8+.4*rnd()),s*(.8+.5*rnd()),(i*2654435761>>>0)%4?INKS.red:INKS.aqua);
   }
   // each dot is a square that always faces the viewer, so it stays a crisp square when the sheet is turned
   // centre the sheet on the turning axis, so it spins in place instead of swinging round it
   {let sx=0,sz=0;const n=P.length/5;for(let i=0;i<n;i++){sx+=P[5*i];sz+=P[5*i+2]}
    const cx=sx/n,cz=sz/n;for(let i=0;i<n;i++){P[5*i]-=cx;P[5*i+2]-=cz}}
-  const N=P.length/5,pos=new Float32Array(N*12),cor=new Float32Array(N*8),sz=new Float32Array(N*8),idx=new Uint32Array(N*6);
+  const N=P.length/5,tint=new Float32Array(N*12),pos=new Float32Array(N*12),cor=new Float32Array(N*8),sz=new Float32Array(N*8),idx=new Uint32Array(N*6);
   const C=[-1,-1,1,-1,1,1,-1,1];
   for(let i=0;i<N;i++){
     for(let c=0;c<4;c++){
-      pos.set([P[5*i],P[5*i+1],P[5*i+2]],i*12+c*3);cor.set([C[2*c],C[2*c+1]],i*8+c*2);sz.set([P[5*i+3],P[5*i+4]],i*8+c*2);
+      pos.set([P[5*i],P[5*i+1],P[5*i+2]],i*12+c*3);tint.set(TINT[i],i*12+c*3);cor.set([C[2*c],C[2*c+1]],i*8+c*2);sz.set([P[5*i+3],P[5*i+4]],i*8+c*2);
     }
     idx.set([4*i,4*i+1,4*i+2,4*i,4*i+2,4*i+3],i*6);
   }
@@ -176,10 +179,11 @@ function face(side){
   geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
   geo.setAttribute('aCorner',new THREE.BufferAttribute(cor,2));
   geo.setAttribute('aSize',new THREE.BufferAttribute(sz,2));
+  geo.setAttribute('aTint',new THREE.BufferAttribute(tint,3));
   geo.setIndex(new THREE.BufferAttribute(idx,1));
   const mat=new THREE.ShaderMaterial({uniforms:{uColor:{value:new THREE.Color(0)}},side:THREE.DoubleSide,
-    vertexShader:'attribute vec2 aCorner;attribute vec2 aSize;void main(){vec4 mv=modelViewMatrix*vec4(position,1.0);mv.xy+=aCorner*aSize*0.5;gl_Position=projectionMatrix*mv;}',
-    fragmentShader:'uniform vec3 uColor;void main(){gl_FragColor=vec4(uColor,1.0);}'});
+    vertexShader:'attribute vec2 aCorner;attribute vec2 aSize;attribute vec3 aTint;varying vec3 vTint;void main(){vTint=aTint;vec4 mv=modelViewMatrix*vec4(position,1.0);mv.xy+=aCorner*aSize*0.5;gl_Position=projectionMatrix*mv;}',
+    fragmentShader:'uniform vec3 uColor;varying vec3 vTint;void main(){gl_FragColor=vec4(vTint,1.0);}'});
   const mesh=new THREE.Mesh(geo,mat);mesh.frustumCulled=false;return mesh;
 }
 const faces=[face(1)];   // one sheet only; seen from behind it reads mirrored

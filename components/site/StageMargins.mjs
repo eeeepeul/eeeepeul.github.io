@@ -15,11 +15,11 @@ export function StageMargins({ boxes, width, height }) {
       'aria-hidden': 'true',
       focusable: 'false',
     },
-    h('path', { d: art.pale, fill: '#c4c4c2' }),
-    h('path', { d: art.hair, fill: 'none', stroke: '#8d8d8b', strokeWidth: 0.55 }),
-    h('path', { d: art.cross, fill: 'none', stroke: '#8d8d8b', strokeWidth: 0.55 }),
-    h('path', { d: art.heavy, fill: '#8d8d8b' }),
-    h('path', { d: art.dark, fill: '#494949' }),
+    h('path', { d: art.pale, fill: '#a9c6c5' }),
+    h('path', { d: art.hair, fill: 'none', stroke: '#3e7d7e', strokeWidth: 0.55 }),
+    h('path', { d: art.cross, fill: 'none', stroke: '#3e7d7e', strokeWidth: 0.55 }),
+    h('path', { d: art.heavy, fill: '#3e7d7e' }),
+    h('path', { d: art.dark, fill: '#1f5b62' }),
     art.texts.map((t, index) =>
       h(
         'text',
@@ -30,7 +30,7 @@ export function StageMargins({ boxes, width, height }) {
           transform: t.vertical ? `rotate(90 ${t.x} ${t.y})` : undefined,
           fontSize: 4.6,
           letterSpacing: 0.35,
-          fill: '#858583',
+          fill: '#2c6470',
           fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
         },
         t.text

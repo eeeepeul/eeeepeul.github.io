@@ -867,7 +867,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .scale-cell__heat {
   position: absolute;
   inset: 0;
-  opacity: 0.7; /* the heat at 70% of its full strength */
+  opacity: 1; /* flat colours: no transparency */
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1070,6 +1070,92 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+/* the cell is a cube turned about its vertical axis: --turn is 0 on the first page and 1 on the second */
+.about {
+  --w: calc(650 * var(--u));
+  perspective: calc(var(--w) * 2.2);
+  touch-action: pan-y;
+  cursor: grab;
+}
+.about.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+.about-cube {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: translateZ(calc(var(--w) * -0.5)) rotateY(calc(var(--turn) * -90deg));
+  transition: transform 0.55s cubic-bezier(0.22, 0.8, 0.2, 1);
+}
+.about.is-dragging .about-cube {
+  transition: none;
+}
+.about-face {
+  position: absolute;
+  inset: 0;
+  background: #494949;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.about-face--front {
+  transform: translateZ(calc(var(--w) * 0.5));
+}
+.about-face--side {
+  transform: rotateY(90deg) translateZ(calc(var(--w) * 0.5));
+}
+/* the second page: the same panel, with a plain text in place of the tree and the cover */
+.about-panel.about-panel--note {
+  grid-template-rows: 6.4% minmax(0, 1fr);
+}
+.about-notewrap {
+  position: relative;
+  min-height: 0;
+  background: #747474;
+}
+/* the scroll mark: no bar, only a circle on the right edge */
+.about-track {
+  position: absolute;
+  top: calc(12 * var(--u));
+  bottom: calc(12 * var(--u));
+  right: calc(12 * var(--u));
+  width: calc(14 * var(--u));
+  cursor: pointer;
+}
+.about-dot {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: calc(10 * var(--u));
+  height: calc((10 + 26 * var(--stretch, 0)) * var(--u));
+  margin-left: calc(-5 * var(--u));
+  border-radius: calc(5 * var(--u));
+  background: #f6f6f6;
+  pointer-events: none;
+}
+.about-note {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: calc(14 * var(--u)) calc(16 * var(--u));
+  background: #747474;
+  font-size: calc(22.5 * var(--u));
+  line-height: 1.58;
+  padding-right: calc(38 * var(--u));
+  scrollbar-width: none;
+}
+.about-note::-webkit-scrollbar {
+  display: none;
+}
+.about-note p {
+  /* a blank line (the height of one line) between paragraphs; line breaks in the text are kept */
+  margin: 0 0 calc(35.5 * var(--u));
+  white-space: pre-line;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
 .about-panel {
   position: absolute;
   left: 2.46%;
@@ -1091,6 +1177,35 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   font-weight: 500;
   letter-spacing: 0.01em;
   border-bottom: calc(2 * var(--u)) solid #f6f6f6;
+}
+
+/* the language mark: a small picture at the right end of the title bar (two pictures, swapped by pressing) */
+.about-title {
+  position: relative;
+}
+.about-lang {
+  position: absolute;
+  right: calc(4.5 * var(--u));
+  top: 50%;
+  width: calc(47.5 * var(--u));
+  height: calc(30.4 * var(--u));
+  margin: 0;
+  padding: 0;
+  border: 0;
+  transform: translateY(-50%);
+  background: none;
+  cursor: pointer;
+}
+.about-lang img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+.about-lang:focus-visible {
+  outline: calc(2 * var(--u)) solid #f6f6f6;
+  outline-offset: calc(2 * var(--u));
 }
 
 .about-body {
@@ -1126,7 +1241,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 
 .about-node {
   position: relative;
-  --row: calc(22.4 * var(--u));
+  --row: calc(30 * var(--u));
   /* x positions per depth (units, from the tree's left edge) */
   --t: 16;
   --i: 39;
@@ -1225,7 +1340,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   color: #f6f6f6;
   background: none;
   border: 0;
-  font: 400 calc(15 * var(--u)) / 1 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font: 400 calc(22.5 * var(--u)) / 1 'Helvetica Neue', Helvetica, Arial, sans-serif;
   transform: translateY(-52%);
   cursor: pointer;
   white-space: nowrap;
@@ -1267,23 +1382,30 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: calc(12 * var(--u)) calc(16 * var(--u)) 0;
+  /* the same margins as the text on the second face */
+  padding: calc(14 * var(--u)) calc(38 * var(--u)) 0 calc(16 * var(--u));
   background: #747474;
 }
 
 .about-text p {
   margin: 0;
-  height: calc(24.6 * 5 * var(--u));
-  overflow: hidden;
-  font-size: calc(16.4 * var(--u));
-  line-height: calc(24.6 * var(--u));
+  /* the same size as the text on the second face */
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  font-size: calc(22.5 * var(--u));
+  line-height: calc(35.5 * var(--u));
+}
+.about-text p::-webkit-scrollbar {
+  display: none;
 }
 
 .about-foot {
   display: flex;
   align-items: center;
   gap: calc(10 * var(--u));
-  margin-top: calc(10 * var(--u));
+  margin-top: calc(4 * var(--u));
   color: #b7b7b7;
   font-size: calc(16 * var(--u));
   font-weight: 500;
@@ -1298,9 +1420,26 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 }
 
 .about-foot__bar {
-  width: calc(166 * var(--u));
+  position: relative;
+  display: block;
+  flex: 1 1 0;
+  min-width: 0;
   height: calc(16 * var(--u));
+  --rest: 0.34;
+}
+/* the bar is a level meter: its length is --level of the line (it rests at --rest), up to the right end */
+.about-foot__fill {
+  display: block;
+  width: calc(100% * var(--level, var(--rest)));
+  height: 100%;
   background: #b7b7b7;
+  transition: width 0.09s linear;
+}
+.about-foot__bar:not(.is-typing) .about-foot__fill {
+  transition: width 0.4s ease-out;
+}
+.about-untyped {
+  color: transparent;
 }
 
 /* ---- cell 5: the visitor record (measured from the supplied picture, 760 x 314) ------------ */
@@ -1677,6 +1816,16 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 }
 
 /* ---- cell 13: the sound as it goes by (supplied picture 2000 x 131, a pale ground in grey) --- */
+/* the turning house stands in the empty corner at the right end of the strip (the marked place) */
+.stage-house {
+  position: absolute;
+  left: 89%;
+  top: 7%;
+  width: 10.2%;
+  height: 86%;
+  pointer-events: none;
+}
+
 .stage-cell--spectrum {
   background: #cbcbcb;
 }
@@ -2305,4 +2454,634 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   display: block;
   pointer-events: none;
   user-select: none;
+}
+
+/* ==== colour ==================================================================================
+   The stage in the colours of the supplied colour picture: a print in a few inks (navy, teal, a
+   pale aqua, cream paper and red). Only colours are set here; the measures above stay as they
+   are. Pictures and pages of their own are shown through the tone filters of StagePalette. */
+.stage-shell {
+  --c-black: #060806;
+  --c-ink: #0a1d21;
+  --c-navy: #0e3038;
+  --c-panel: #134750;
+  --c-teal: #2c6470;
+  --c-line: #3e7d7e;
+  --c-chip: #5f8c8a;
+  --c-sea: #5f9ca0;
+  --c-aqua: #bed7d6;
+  --c-cream: #eae2c4;
+  --c-field: #e2debc;
+  --c-red: #a8080e;
+  --c-red-deep: #730309;
+  --c-red-dark: #340406;
+  background: var(--c-ink);
+}
+
+.stage-palette {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.stage {
+  background: var(--c-aqua);
+  box-shadow: 0 0 0 1px var(--c-ink);
+}
+
+.stage-cell:is(
+    [data-stage-cell='1'],
+    [data-stage-cell='2'],
+    [data-stage-cell='3'],
+    [data-stage-cell='5'],
+    [data-stage-cell='6'],
+    [data-stage-cell='7'],
+    [data-stage-cell='8']
+  )::after {
+  box-shadow: inset 0 0 0 1px #bed7d6;
+}
+
+.stage-cell[data-stage-cell='4']::after {
+  box-shadow: inset 0 0 0 1px var(--c-line);
+}
+
+.stage-cell--empty {
+  background: var(--c-chip);
+}
+
+.stage-cell__number {
+  color: #5f7c7e;
+}
+
+.stage-cell--map {
+  background: var(--c-black);
+}
+
+/* cell 1: the point relief on black, under a navy bar */
+.stage-cell--frame,
+.stage-cell__view,
+.stage-cell__frame {
+  background: var(--c-black);
+}
+
+.stage-bar {
+  background: var(--c-navy);
+}
+
+.stage-bar__chip {
+  color: var(--c-cream);
+  background: var(--c-ink);
+  box-shadow: inset 0 0 0 1px #bed7d6;
+}
+
+/* cell 2: the scale, the aerial view and the pencil view */
+.stage-cell--scale {
+  background: var(--c-navy);
+}
+
+.scale-cell {
+  color: var(--c-cream);
+}
+
+.scale-cell__aerial .scale-cell__picture {
+  filter: url(#tone-field);
+}
+
+.scale-cell__reveal .scale-cell__picture {
+  filter: url(#tone-field);
+}
+
+.scale-cell__bar {
+  background: linear-gradient(
+    to bottom,
+    var(--c-red) 0%,
+    #c0020e 10%,
+    #f2dab9 42%,
+    var(--c-aqua) 74%,
+    var(--c-aqua) 86%,
+    var(--c-red) 90%,
+    var(--c-red) 100%
+  );
+}
+
+.scale-cell__divider-line {
+  background: var(--c-cream);
+}
+
+.scale-cell__divider-handle {
+  background: #0e3038;
+  border-color: var(--c-cream);
+}
+
+.scale-cell__divider-left {
+  border-right-color: var(--c-cream);
+}
+
+.scale-cell__divider-right {
+  border-left-color: var(--c-cream);
+}
+
+.scale-cell__divider:focus-visible .scale-cell__divider-handle {
+  outline-color: var(--c-cream);
+}
+
+.scale-cell__zoom {
+  background: var(--c-navy);
+  box-shadow: inset 0 0 0 1px #bed7d6;
+}
+
+.scale-cell__step {
+  background: var(--c-panel);
+}
+
+.scale-cell__minus::before,
+.scale-cell__plus::before,
+.scale-cell__plus::after {
+  background: var(--c-cream);
+}
+
+.scale-cell__percent {
+  color: var(--c-cream);
+}
+
+/* cell 3: a navy box, its panel in red with cream lines and letters */
+.stage-cell--about {
+  background: #1f5b62;
+}
+
+.about,
+.about-face {
+  background: var(--c-navy);
+  color: var(--c-cream);
+}
+
+.about-panel {
+  border-color: var(--c-cream);
+  background: var(--c-red-deep);
+}
+
+.about-title {
+  background: var(--c-navy);
+  color: var(--c-cream);
+  border-bottom-color: var(--c-cream);
+}
+
+.about-lang img {
+  filter: url(#tone-paper);
+}
+
+.about-lang:focus-visible {
+  outline-color: var(--c-cream);
+}
+
+.about-body {
+  border-bottom-color: var(--c-cream);
+}
+
+.about-cover {
+  border-right-color: var(--c-cream);
+  filter: url(#tone-mono);
+}
+
+.about-tree,
+.about-text,
+.about-notewrap,
+.about-note {
+  background: var(--c-red-deep);
+}
+
+.about-row.is-selected::after {
+  background: #8c1a1f;
+}
+
+.about-toggle {
+  background: var(--c-cream);
+}
+
+.about-toggle i,
+.about-toggle i::before {
+  background: var(--c-red-deep);
+}
+
+.about-icon {
+  border-color: var(--c-cream);
+  background: var(--c-red-deep);
+}
+
+.about-node.is-leaf > .about-row > .about-icon {
+  background: var(--c-cream);
+}
+
+.about-label {
+  color: var(--c-cream);
+}
+
+.about-kids > .about-node::before,
+.about-node.is-leaf > .about-row::before {
+  background: var(--c-cream);
+}
+
+.about-foot {
+  color: var(--c-cream);
+}
+
+.about-foot__play {
+  border-left-color: var(--c-cream);
+}
+
+.about-foot__fill,
+.about-dot {
+  background: var(--c-cream);
+}
+
+/* cell 5: the visitor record */
+.stage-cell--visitors {
+  background: var(--c-cream);
+}
+
+.visitors {
+  color: var(--c-cream);
+}
+
+.visitors-bar,
+.visitors-menu {
+  background: var(--c-panel);
+}
+
+.visitors-chip {
+  color: var(--c-cream);
+  background: var(--c-navy);
+  box-shadow: inset 0 0 0 1px #bed7d6;
+}
+
+.visitors-active span {
+  color: var(--c-aqua);
+}
+
+.visitors-menu button {
+  color: var(--c-cream);
+}
+
+.visitors-menu li[aria-selected='true'] button,
+.visitors-menu button:hover {
+  background: var(--c-teal);
+}
+
+/* cell 6: the scanned houses on the stage's black */
+.stage-cell--model,
+.stage-cell--model .stage-cell__frame {
+  background: var(--c-black);
+}
+
+.house-readout {
+  filter: url(#tone-paper);
+}
+
+/* cell 7: the radar in reds */
+.stage-cell--radar,
+.radar-scope {
+  background: var(--c-red-dark);
+}
+
+.radar-plane text {
+  fill: var(--c-cream);
+}
+
+.radar-scope__photo,
+.radar-scope__mosaic {
+  filter: url(#tone-scope);
+}
+
+/* cell 8: the click log, black rows and teal ones */
+.stage-cell--log {
+  background: #0b0e0e;
+}
+
+.event-log {
+  color: var(--c-cream);
+}
+
+.event-log__head th {
+  color: var(--c-cream);
+  background: #0b0e0e;
+  border-bottom-color: var(--c-line);
+}
+
+.event-log__row {
+  background: #0b0e0e;
+}
+
+.event-log__row.is-own {
+  color: var(--c-cream);
+  background: #4f7072;
+}
+
+/* cells 9, 10 and 14: navy, the lines in cream */
+.stage-cell--clip {
+  background: var(--c-navy);
+  filter: url(#tone-clip);
+}
+
+/* the gel picture comes out as a cream card with navy bands (white behind it, turned negative, so
+   that the cell's filter turns it back) */
+.clip-gel {
+  background: #ffffff;
+  filter: invert(1) contrast(2.2);
+}
+
+.stage-cell--graph {
+  background: var(--c-black);
+  filter: url(#tone-graph);
+}
+
+/* cell 14: navy squares drawn in cream, on the aqua of the page (its own coloured picture) */
+.stage-cell--strip14 {
+  background: var(--c-aqua);
+}
+
+/* cell 11: the chart (its own colours, see panels/flow-chart.html) and its line of letters in red */
+.stage-cell--chart,
+.stage-cell--chart .stage-cell__frame {
+  background: var(--c-cream);
+}
+
+.chart-rule {
+  background: var(--c-red);
+}
+
+.chart-text {
+  filter: url(#tone-red);
+}
+
+/* cell 12: the player, navy with cream fields and aqua keys */
+.stage-cell--player {
+  background: var(--c-navy);
+}
+
+.player {
+  color: var(--c-cream);
+}
+
+.player-field {
+  color: var(--c-ink);
+  background: var(--c-field);
+}
+
+.player-drop {
+  background: var(--c-navy);
+}
+
+.player-drop i {
+  border-top-color: var(--c-cream);
+}
+
+.player-menu {
+  background: var(--c-field);
+  box-shadow: 0 0 0 1px var(--c-line);
+}
+
+.player-menu button {
+  color: var(--c-ink);
+}
+
+.player-menu button:hover:not(:disabled),
+.player-menu li[aria-selected='true'] button {
+  background: #cfc7a4;
+}
+
+.player-menu button:disabled {
+  color: #8f8a72;
+}
+
+.player-menu__no {
+  color: #7d7862;
+}
+
+.player-button {
+  background: var(--c-aqua);
+}
+
+.player-icon {
+  fill: var(--c-chip);
+}
+
+.player-button.is-on .player-icon {
+  fill: var(--c-ink);
+}
+
+.player-button.is-pressed {
+  background: #82b6b2;
+}
+
+/* cell 13: the sound on cream paper */
+.stage-cell--spectrum {
+  background: var(--c-teal);
+}
+
+.spectrum {
+  background: var(--c-cream);
+}
+
+/* cells 15, 16, 17 and 18 */
+.stage-cell--panel15 {
+  background: var(--c-black);
+}
+
+.panel15 {
+  filter: url(#tone-chart);
+}
+
+.stage-cell--domino {
+  background: var(--c-navy);
+}
+
+.domino {
+  filter: brightness(1.4) saturate(0.75) url(#tone-tiles);
+}
+
+.stage-cell--sequence {
+  background: #c7d3c3;
+}
+
+.sequence {
+  color: var(--c-ink);
+}
+
+.sequence__place.is-alike {
+  background-image: radial-gradient(circle, var(--c-teal) 0, var(--c-teal) calc(0.4 * var(--u)), transparent calc(0.52 * var(--u)));
+}
+
+.stage-cell--solid {
+  background: var(--c-black);
+}
+
+/* the map's tool bar: aqua keys on teal */
+.stage-cell--map .map-gis-toolbar {
+  background: var(--c-chip);
+}
+
+.stage-cell--map .map-gis-toolbar.is-folded {
+  background: transparent;
+}
+
+.stage-cell--map .map-gis-bar__head,
+.stage-cell--map .map-gis-bar__dash {
+  background: #1f5b62;
+}
+
+.stage-cell--map .map-gis-bar__fold {
+  background: var(--c-aqua);
+}
+
+.stage-cell--map .map-gis-tool {
+  color: var(--c-ink);
+  background: var(--c-aqua);
+}
+
+.stage-cell--map .map-gis-tool:hover,
+.stage-cell--map .map-gis-tool:focus-visible {
+  background: #b5dbd8;
+}
+
+.stage-cell--map .map-gis-tool.is-pressed {
+  background: #82b6b2;
+}
+
+/* the welcome card and the guide */
+.welcome {
+  background: rgba(6, 16, 18, 0.55);
+}
+
+.welcome__card {
+  background: var(--c-cream);
+  color: var(--c-ink);
+}
+
+.welcome__card::after {
+  border-color: var(--c-ink);
+}
+
+.welcome__head {
+  background: var(--c-aqua);
+  border-bottom-color: var(--c-line);
+  color: var(--c-navy);
+}
+
+.welcome__picture,
+.welcome__field {
+  background: #f3ecd3;
+  border-color: var(--c-line);
+}
+
+.welcome__field {
+  color: var(--c-ink);
+}
+
+.welcome__field::placeholder {
+  color: #6f7f78;
+}
+
+.welcome__field:focus {
+  border-color: var(--c-navy);
+}
+
+.welcome__enter {
+  background: var(--c-navy);
+  color: var(--c-cream);
+}
+
+.welcome__enter:hover,
+.welcome__enter:focus-visible {
+  background: var(--c-panel);
+}
+
+.guide {
+  background: rgba(6, 16, 18, 0.74);
+}
+
+.guide__note {
+  background: var(--c-navy);
+  border-color: var(--c-aqua);
+  color: var(--c-cream);
+}
+
+.guide__tab {
+  background: var(--c-cream);
+}
+
+.guide__dots {
+  background-image: radial-gradient(circle, var(--c-aqua) 0, var(--c-aqua) calc(0.9 * var(--u)), transparent calc(1.1 * var(--u)));
+}
+
+.stage-cell--model .stage-cell__frame {
+  filter: url(#tone-houses);
+}
+
+/* the map's rulers: white, their marks and letters in #0d2f37 */
+.stage-cell--map .map-viewport-rulers {
+  color: #0d2f37;
+}
+
+.stage-cell--map .map-viewport-ruler,
+.stage-cell--map .map-viewport-ruler--top,
+.stage-cell--map .map-viewport-ruler--left,
+.stage-cell--map .map-viewport-ruler__corner {
+  background-color: #ffffff;
+  border-color: #0d2f37;
+}
+
+.stage-cell--map .map-viewport-ruler--top::before {
+  background: repeating-linear-gradient(to right, transparent 0 4px, #0d2f37 4px 5px);
+}
+
+.stage-cell--map .map-viewport-ruler--top::after {
+  background: repeating-linear-gradient(to right, transparent 0 24px, #0d2f37 24px 25px);
+}
+
+.stage-cell--map .map-viewport-ruler--left::before {
+  background: repeating-linear-gradient(to bottom, transparent 0 4px, #0d2f37 4px 5px);
+}
+
+.stage-cell--map .map-viewport-ruler--left::after {
+  background: repeating-linear-gradient(to bottom, transparent 0 24px, #0d2f37 24px 25px);
+}
+
+.stage-cell--map .map-viewport-ruler__value,
+.stage-cell--map .map-viewport-ruler__value--top {
+  color: #0d2f37;
+}
+
+.stage-cell--map .map-viewport-ruler__major-tick {
+  background: #0d2f37;
+}
+
+/* the big boxes under the cells: plain black, no edge */
+.stage-block {
+  position: absolute;
+  background: var(--c-black);
+  pointer-events: none;
+}
+
+/* every box that lies on one of the big black boxes has a thin cream outline round its edge */
+.stage-cell:is(
+    [data-stage-cell='1'],
+    [data-stage-cell='2'],
+    [data-stage-cell='9'],
+    [data-stage-cell='10'],
+    [data-stage-cell='11'],
+    [data-stage-cell='12'],
+    [data-stage-cell='13'],
+    [data-stage-cell='14'],
+    [data-stage-cell='15'],
+    [data-stage-cell='16'],
+    [data-stage-cell='17'],
+    [data-stage-cell='18']
+  )::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 max(1px, 0.09cqw) #e8e2c7;
+  pointer-events: none;
+  z-index: 50;
 }

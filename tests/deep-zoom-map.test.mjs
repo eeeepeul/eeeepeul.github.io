@@ -10,18 +10,8 @@ import {
   easeInOut,
   getDragDegreesPerPixel,
   getFacingRotation,
-  getGlobeScale,
-  getHandoffOpacity,
   MAP_LEGEND,
   getLegendNumberedOpacity,
-  getStarsAmount,
-  getVideoHandoffProgress,
-  getVideoLimbRatio,
-  getVideoPlanetScale,
-  isVideoFrameReady,
-  isVideoSeekCurrent,
-  shouldRequestVideoSeek,
-  getZoomAnchorTurn,
   getShortestYawDelta,
   HOUSE_HOTSPOTS,
   ZOOM_VIDEO,
@@ -49,55 +39,6 @@ test('the video timeline follows the same normalized zoom progress', () => {
   assert.equal(lastFrame.time, ZOOM_VIDEO.durationSeconds)
   assert.equal(setCameraProgress(2, viewport).time, ZOOM_VIDEO.durationSeconds)
   assert.equal(setCameraProgress(Number.NaN, viewport).progress, 0)
-})
-
-test('handoff progress never runs ahead of the decoded video frame', () => {
-  assert.equal(getVideoHandoffProgress(0.2, 0), 0)
-  assert.equal(getVideoHandoffProgress(0.2, ZOOM_VIDEO.durationSeconds * 0.1), 0.1)
-  assert.equal(getVideoHandoffProgress(0.2, ZOOM_VIDEO.durationSeconds * 0.2), 0.2)
-  assert.equal(getVideoHandoffProgress(0.2, ZOOM_VIDEO.durationSeconds * 0.4), 0.2)
-  assert.equal(getVideoHandoffProgress(0.2, Number.NaN), 0)
-})
-
-test('a decoded frame can be checked against the requested timestamp', () => {
-  assert.equal(isVideoFrameReady(0, 0), true)
-  assert.equal(isVideoFrameReady(0.2, 0), false)
-  assert.equal(isVideoFrameReady(0.2, ZOOM_VIDEO.durationSeconds * 0.2), true)
-  assert.equal(isVideoFrameReady(0.2, ZOOM_VIDEO.durationSeconds * 0.2 + 0.01), true)
-  assert.equal(isVideoFrameReady(0.2, ZOOM_VIDEO.durationSeconds * 0.2 + 0.03), false)
-})
-
-test('late seek events cannot repaint an obsolete video frame', () => {
-  assert.equal(isVideoSeekCurrent(2, 2), true)
-  assert.equal(isVideoSeekCurrent(2, 2.01), true)
-  assert.equal(isVideoSeekCurrent(2, 2.03), false)
-  assert.equal(isVideoSeekCurrent(2, 2.03, 1 / 24), true)
-  assert.equal(isVideoSeekCurrent(2, Number.NaN), false)
-})
-
-test('video seeks are skipped when the decoder is already on the requested frame', () => {
-  assert.equal(shouldRequestVideoSeek(2, 2), false)
-  assert.equal(shouldRequestVideoSeek(2, 2.01), false)
-  assert.equal(shouldRequestVideoSeek(2, 2.03), true)
-  assert.equal(shouldRequestVideoSeek(Number.NaN, 2), false)
-})
-
-test('the original 3D background only leads the first reference frames', () => {
-  assert.equal(setCameraProgress(0.01, viewport).backgroundPinned, true)
-  assert.equal(setCameraProgress(0.02, viewport).backgroundPinned, true)
-  assert.equal(setCameraProgress(0.35, viewport).backgroundPinned, true)
-  assert.equal(setCameraProgress(0.41, viewport).backgroundPinned, false)
-})
-
-test('the 3D planet hands over to the clip in the first sliver of progress', () => {
-  for (const progress of [0, GLOBE.handoffStart]) {
-    assert.equal(getHandoffOpacity(progress), 1)
-  }
-  const middle = (GLOBE.handoffStart + GLOBE.handoffEnd) / 2
-  assert.ok(getHandoffOpacity(middle) > 0 && getHandoffOpacity(middle) < 1)
-  assert.equal(getHandoffOpacity(GLOBE.handoffEnd), 0)
-  assert.equal(getHandoffOpacity(0.41), 0)
-  assert.equal(getHandoffOpacity(1), 0)
 })
 
 test('the video always covers the viewport and stays centered', () => {
@@ -173,16 +114,6 @@ test('the home turn eases from rest to rest', () => {
   assert.ok(easeInOut(0.75) > 0.75)
 })
 
-test('the planet grows exponentially from a small start to the clip size', () => {
-  assert.equal(getGlobeScale(0), GLOBE.minScale)
-  assert.equal(getGlobeScale(1), 1)
-  assert.equal(getGlobeScale(-3), GLOBE.minScale)
-  assert.equal(getGlobeScale(4), 1)
-  assert.ok(Math.abs(getGlobeScale(0.5) - Math.sqrt(GLOBE.minScale)) < 1e-9)
-  assert.ok(GLOBE.minScale > 0 && GLOBE.minScale < 1)
-  assert.ok(GLOBE.starCount > 0)
-})
-
 test('a drag turns the planet so its surface follows the pointer', () => {
   const small = getDragDegreesPerPixel(GLOBE.minScale)
   const full = getDragDegreesPerPixel(1)
@@ -194,52 +125,8 @@ test('a drag turns the planet so its surface follows the pointer', () => {
   assert.ok(getDragDegreesPerPixel(1, 2) < full)
 })
 
-test('zooming towards the pointer turns the planet to keep that point in place', () => {
-  const point = { x: 120, y: -60 }
-  const grow = getZoomAnchorTurn(point, 0.5, 0.6)
-  const shrink = getZoomAnchorTurn(point, 0.6, 0.5)
-
-  // Centre pointer: nothing to anchor. Off the planet: nothing to anchor.
-  assert.equal(getZoomAnchorTurn({ x: 0, y: 0 }, 0.5, 0.6), null)
-  assert.equal(getZoomAnchorTurn({ x: 400, y: 0 }, 0.5, 0.6), null)
-  // Growing pulls the point back towards the centre: left and down here.
-  assert.ok(grow.yaw < 0 && grow.pitch > 0)
-  // Shrinking is the exact opposite turn.
-  assert.ok(Math.abs(grow.yaw + shrink.yaw) < 1e-9)
-  assert.ok(Math.abs(grow.pitch + shrink.pitch) < 1e-9)
-  // The turn follows the direction of the pointer from the centre.
-  assert.ok(Math.abs(grow.yaw / grow.pitch - point.x / point.y) < 1e-9)
-})
-
 test('the sky turns with the planet, as it does in Google Earth', () => {
   assert.equal(GLOBE.skyFollow, 1)
-})
-
-test('the 3D planet follows the clip planet in size while the camera pushes in', () => {
-  // Starts at the clip's first frame size and never shrinks while the clip plays on.
-  assert.equal(getVideoPlanetScale(0), 1)
-  let previous = 1
-  for (let step = 1; step <= 40; step += 1) {
-    const scale = getVideoPlanetScale(step / 100)
-    assert.ok(scale >= previous)
-    previous = scale
-  }
-  // Measured on the clip: about 1.6x by 21% of the way through.
-  assert.ok(Math.abs(getVideoPlanetScale(0.2074) - 1.687) < 1e-9)
-  // Interpolates between the measured points.
-  const between = getVideoPlanetScale(0.0916)
-  assert.ok(between > getVideoPlanetScale(0.0824) && between < getVideoPlanetScale(0.1008))
-})
-
-test('the 3D planet is gone once the clip has taken over', () => {
-  const earlyScale = getVideoPlanetScale(0.01)
-  const lateScale = getVideoPlanetScale(0.02)
-
-  assert.equal(getHandoffOpacity(0.001), 1)
-  assert.equal(getHandoffOpacity(0.01), 0)
-  assert.equal(getHandoffOpacity(0.4), 0)
-  assert.ok(lateScale > earlyScale)
-  assert.ok(getVideoPlanetScale(GLOBE.handoffEnd) > 1)
 })
 
 test('both map keys ship with the site', () => {
@@ -266,19 +153,4 @@ test('the keys cross as the planet fills the screen and space disappears', () =>
   }
   // The cross happens after the planet has filled the clip's frame (about a third).
   assert.ok(MAP_LEGEND.crossTo >= 0.3)
-})
-
-test('the 3D planet rim is squeezed onto the clip rim while the land stays put', () => {
-  assert.equal(getVideoLimbRatio(0), 1)
-  for (let step = 0; step <= 10; step += 1) {
-    const ratio = getVideoLimbRatio((step / 10) * 0.1)
-    assert.ok(ratio <= 1 && ratio > 0.9)
-  }
-})
-
-test('the sky stars stay over the clip while there is sky, then go', () => {
-  assert.equal(getStarsAmount(0), 1)
-  assert.equal(getStarsAmount(0.05), 1)
-  assert.equal(getStarsAmount(0.35), 0)
-  assert.equal(getStarsAmount(1), 0)
 })

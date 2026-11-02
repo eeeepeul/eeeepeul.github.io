@@ -124,7 +124,7 @@ export function StageVisitors() {
           createElement(
             'svg',
             { viewBox: '0 0 14 8', width: 14, height: 8, 'aria-hidden': 'true' },
-            createElement('path', { d: 'M1 1l6 6 6-6', fill: 'none', stroke: '#fff', strokeWidth: 2 })
+            createElement('path', { d: 'M1 1l6 6 6-6', fill: 'none', stroke: '#eae2c4', strokeWidth: 2 })
           )
         ),
         open
@@ -168,8 +168,7 @@ export function StageVisitors() {
           y: ROW_TOPS[block.row],
           width: block.x1 - block.x0,
           height: ROW_HEIGHT,
-          fill: '#6a6a6a',
-          opacity: 0.55,
+          fill: '#9ebbb0',
         })
       ),
       bars.map((bar, index) =>
@@ -179,7 +178,7 @@ export function StageVisitors() {
           y: ROW_TOPS[bar.row],
           width: bar.width,
           height: ROW_HEIGHT,
-          fill: '#2a2a2a',
+          fill: '#0a1d21',
         })
       ),
       now
@@ -188,8 +187,7 @@ export function StageVisitors() {
             y: ROW_TOPS[cursorRow],
             width: 5,
             height: ROW_HEIGHT,
-            fill: '#f4f4f2',
-            opacity: 0.9,
+            fill: '#a8080e',
           })
         : null
     )

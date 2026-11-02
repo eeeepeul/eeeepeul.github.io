@@ -16,8 +16,10 @@ import { StageWelcome } from './StageWelcome.mjs'
 import { StageGrain } from './StageGrain.mjs'
 import { StageMargins } from './StageMargins.mjs'
 import { StageSpectrum } from './StageSpectrum.mjs'
+import { StageHouse } from './StageHouse.mjs'
 import { StageVisitors } from './StageVisitors.mjs'
 import { StageVolume } from './StageVolume.mjs'
+import { StagePalette } from './StagePalette.mjs'
 
 // The home page as one fixed-proportion screen of panels. The cells are laid out on a
 // 2000 x 1126 plan and placed by percentage, so the whole stage scales with the window and
@@ -57,6 +59,16 @@ export const STAGE_CELLS = [
   [18, 1972, 806, 1988, 1113],
 ]
 
+// The big boxes that lie under the cells, grouping them (as in the supplied drawing): [left, top, right,
+// bottom] on the plan. One holds the two cells at the top left, the other the whole lower band; they are
+// plain black, so the pale margin between the cells reads as a few clear groups instead of many pieces.
+// (nothing lies under cell 3: the lower band's box goes round it, along its right side and under it)
+export const STAGE_BLOCKS = [
+  [0, 0, 426, 676],
+  [424, 792, 1986, 1123],
+  [0, 998, 424, 1123],
+]
+
 // The place the panel reads out (to be tied to the map's own view later).
 export const LOCATION_READING = '09.0100\u00b0 N / 21.8000\u00b0 E'
 
@@ -84,11 +96,11 @@ function ViewfinderFrame() {
     createElement('path', {
       d: `M0.6 ${reachY}V0.6H${reachX}M${w - reachX} 0.6H${w - 0.6}V${reachY}M0.6 ${h - reachY}V${h - 0.6}H${reachX}M${w - reachX} ${h - 0.6}H${w - 0.6}V${h - reachY}`,
       fill: 'none',
-      stroke: '#767676',
+      stroke: '#bed7d6',
       strokeWidth: 1.1,
     }),
     [[4, 4], [w - 10.5, 4], [4, h - 10.5], [w - 10.5, h - 10.5]].map(([x, y]) =>
-      createElement('rect', { key: `${x}-${y}`, x, y, width: 6.5, height: 6.5, fill: '#767676' })
+      createElement('rect', { key: `${x}-${y}`, x, y, width: 6.5, height: 6.5, fill: '#eae2c4' })
     )
   )
 }
@@ -112,8 +124,19 @@ export function HomeStage() {
     createElement(
       'div',
       { className: 'stage', style: { '--stage-ratio': `${STAGE_WIDTH} / ${STAGE_HEIGHT}` } },
+      // the colour filters the pictures are shown through (see StagePalette)
+      createElement(StagePalette),
       // the margins between the boxes, filled with fine ordered graphics (under the boxes)
       createElement(StageMargins, { boxes: STAGE_CELLS, width: STAGE_WIDTH, height: STAGE_HEIGHT }),
+      // the big boxes under the cells
+      STAGE_BLOCKS.map((block, index) =>
+        createElement('div', {
+          key: `block-${index}`,
+          className: 'stage-block',
+          'aria-hidden': 'true',
+          style: getCellStyle([0, ...block]),
+        })
+      ),
       STAGE_CELLS.map((cell) => {
         const [number] = cell
         if (number === 4) {
@@ -164,7 +187,7 @@ export function HomeStage() {
             },
             createElement('img', {
               className: 'stage-cell__picture',
-              src: assetPath('media/strip-14-grey.png'),
+              src: assetPath('media/strip-14-color.png'),
               alt: '',
               draggable: false,
             })
@@ -231,7 +254,8 @@ export function HomeStage() {
               'aria-label': '칸 13, 주파수',
               style: getCellStyle(cell),
             },
-            createElement(StageSpectrum)
+            createElement(StageSpectrum),
+            createElement(StageHouse)
           )
         }
         if (number === 12) {
