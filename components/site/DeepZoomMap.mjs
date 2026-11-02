@@ -42,7 +42,7 @@ const MAX_SPIN_SPEED = 0.16
 const SPIN_IDLE_MS = 90
 // Changes with every new set of the map's pictures: browsers keep pictures for minutes, and an old
 // copy of one picture next to the new others (e.g. frames without the land channel) breaks the look.
-const PICTURES = 'v=3'
+const PICTURES = 'v=4'
 const withVersion = (url) => `${url}?${PICTURES}`
 // This close below the hand-over the clip is already sought to its frame, so it is ready.
 const PRESEEK_Z = 0.45
@@ -55,8 +55,9 @@ const ASLANT_HOLD = 0.4
 // clip then keeps.
 const LINES_FROM = 1.8
 // zoom for an amount of wheel turned, with the rest on the aslant view
-// where the page opens: in the middle of the rest on the aslant view
-const START_TURN = ZOOM_ASLANT + ASLANT_HOLD / 2
+// where the page opens
+const START_ZOOM = 1.2 // the view the page opens on and the reset button returns to
+const START_TURN = START_ZOOM
 const zoomForTurn = (turn) =>
   turn < ZOOM_ASLANT ? turn : turn < ZOOM_ASLANT + ASLANT_HOLD ? ZOOM_ASLANT : turn - ASLANT_HOLD
 
@@ -92,12 +93,36 @@ function getPlanetView(z, yaw, pitch) {
 }
 
 // The houses picture with its edges faded out, so it can lie over the clip's last frame.
-function featherPicture(image, feather) {
+// The roads of the map are drawn in light double lines, which the pixel look keeps only where they are
+// dark enough. A curve over the picture brings them to a steady darkness (and leaves the faintest lines
+// and specks as they are), so a road does not stop where the picture changes from one source to the
+// other, nor where it is drawn finer.
+function darkenRoads(source) {
   const canvas = document.createElement('canvas')
-  canvas.width = image.naturalWidth
-  canvas.height = image.naturalHeight
+  canvas.width = source.naturalWidth || source.width
+  canvas.height = source.naturalHeight || source.height
+  const context = canvas.getContext('2d', { willReadFrequently: true })
+  context.drawImage(source, 0, 0)
+  try {
+    const data = context.getImageData(0, 0, canvas.width, canvas.height)
+    const px = data.data
+    const curve = new Uint8ClampedArray(256)
+    for (let i = 0; i < 256; i += 1) curve[i] = 255 * (i / 255) ** 2.4
+    for (let i = 0; i < px.length; i += 4) {
+      px[i] = curve[px[i]]
+      px[i + 1] = curve[px[i + 1]]
+      px[i + 2] = curve[px[i + 2]]
+    }
+    context.putImageData(data, 0, 0)
+  } catch {
+    // the picture simply stays as it is
+  }
+  return canvas
+}
+
+function featherPicture(image, feather) {
+  const canvas = darkenRoads(image)
   const context = canvas.getContext('2d')
-  context.drawImage(image, 0, 0)
   context.globalCompositeOperation = 'destination-out'
   const { width, height } = canvas
   const edges = [
@@ -278,7 +303,7 @@ export function DeepZoomMap() {
     // The toolbar's satellite button and the layer list's checkboxes.
     let satelliteEnabled = true
     // How far in the view is (see ZOOM_PATH), and where the wheel is taking it.
-    let zoom = ZOOM_ASLANT
+    let zoom = START_ZOOM
     // how much the wheel has been turned (zoomForTurn makes it a zoom)
     let turnTarget = START_TURN
     // Where the planet has been dragged to; the zoom turns it home from here.
@@ -580,7 +605,7 @@ export function DeepZoomMap() {
       image.src = withVersion(assetPath(src.slice(1)))
     }
     loadImage(ZOOM_PATH.houses.lastFrame, (image) => {
-      lastFrame = image
+      lastFrame = darkenRoads(image)
       if (housesDrawn) show()
     })
     loadImage(ZOOM_PATH.houses.src, (image) => {
