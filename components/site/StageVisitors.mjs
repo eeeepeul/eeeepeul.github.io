@@ -168,8 +168,7 @@ export function StageVisitors() {
           y: ROW_TOPS[block.row],
           width: block.x1 - block.x0,
           height: ROW_HEIGHT,
-          fill: '#5f9ca0',
-          opacity: 0.55,
+          fill: '#9ebbb0',
         })
       ),
       bars.map((bar, index) =>
@@ -189,7 +188,6 @@ export function StageVisitors() {
             width: 5,
             height: ROW_HEIGHT,
             fill: '#a8080e',
-            opacity: 0.9,
           })
         : null
     )

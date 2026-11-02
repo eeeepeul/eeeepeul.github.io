@@ -70,7 +70,7 @@ export function StageVolume() {
       onPointerCancel: onUp,
       onKeyDown: onKey,
     },
-    createElement('rect', { width: 118, height: 582, fill: '#9dcbc8' }),
+    createElement('rect', { width: 118, height: 582, fill: '#bed7d6' }),
     // the grey the bars stand on, following the curve
     LEFTS.map((left, i) =>
       createElement('rect', { key: `base${i}`, x: left, y: i * PITCH, width: 86 - left, height: PITCH + 0.4, fill: '#5f9ca0' })

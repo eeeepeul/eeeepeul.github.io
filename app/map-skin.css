@@ -867,7 +867,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .scale-cell__heat {
   position: absolute;
   inset: 0;
-  opacity: 0.7; /* the heat at 70% of its full strength */
+  opacity: 1; /* flat colours: no transparency */
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -2469,7 +2469,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   --c-line: #3e7d7e;
   --c-chip: #5f8c8a;
   --c-sea: #5f9ca0;
-  --c-aqua: #9dcbc8;
+  --c-aqua: #bed7d6;
   --c-cream: #eae2c4;
   --c-field: #e2debc;
   --c-red: #a8080e;
@@ -2499,7 +2499,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
     [data-stage-cell='7'],
     [data-stage-cell='8']
   )::after {
-  box-shadow: inset 0 0 0 1px rgba(157, 203, 200, 0.55);
+  box-shadow: inset 0 0 0 1px #bed7d6;
 }
 
 .stage-cell[data-stage-cell='4']::after {
@@ -2511,7 +2511,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 }
 
 .stage-cell__number {
-  color: rgba(10, 29, 33, 0.5);
+  color: #5f7c7e;
 }
 
 .stage-cell--map {
@@ -2532,7 +2532,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .stage-bar__chip {
   color: var(--c-cream);
   background: var(--c-ink);
-  box-shadow: inset 0 0 0 1px rgba(157, 203, 200, 0.45);
+  box-shadow: inset 0 0 0 1px #bed7d6;
 }
 
 /* cell 2: the scale, the aerial view and the pencil view */
@@ -2570,7 +2570,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 }
 
 .scale-cell__divider-handle {
-  background: rgba(14, 48, 56, 0.92);
+  background: #0e3038;
   border-color: var(--c-cream);
 }
 
@@ -2588,7 +2588,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 
 .scale-cell__zoom {
   background: var(--c-navy);
-  box-shadow: inset 0 0 0 1px rgba(157, 203, 200, 0.5);
+  box-shadow: inset 0 0 0 1px #bed7d6;
 }
 
 .scale-cell__step {
@@ -2652,7 +2652,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 }
 
 .about-row.is-selected::after {
-  background: rgba(234, 226, 196, 0.16);
+  background: #8c1a1f;
 }
 
 .about-toggle {
@@ -2712,7 +2712,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .visitors-chip {
   color: var(--c-cream);
   background: var(--c-navy);
-  box-shadow: inset 0 0 0 1px rgba(157, 203, 200, 0.45);
+  box-shadow: inset 0 0 0 1px #bed7d6;
 }
 
 .visitors-active span {
@@ -2838,7 +2838,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 
 .player-menu {
   background: var(--c-field);
-  box-shadow: 0 0 0 1px var(--c-line), 0 0.5cqw 1.6cqw rgba(6, 8, 6, 0.3);
+  box-shadow: 0 0 0 1px var(--c-line);
 }
 
 .player-menu button {
@@ -3032,7 +3032,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 }
 
 .stage-cell--map .map-viewport-ruler--top::before {
-  background: repeating-linear-gradient(to right, transparent 0 4px, rgba(13, 47, 55, 0.82) 4px 5px);
+  background: repeating-linear-gradient(to right, transparent 0 4px, #0d2f37 4px 5px);
 }
 
 .stage-cell--map .map-viewport-ruler--top::after {
@@ -3040,7 +3040,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 }
 
 .stage-cell--map .map-viewport-ruler--left::before {
-  background: repeating-linear-gradient(to bottom, transparent 0 4px, rgba(13, 47, 55, 0.82) 4px 5px);
+  background: repeating-linear-gradient(to bottom, transparent 0 4px, #0d2f37 4px 5px);
 }
 
 .stage-cell--map .map-viewport-ruler--left::after {

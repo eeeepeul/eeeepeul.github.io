@@ -96,7 +96,7 @@ function ViewfinderFrame() {
     createElement('path', {
       d: `M0.6 ${reachY}V0.6H${reachX}M${w - reachX} 0.6H${w - 0.6}V${reachY}M0.6 ${h - reachY}V${h - 0.6}H${reachX}M${w - reachX} ${h - 0.6}H${w - 0.6}V${h - reachY}`,
       fill: 'none',
-      stroke: '#9dcbc8',
+      stroke: '#bed7d6',
       strokeWidth: 1.1,
     }),
     [[4, 4], [w - 10.5, 4], [4, h - 10.5], [w - 10.5, h - 10.5]].map(([x, y]) =>

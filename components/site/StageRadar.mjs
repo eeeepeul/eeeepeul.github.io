@@ -26,6 +26,12 @@ const RAD = Math.PI / 180
 // the angle of a point from straight up, clockwise, round the centre of the radar
 // The glow the sweep leaves behind is cut into thin slices that fade by angle: nothing at the
 // trailing edge, most at the line, so no edge of the wedge shows.
+const blendHex = (from, to, amount) => {
+  const parse = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
+  const a = parse(from)
+  const b = parse(to)
+  return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * amount)).join(',')})`
+}
 const WEDGE_SLICE_COUNT = 56
 const WEDGE_SLICES = Array.from({ length: WEDGE_SLICE_COUNT }, (_, i) => {
   const t0 = i / WEDGE_SLICE_COUNT
@@ -38,7 +44,8 @@ const WEDGE_SLICES = Array.from({ length: WEDGE_SLICE_COUNT }, (_, i) => {
   return {
     key: i,
     d: `M${CX} ${CY - 4}L${point(t0)}A204 204 0 0 1 ${point(t1, 0.3)}Z`,
-    opacity: 0.5 * t * t,
+    // the glow as flat colours: the ground's red towards the line's pale, no transparency
+    fill: blendHex('#640609', '#f4e6cc', 0.5 * t * t),
   }
 })
 
@@ -251,16 +258,6 @@ export function StageRadar() {
     createElement(
       'svg',
       { className: 'radar-plane', viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: 'none', role: 'img', 'aria-label': '집으로 오는 사람들의 레이더' },
-      createElement(
-        'defs',
-        null,
-        createElement(
-          'radialGradient',
-          { id: 'radar-halo' },
-          createElement('stop', { offset: 0, stopColor: '#f4e6cc', stopOpacity: 0.85 }),
-          createElement('stop', { offset: 1, stopColor: '#f4e6cc', stopOpacity: 0 })
-        )
-      ),
       createElement('rect', { width: W, height: H, fill: '#640609' }),
       // the grid
       createElement('path', {
@@ -278,7 +275,6 @@ export function StageRadar() {
           sideTicks.map((t) => `M0 ${20 + t.at}h${t.length}M${W} ${20 + t.at}h-${t.length}`).join(''),
         stroke: '#d98b7c',
         strokeWidth: 0.8,
-        opacity: 0.7,
         fill: 'none',
       }),
       [[4, 4], [430, 4], [4, 298], [430, 298]].map(([x, y]) =>
@@ -314,7 +310,7 @@ export function StageRadar() {
           'g',
           { transform: `rotate(${sweep.toFixed(2)} ${CX} ${CY})` },
           WEDGE_SLICES.map((slice) =>
-            createElement('path', { key: slice.key, d: slice.d, fill: '#f4e6cc', fillOpacity: slice.opacity })
+            createElement('path', { key: slice.key, d: slice.d, fill: slice.fill })
           ),
           createElement('path', { d: `M${CX} ${CY - 4}V${CY - 204}`, stroke: '#f4e6cc', strokeWidth: 3, fill: 'none' })
         )
@@ -340,9 +336,10 @@ export function StageRadar() {
             fill: 'none',
             stroke: '#f4e6cc',
             strokeWidth: 1.2,
-            opacity: (1 - phase) * 0.55,
+            // flat: the ripple is drawn while it is strong enough, then it is gone
+            display: phase < 0.55 ? undefined : 'none',
           }),
-          createElement('circle', { cx: house.x, cy: house.y, r: 11 + flash * 8, fill: 'url(#radar-halo)', opacity: 0.25 + 0.2 * Math.sin(time * 2.2 + k) + flash * 0.6 }),
+          createElement('circle', { cx: house.x, cy: house.y, r: 11 + flash * 8, fill: '#8a1016', display: flash > 0.2 ? undefined : 'none' }),
           createElement('circle', { cx: house.x, cy: house.y, r: 4.7, fill: flash > 0.2 ? '#f4e6cc' : '#e2b8a4' })
         )
       }),
@@ -350,8 +347,8 @@ export function StageRadar() {
       people.map((p) =>
         createElement(
           'g',
-          { key: `p${p.id}`, opacity: Math.max(0, Math.min(1, p.alpha)) },
-          pings[p.id] ? createElement('circle', { cx: p.x, cy: p.y, r: 4 + (1 - pings[p.id]) * 12, fill: 'none', stroke: '#f4e6cc', strokeWidth: 1, opacity: pings[p.id] * 0.8 }) : null,
+          { key: `p${p.id}`, display: p.alpha > 0.35 ? undefined : 'none' },
+          pings[p.id] ? createElement('circle', { cx: p.x, cy: p.y, r: 4 + (1 - pings[p.id]) * 12, fill: 'none', stroke: '#f4e6cc', strokeWidth: 1, display: pings[p.id] > 0.3 ? undefined : 'none' }) : null,
           createElement('path', {
             d: `M${p.x - 4} ${p.y}h8M${p.x} ${p.y - 4}v8M${p.x - 2.8} ${p.y - 2.8}l5.6 5.6M${p.x + 2.8} ${p.y - 2.8}l-5.6 5.6`,
             stroke: '#f4e6cc',

@@ -11,9 +11,15 @@ export const INKS = {
   navy: [14, 48, 56],
   teal: [44, 100, 112],
   sea: [95, 156, 160],
-  aqua: [157, 203, 200],
+  aqua: [190, 215, 214],
   cream: [234, 226, 196],
   peach: [226, 170, 150],
+  deepGreen: [24, 31, 29],
+  forest: [53, 66, 57],
+  sage: [93, 108, 89],
+  mist: [128, 141, 128],
+  fog: [176, 183, 173],
+  paper: [234, 227, 211],
   red: [168, 8, 14],
   redBright: [208, 26, 28],
   redDeep: [115, 3, 9],
@@ -30,8 +36,9 @@ const TONES = {
   'tone-line-black': [[0, 'cream'], [0.6, 'cream'], [0.8, 'teal'], [0.9, 'black'], [1, 'black']],
   // keeps light light: dark to navy, light to cream
   'tone-paper': [[0, 'ink'], [0.45, 'teal'], [0.75, 'aqua'], [1, 'cream']],
-  // a photograph seen from the air: navy shadows, teal and aqua middles, cream lights
-  'tone-field': [[0, 'black'], [0.28, 'navy'], [0.5, 'teal'], [0.72, 'sea'], [0.88, 'aqua'], [1, 'cream']],
+  // a photograph seen from the air, in the greens of the supplied land: navy shadows, forest and sage
+  // greens in the middle, cream lights
+  'tone-field': [[0, 'black'], [0.14, 'deepGreen'], [0.36, 'forest'], [0.56, 'sage'], [0.74, 'mist'], [0.88, 'fog'], [1, 'paper']],
   // black and cream only
   'tone-mono': [[0, 'black'], [1, 'cream']],
   // in reds, up to cream (the scope, the line of letters)

@@ -35,8 +35,10 @@ export function StageVisits() {
       for (const [x, y, radius, opacity] of circlesAt(slots, step)) {
         context.beginPath()
         context.arc(x * WIDTH, y * HEIGHT, radius, 0, Math.PI * 2)
+        // flat red: a circle is either there or not
+        if (opacity < 0.08) continue
         context.lineWidth = radius > 20 ? 1.5 : 2
-        context.strokeStyle = `rgba(${RED}, ${opacity.toFixed(3)})`
+        context.strokeStyle = `rgb(${RED})`
         context.stroke()
       }
     }
