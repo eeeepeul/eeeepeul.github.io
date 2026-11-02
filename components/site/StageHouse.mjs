@@ -33,7 +33,7 @@ export function StageHouse() {
       shape.closePath()
       const geometry = new THREE.ExtrudeGeometry(shape, { depth: DEPTH, bevelEnabled: false, curveSegments: 1 })
       geometry.translate(-0.5, -HOUSE_ASPECT / 2, -DEPTH / 2)
-      const material = new THREE.MeshBasicMaterial({ color: 0x000000 })
+      const material = new THREE.MeshBasicMaterial({ color: 0x0a1d21 })
       const house = new THREE.Mesh(geometry, material)
       scene.add(house)
       camera.position.set(0, Math.sin(LOOK_DOWN) * 6, Math.cos(LOOK_DOWN) * 6)

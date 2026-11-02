@@ -11,7 +11,7 @@ import { VISIT_ASPECT, circlesAt, createVisits, stepAt } from '../../lib/visit-c
 // so it is only seen where the 'after' picture is, and it zooms with the picture.
 const WIDTH = 1610 // the picture's own width, so a circle's radius is in picture pixels
 const HEIGHT = Math.round(WIDTH * VISIT_ASPECT)
-const RED = '238, 74, 52'
+const RED = '192, 2, 14'
 
 export function StageVisits() {
   const canvasRef = useRef(null)

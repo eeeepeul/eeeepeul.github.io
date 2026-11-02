@@ -13,6 +13,9 @@ const COLUMNS = 1400
 const ROWS = 76
 const SCALE = COLUMNS / 1000
 const FRAME_MS = 33
+// the paper and the ink (see StagePalette)
+const PAPER = [234, 226, 196]
+const INK = [10, 30, 33]
 
 const smooth = (a, b, x) => {
   const t = Math.max(0, Math.min(1, (x - a) / (b - a)))
@@ -256,10 +259,12 @@ export function StageSpectrum() {
           // the dark core, with feathered edges
           gray -= 105 * smooth(0.06, 0.7, heart)
           gray = Math.max(78, Math.min(246, gray))
+          // printed in the stage's inks: the paper cream, the ink a deep navy
+          const k = (246 - gray) / 168
           const i = (y * COLUMNS + x) * 4
-          data[i] = gray
-          data[i + 1] = gray
-          data[i + 2] = gray
+          data[i] = PAPER[0] + (INK[0] - PAPER[0]) * k
+          data[i + 1] = PAPER[1] + (INK[1] - PAPER[1]) * k
+          data[i + 2] = PAPER[2] + (INK[2] - PAPER[2]) * k
           data[i + 3] = 255
         }
       }

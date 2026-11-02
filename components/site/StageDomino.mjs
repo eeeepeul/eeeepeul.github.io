@@ -89,7 +89,7 @@ export function StageDomino() {
           context.drawImage(sprite, index * FRAME_W, 0, FRAME_W, FRAME_H, left, 0, right - left, height)
           if (i < TILES - 1) {
             // a hair-fine divider: one screen pixel, and faint
-            context.fillStyle = 'rgba(20, 30, 50, 0.4)'
+            context.fillStyle = 'rgba(10, 29, 33, 0.4)'
             context.fillRect(right - GRAIN_SCALE, 0, GRAIN_SCALE, height)
           }
         }

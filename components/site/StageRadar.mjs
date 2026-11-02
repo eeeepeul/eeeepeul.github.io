@@ -162,8 +162,8 @@ function ScopeCamera() {
     createElement(
       'svg',
       { className: 'radar-scope__sight', viewBox: '0 0 314 314', 'aria-hidden': 'true' },
-      createElement('circle', { cx: 157, cy: 156, r: 134, fill: 'none', stroke: '#d4d4d4', strokeWidth: 2.4 }),
-      createElement('path', { d: 'M23 156H291M157 22V290', stroke: '#d4d4d4', strokeWidth: 2.2, fill: 'none' })
+      createElement('circle', { cx: 157, cy: 156, r: 134, fill: 'none', stroke: '#edd5c0', strokeWidth: 2.4 }),
+      createElement('path', { d: 'M23 156H291M157 22V290', stroke: '#edd5c0', strokeWidth: 2.2, fill: 'none' })
     )
   )
 }
@@ -257,17 +257,17 @@ export function StageRadar() {
         createElement(
           'radialGradient',
           { id: 'radar-halo' },
-          createElement('stop', { offset: 0, stopColor: '#fff', stopOpacity: 0.85 }),
-          createElement('stop', { offset: 1, stopColor: '#fff', stopOpacity: 0 })
+          createElement('stop', { offset: 0, stopColor: '#f4e6cc', stopOpacity: 0.85 }),
+          createElement('stop', { offset: 1, stopColor: '#f4e6cc', stopOpacity: 0 })
         )
       ),
-      createElement('rect', { width: W, height: H, fill: '#5f5f5f' }),
+      createElement('rect', { width: W, height: H, fill: '#640609' }),
       // the grid
       createElement('path', {
         d:
           Array.from({ length: 28 }, (_, k) => `M${10 + k * 16} 0V${H}`).join('') +
           Array.from({ length: 20 }, (_, k) => `M0 ${13 + k * 16}H${W}`).join(''),
-        stroke: '#706f6f',
+        stroke: '#8a1016',
         strokeWidth: 1,
         fill: 'none',
       }),
@@ -276,17 +276,17 @@ export function StageRadar() {
         d:
           topTicks.map((t) => `M${20 + t.at} 0v${t.length}M${20 + t.at} ${H}v-${t.length}`).join('') +
           sideTicks.map((t) => `M0 ${20 + t.at}h${t.length}M${W} ${20 + t.at}h-${t.length}`).join(''),
-        stroke: '#a8a8a8',
+        stroke: '#d98b7c',
         strokeWidth: 0.8,
         opacity: 0.7,
         fill: 'none',
       }),
       [[4, 4], [430, 4], [4, 298], [430, 298]].map(([x, y]) =>
-        createElement('rect', { key: `${x}-${y}`, x, y, width: 12, height: 12, fill: '#a5a5a5' })
+        createElement('rect', { key: `${x}-${y}`, x, y, width: 12, height: 12, fill: '#d98b7c' })
       ),
       // the readouts
       [24, 29.3, 35.7, 42.7, 48.7, 54.7, 60.7].map((x, k) =>
-        createElement('rect', { key: `sq${k}`, x, y: 23.8, width: 4.2, height: 4, fill: k === 2 ? '#fff' : '#a5a5a5' })
+        createElement('rect', { key: `sq${k}`, x, y: 23.8, width: 4.2, height: 4, fill: k === 2 ? '#f4e6cc' : '#d98b7c' })
       ),
       createElement(
         'g',
@@ -303,7 +303,7 @@ export function StageRadar() {
         )
       ),
       [[382, 24, 40], [398, 34.3, 24], [362, 44.3, 60], [374, 54.3, 48]].map(([x, y, width], k) =>
-        createElement('rect', { key: `bar${k}`, x, y, width, height: 7.6, fill: '#a8a8a8' })
+        createElement('rect', { key: `bar${k}`, x, y, width, height: 7.6, fill: '#d98b7c' })
       ),
       // what the sweep has passed over, and the sweep itself, turning about the centre
       createElement('clipPath', { id: 'radar-upper' }, createElement('rect', { x: 0, y: 0, width: W, height: CY + 1 })),
@@ -314,18 +314,18 @@ export function StageRadar() {
           'g',
           { transform: `rotate(${sweep.toFixed(2)} ${CX} ${CY})` },
           WEDGE_SLICES.map((slice) =>
-            createElement('path', { key: slice.key, d: slice.d, fill: '#fff', fillOpacity: slice.opacity })
+            createElement('path', { key: slice.key, d: slice.d, fill: '#f4e6cc', fillOpacity: slice.opacity })
           ),
-          createElement('path', { d: `M${CX} ${CY - 4}V${CY - 204}`, stroke: '#fff', strokeWidth: 3, fill: 'none' })
+          createElement('path', { d: `M${CX} ${CY - 4}V${CY - 204}`, stroke: '#f4e6cc', strokeWidth: 3, fill: 'none' })
         )
       ),
       // the arcs
-      createElement('path', { d: `M22 ${CY}A204 204 0 0 1 430 ${CY}`, stroke: '#cfcfcf', strokeWidth: 2.6, fill: 'none' }),
-      createElement('path', { d: `M88 ${CY}A138 138 0 0 1 364 ${CY}`, stroke: '#cfcfcf', strokeWidth: 2, strokeDasharray: '9 6', fill: 'none' }),
-      createElement('path', { d: `M156 ${CY}A70 70 0 0 1 296 ${CY}`, stroke: '#cfcfcf', strokeWidth: 2, strokeDasharray: '9 6', fill: 'none' }),
-      createElement('path', { d: `M${CX} 78.7V302`, stroke: '#a2a2a2', strokeWidth: 2.6, fill: 'none' }),
-      createElement('circle', { cx: CX, cy: 95.7, r: 3.4, fill: 'none', stroke: '#8e8e8e', strokeWidth: 1.4 }),
-      createElement('path', { d: `M214 ${CY - 2.5}h24`, stroke: '#d8d8d8', strokeWidth: 2, fill: 'none' }),
+      createElement('path', { d: `M22 ${CY}A204 204 0 0 1 430 ${CY}`, stroke: '#edd5c0', strokeWidth: 2.6, fill: 'none' }),
+      createElement('path', { d: `M88 ${CY}A138 138 0 0 1 364 ${CY}`, stroke: '#edd5c0', strokeWidth: 2, strokeDasharray: '9 6', fill: 'none' }),
+      createElement('path', { d: `M156 ${CY}A70 70 0 0 1 296 ${CY}`, stroke: '#edd5c0', strokeWidth: 2, strokeDasharray: '9 6', fill: 'none' }),
+      createElement('path', { d: `M${CX} 78.7V302`, stroke: '#d98b7c', strokeWidth: 2.6, fill: 'none' }),
+      createElement('circle', { cx: CX, cy: 95.7, r: 3.4, fill: 'none', stroke: '#c76e60', strokeWidth: 1.4 }),
+      createElement('path', { d: `M214 ${CY - 2.5}h24`, stroke: '#edd5c0', strokeWidth: 2, fill: 'none' }),
       // the houses: fixed, each glowing
       HOUSES.map((house, k) => {
         const phase = (time * 0.55 + k * 0.27) % 1
@@ -338,12 +338,12 @@ export function StageRadar() {
             cy: house.y,
             r: 5 + phase * 13,
             fill: 'none',
-            stroke: '#fff',
+            stroke: '#f4e6cc',
             strokeWidth: 1.2,
             opacity: (1 - phase) * 0.55,
           }),
           createElement('circle', { cx: house.x, cy: house.y, r: 11 + flash * 8, fill: 'url(#radar-halo)', opacity: 0.25 + 0.2 * Math.sin(time * 2.2 + k) + flash * 0.6 }),
-          createElement('circle', { cx: house.x, cy: house.y, r: 4.7, fill: flash > 0.2 ? '#fff' : '#c4c4c4' })
+          createElement('circle', { cx: house.x, cy: house.y, r: 4.7, fill: flash > 0.2 ? '#f4e6cc' : '#e2b8a4' })
         )
       }),
       // the people on their way
@@ -351,10 +351,10 @@ export function StageRadar() {
         createElement(
           'g',
           { key: `p${p.id}`, opacity: Math.max(0, Math.min(1, p.alpha)) },
-          pings[p.id] ? createElement('circle', { cx: p.x, cy: p.y, r: 4 + (1 - pings[p.id]) * 12, fill: 'none', stroke: '#fff', strokeWidth: 1, opacity: pings[p.id] * 0.8 }) : null,
+          pings[p.id] ? createElement('circle', { cx: p.x, cy: p.y, r: 4 + (1 - pings[p.id]) * 12, fill: 'none', stroke: '#f4e6cc', strokeWidth: 1, opacity: pings[p.id] * 0.8 }) : null,
           createElement('path', {
             d: `M${p.x - 4} ${p.y}h8M${p.x} ${p.y - 4}v8M${p.x - 2.8} ${p.y - 2.8}l5.6 5.6M${p.x + 2.8} ${p.y - 2.8}l-5.6 5.6`,
-            stroke: '#fff',
+            stroke: '#f4e6cc',
             strokeWidth: 1.1,
             fill: 'none',
           }),
