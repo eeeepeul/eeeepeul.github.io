@@ -16,6 +16,7 @@ import { StageWelcome } from './StageWelcome.mjs'
 import { StageGrain } from './StageGrain.mjs'
 import { StageMargins } from './StageMargins.mjs'
 import { StageSpectrum } from './StageSpectrum.mjs'
+import { StageHouse } from './StageHouse.mjs'
 import { StageVisitors } from './StageVisitors.mjs'
 import { StageVolume } from './StageVolume.mjs'
 
@@ -231,7 +232,8 @@ export function HomeStage() {
               'aria-label': '칸 13, 주파수',
               style: getCellStyle(cell),
             },
-            createElement(StageSpectrum)
+            createElement(StageSpectrum),
+            createElement(StageHouse)
           )
         }
         if (number === 12) {

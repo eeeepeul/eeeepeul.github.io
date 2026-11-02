@@ -44,6 +44,8 @@ export function StageWelcome() {
       // the answer simply is not kept when the browser blocks storage
     }
     setOpen(false)
+    // the map behind the card may now glide to its first view
+    window.dispatchEvent(new CustomEvent('stage:entered'))
   }
 
   return h(

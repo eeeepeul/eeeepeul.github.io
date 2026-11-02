@@ -67,6 +67,13 @@ const LINES_FROM = 1.8
 // where the page opens
 const START_ZOOM = 1.2 // the view the page opens on and the reset button returns to
 const START_TURN = START_ZOOM
+// While the welcome card is open the map waits on the whole planet (as in the opening picture), and on
+// entering glides to its first view in GLIDE_MS, easing out of the start and into the end (a slow
+// first moment, a quick middle, a long soft landing).
+const WELCOME_ZOOM = 0.4
+const GLIDE_MS = 2100
+const GLIDE_DELAY_MS = 900 // without the card: how long after the planet is ready the glide begins
+const smootherstep = (t) => t * t * t * (t * (t * 6 - 15) + 10)
 const zoomForTurn = (turn) =>
   turn < ZOOM_ASLANT ? turn : turn < ZOOM_ASLANT + ASLANT_HOLD ? ZOOM_ASLANT : turn - ASLANT_HOLD
 
@@ -323,9 +330,16 @@ export function DeepZoomMap() {
     // The toolbar's satellite button and the layer list's checkboxes.
     let satelliteEnabled = true
     // How far in the view is (see ZOOM_PATH), and where the wheel is taking it.
-    let zoom = START_ZOOM
+    // (the welcome card is in the page while it is open: then the map waits on the whole planet)
+    // Without the card (the local development page leaves it out) the map still opens on the whole
+    // planet and glides to its first view by itself a moment after it is ready.
+    const welcomeOpen = Boolean(document.querySelector('.welcome'))
+    let glideTimer = 0
+    let zoom = WELCOME_ZOOM
     // how much the wheel has been turned (zoomForTurn makes it a zoom)
-    let turnTarget = START_TURN
+    let turnTarget = WELCOME_ZOOM
+    // the glide from the welcome view to the first one, while it lasts (a wheel turn ends it)
+    let glide = null
     // Where the planet has been dragged to; the zoom turns it home from here.
     let yaw = HOME_ROTATION.yaw
     let pitch = HOME_ROTATION.pitch
@@ -481,7 +495,13 @@ export function DeepZoomMap() {
       let active = false
       const zoomTarget = zoomForTurn(turnTarget)
       const gap = zoomTarget - zoom
-      if (Math.abs(gap) > 0.0005) {
+      if (glide) {
+        if (glide.start === null) glide.start = timestamp
+        const t = Math.min(1, (timestamp - glide.start) / GLIDE_MS)
+        zoom = glide.from + (glide.to - glide.from) * smootherstep(t)
+        active = true
+        if (t >= 1) glide = null
+      } else if (Math.abs(gap) > 0.0005) {
         // However fast the wheel turns, the view moves no faster than it can be drawn smoothly: a top
         // speed (lower where the clip has to find a new frame for every step), and in the clip never
         // more than a few frames ahead of the frame actually on screen.
@@ -538,6 +558,11 @@ export function DeepZoomMap() {
     // Wheel, pinch and swipe all arrive here as an amount of zoom (z).
     const zoomBy = (amount) => {
       if (mode === 'loading' && globe) return
+      if (glide) {
+        // taking the wheel mid-glide: carry on from where the view is
+        turnTarget = zoom
+        glide = null
+      }
       turnTarget = Math.min(ZOOM_END + ASLANT_HOLD, Math.max(0, turnTarget + amount))
       requestFrame()
     }
@@ -683,6 +708,13 @@ export function DeepZoomMap() {
       if (globe && mode !== 'loading') show()
     }
     // Back to the first view: turned home and zoomed all the way out.
+    const handleEntered = () => {
+      if (turnTarget > WELCOME_ZOOM + 0.001 || zoom > WELCOME_ZOOM + 0.001) return
+      glide = { from: zoom, to: START_ZOOM, start: null }
+      turnTarget = START_TURN
+      requestFrame()
+    }
+    window.addEventListener('stage:entered', handleEntered)
     const handleReset = () => {
       yaw = HOME_ROTATION.yaw
       pitch = HOME_ROTATION.pitch
@@ -742,10 +774,12 @@ export function DeepZoomMap() {
         globe.setVideoSource(canvasNode)
         globeSize = ''
         handleResize()
+        if (!welcomeOpen) glideTimer = window.setTimeout(handleEntered, GLIDE_DELAY_MS)
       })
       .catch((error) => {
         // No WebGL or texture: the clip's own first frame stands in for the planet.
         console.error('globe failed to start', error)
+        if (!welcomeOpen) handleEntered()
         if (!cancelled) setMode('video')
       })
 
@@ -759,11 +793,13 @@ export function DeepZoomMap() {
     return () => {
       window.removeEventListener('pageshow', handlePageShow)
       cancelled = true
+      window.clearTimeout(glideTimer)
       window.cancelAnimationFrame(frameId)
       resizeObserver?.disconnect()
       window.removeEventListener('resize', handleResize)
       window.removeEventListener('map:layers', readLayers)
       window.removeEventListener('map:reset', handleReset)
+      window.removeEventListener('stage:entered', handleEntered)
       window.removeEventListener('map:satellite', handleSatellite)
       rootNode.removeEventListener('wheel', handleWheel)
       rootNode.removeEventListener('pointerdown', handlePointerDown)
