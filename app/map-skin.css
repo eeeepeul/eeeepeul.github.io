@@ -1070,6 +1070,89 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+/* the cell is a cube turned about its vertical axis: --turn is 0 on the first page and 1 on the second */
+.about {
+  --w: calc(650 * var(--u));
+  perspective: calc(var(--w) * 2.2);
+  touch-action: pan-y;
+  cursor: grab;
+}
+.about.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+.about-cube {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: translateZ(calc(var(--w) * -0.5)) rotateY(calc(var(--turn) * -90deg));
+  transition: transform 0.55s cubic-bezier(0.22, 0.8, 0.2, 1);
+}
+.about.is-dragging .about-cube {
+  transition: none;
+}
+.about-face {
+  position: absolute;
+  inset: 0;
+  background: #494949;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.about-face--front {
+  transform: translateZ(calc(var(--w) * 0.5));
+}
+.about-face--side {
+  transform: rotateY(90deg) translateZ(calc(var(--w) * 0.5));
+}
+/* the second page: the same panel, with a plain text in place of the tree and the cover */
+.about-panel.about-panel--note {
+  grid-template-rows: 6.4% minmax(0, 1fr);
+}
+.about-notewrap {
+  position: relative;
+  min-height: 0;
+  background: #747474;
+}
+/* the scroll mark: no bar, only a circle on the right edge */
+.about-track {
+  position: absolute;
+  top: calc(12 * var(--u));
+  bottom: calc(12 * var(--u));
+  right: calc(12 * var(--u));
+  width: calc(14 * var(--u));
+  cursor: pointer;
+}
+.about-dot {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: calc(10 * var(--u));
+  height: calc((10 + 26 * var(--stretch, 0)) * var(--u));
+  margin-left: calc(-5 * var(--u));
+  border-radius: calc(5 * var(--u));
+  background: #f6f6f6;
+  pointer-events: none;
+}
+.about-note {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: calc(14 * var(--u)) calc(16 * var(--u));
+  background: #747474;
+  font-size: calc(22.5 * var(--u));
+  line-height: 1.58;
+  padding-right: calc(38 * var(--u));
+  scrollbar-width: none;
+}
+.about-note::-webkit-scrollbar {
+  display: none;
+}
+.about-note p {
+  margin: 0 0 calc(22 * var(--u));
+  word-break: keep-all;
+}
+
 .about-panel {
   position: absolute;
   left: 2.46%;
@@ -1267,23 +1350,30 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: calc(12 * var(--u)) calc(16 * var(--u)) 0;
+  /* the same margins as the text on the second face */
+  padding: calc(14 * var(--u)) calc(38 * var(--u)) 0 calc(16 * var(--u));
   background: #747474;
 }
 
 .about-text p {
   margin: 0;
-  height: calc(24.6 * 5 * var(--u));
-  overflow: hidden;
-  font-size: calc(16.4 * var(--u));
-  line-height: calc(24.6 * var(--u));
+  /* the same size as the text on the second face */
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  font-size: calc(22.5 * var(--u));
+  line-height: calc(35.5 * var(--u));
+}
+.about-text p::-webkit-scrollbar {
+  display: none;
 }
 
 .about-foot {
   display: flex;
   align-items: center;
   gap: calc(10 * var(--u));
-  margin-top: calc(10 * var(--u));
+  margin-top: calc(4 * var(--u));
   color: #b7b7b7;
   font-size: calc(16 * var(--u));
   font-weight: 500;
@@ -1298,9 +1388,26 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 }
 
 .about-foot__bar {
-  width: calc(166 * var(--u));
+  position: relative;
+  display: block;
+  flex: 1 1 0;
+  min-width: 0;
   height: calc(16 * var(--u));
+  --rest: 0.34;
+}
+/* the bar is a level meter: its length is --level of the line (it rests at --rest), up to the right end */
+.about-foot__fill {
+  display: block;
+  width: calc(100% * var(--level, var(--rest)));
+  height: 100%;
   background: #b7b7b7;
+  transition: width 0.09s linear;
+}
+.about-foot__bar:not(.is-typing) .about-foot__fill {
+  transition: width 0.4s ease-out;
+}
+.about-untyped {
+  color: transparent;
 }
 
 /* ---- cell 5: the visitor record (measured from the supplied picture, 760 x 314) ------------ */
