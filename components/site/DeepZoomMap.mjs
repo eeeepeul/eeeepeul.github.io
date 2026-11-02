@@ -51,6 +51,15 @@ const HOUSES_FEATHER = 28
 // The wheel rests a little on the aslant view (the site's main view): this much turning of the wheel
 // (in z) passes over it without moving.
 const ASLANT_HOLD = 0.4
+// how long the view must be still before it is drawn at full sharpness again (ms)
+const REST_MS = 220
+// top speeds of the zoom, in zoom units (z) a second: over the planet, and over the clip and the houses
+const PLANET_SPEED = 1.8
+const CLIP_SPEED = 0.9
+// in the clip the view keeps within this many frames of the frame on screen, and waits at most this
+// long (ms) for it to catch up
+const FRAME_LEAD = 4
+const HOLD_LIMIT_MS = 500
 // Over these zooms the textured planet brings in the map's fine lines (roads, rivers), which the
 // clip then keeps.
 const LINES_FROM = 1.8
@@ -62,7 +71,8 @@ const zoomForTurn = (turn) =>
   turn < ZOOM_ASLANT ? turn : turn < ZOOM_ASLANT + ASLANT_HOLD ? ZOOM_ASLANT : turn - ASLANT_HOLD
 
 // progress along the clip that lands in the middle of a frame
-const frameProgress = (frame) => Math.min(1, (frame + 0.5) / ZOOM_PATH.frameCount)
+const frameProgress = (frame) =>
+  Math.min(1, Math.max(0, (frame - ZOOM_VIDEO.firstFrame + 0.5) / ZOOM_VIDEO.frameCount))
 const HAND_PROGRESS = frameProgress(ZOOM_PATH.handFrame)
 const clamp01 = (value) => Math.min(1, Math.max(0, value))
 
@@ -144,7 +154,7 @@ function featherPicture(image, feather) {
 // Past the clip's last frame: the last frame and, over it, the houses picture, both seen from
 // closer in (getHousesView), drawn into the frame canvas the clip is shown from.
 function drawHouses(canvasNode, view, lastFrame, houses) {
-  const context = canvasNode.getContext('2d', { willReadFrequently: true })
+  const context = canvasNode.getContext('2d')
   if (!context || !lastFrame) return
   const unit = canvasNode.width / ZOOM_VIDEO.width
   context.setTransform(1, 0, 0, 1, 0, 0)
@@ -194,18 +204,28 @@ function setFrameGeometry(node, state) {
 // Returns the number of the frame that was drawn, read back from the blocks the clip
 // carries in its bottom rows (from the video's time when they cannot be read), or null when
 // nothing was drawn (the canvas still holds the frame it had).
+// The frame number is read from a small strip of its own, so the big frame canvas never has to be
+// read back (which would keep it off the graphics card and make every frame slow to draw and upload).
+let codeStrip = null
 function drawFrame(canvasNode, videoNode) {
   if (!canvasNode || !videoNode || videoNode.readyState < 2) return null
-  const context = canvasNode.getContext('2d', { willReadFrequently: true })
+  const context = canvasNode.getContext('2d')
   if (!context) return null
   context.drawImage(videoNode, 0, 0, canvasNode.width, canvasNode.height)
   try {
     const { bits, blockWidth, row } = VIDEO_FRAME_CODE
-    const scale = canvasNode.width / ZOOM_VIDEO.bufferWidth
-    const strip = context.getImageData(0, Math.round(row * scale), Math.round(bits * blockWidth * scale), 1).data
+    if (!codeStrip) {
+      codeStrip = document.createElement('canvas')
+      codeStrip.width = bits * blockWidth
+      codeStrip.height = 1
+    }
+    const stripContext = codeStrip.getContext('2d', { willReadFrequently: true })
+    const scale = (videoNode.videoWidth || ZOOM_VIDEO.bufferWidth) / ZOOM_VIDEO.bufferWidth
+    stripContext.drawImage(videoNode, 0, row * scale, bits * blockWidth * scale, scale, 0, 0, bits * blockWidth, 1)
+    const strip = stripContext.getImageData(0, 0, bits * blockWidth, 1).data
     let frame = 0
     for (let bit = 0; bit < bits; bit += 1) {
-      const x = Math.round((bit * blockWidth + blockWidth / 2) * scale)
+      const x = Math.round(bit * blockWidth + blockWidth / 2)
       frame = (frame << 1) | (strip[x * 4] < 128 ? 1 : 0)
     }
     return frame
@@ -318,6 +338,10 @@ export function DeepZoomMap() {
     let lastFrame = null
     let houses = null
     let housesDrawn = false
+    // until when the view counts as moving (it is drawn lighter until then)
+    let movingUntil = 0
+    // since when the zoom has been waiting for the clip to catch up (0: it is not waiting)
+    let heldSince = 0
     // the clip's frame the frame canvas holds just now (read from the frame itself)
     let shownFrame = -1
 
@@ -425,10 +449,12 @@ export function DeepZoomMap() {
       rootNode.dataset.mapShownFrame = String(shownFrame)
       if (view) {
         drawHouses(canvasNode, view, lastFrame, houses)
+        globe?.markVideoDirty()
         housesDrawn = true
       } else if (housesDrawn) {
         housesDrawn = false
         shownFrame = drawFrame(canvasNode, videoNode) ?? shownFrame
+      globe?.markVideoDirty()
       }
       if (!globe) return
       // The clip shows only once the frame canvas holds one of its frames from the hand-over on;
@@ -456,10 +482,30 @@ export function DeepZoomMap() {
       const zoomTarget = zoomForTurn(turnTarget)
       const gap = zoomTarget - zoom
       if (Math.abs(gap) > 0.0005) {
-        zoom += gap * (1 - Math.exp(-delta / ZOOM_SMOOTHING_MS))
+        // However fast the wheel turns, the view moves no faster than it can be drawn smoothly: a top
+        // speed (lower where the clip has to find a new frame for every step), and in the clip never
+        // more than a few frames ahead of the frame actually on screen.
+        const inClip = zoom > ZOOM_HAND - 0.05
+        const maxStep = ((inClip ? CLIP_SPEED : PLANET_SPEED) * delta) / 1000
+        let step = gap * (1 - Math.exp(-delta / ZOOM_SMOOTHING_MS))
+        step = Math.max(-maxStep, Math.min(maxStep, step))
+        let next = zoom + step
+        if (globe && inClip && next < ZOOM_CLIP_END && shownFrame >= ZOOM_PATH.handFrame && (heldSince === 0 || timestamp - heldSince < HOLD_LIMIT_MS)) {
+          const ahead = getClipZoom(Math.min(200, shownFrame + FRAME_LEAD))
+          const behind = getClipZoom(Math.max(ZOOM_PATH.handFrame, shownFrame - FRAME_LEAD))
+          const held = step > 0 ? Math.min(next, Math.max(ahead, zoom)) : Math.max(next, Math.min(behind, zoom))
+          if (held === zoom) heldSince = heldSince || timestamp
+          else heldSince = 0
+          next = held
+        } else {
+          // (waited long enough: let this step through, and wait again from the next)
+          heldSince = 0
+        }
+        zoom = next
         active = true
       } else {
         zoom = zoomTarget
+        heldSince = 0
       }
       if (!dragging && (Math.abs(spinYaw) > MIN_SPIN_SPEED || Math.abs(spinPitch) > MIN_SPIN_SPEED)) {
         yaw += spinYaw * delta
@@ -471,8 +517,17 @@ export function DeepZoomMap() {
       } else if (dragging) {
         active = true
       }
+      // lighter drawing while the view moves; full sharpness once it has been still a moment
+      if (globe) {
+        if (active) {
+          movingUntil = timestamp + REST_MS
+          globe.setMoving(true)
+        } else if (timestamp >= movingUntil) {
+          globe.setMoving(false)
+        }
+      }
       show()
-      if (active) frameId = window.requestAnimationFrame(tick)
+      if (active || timestamp < movingUntil) frameId = window.requestAnimationFrame(tick)
       else lastTimestamp = 0
     }
 
@@ -581,6 +636,7 @@ export function DeepZoomMap() {
       // past the clip's end the frame canvas holds the houses, not the clip
       if (housesDrawn) return
       shownFrame = drawFrame(canvasNode, videoNode) ?? shownFrame
+      globe?.markVideoDirty()
       // show it with its own land and place, and start the next seek if the zoom has moved on
       if (globe && mode === 'video') show()
       requestFrame()
@@ -590,6 +646,7 @@ export function DeepZoomMap() {
       setStatus('ready')
       handleResize()
       if (!housesDrawn) shownFrame = drawFrame(canvasNode, videoNode) ?? shownFrame
+      globe?.markVideoDirty()
       if (globe && mode === 'video') globe.render()
     }
     const handleError = () => {
