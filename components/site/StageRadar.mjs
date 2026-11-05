@@ -258,7 +258,7 @@ export function StageRadar() {
     createElement(
       'svg',
       { className: 'radar-plane', viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: 'none', role: 'img', 'aria-label': '집으로 오는 사람들의 레이더' },
-      createElement('rect', { width: W, height: H, fill: '#640609' }),
+      createElement('rect', { width: W, height: H, fill: '#252525' }),
       // the grid
       createElement('path', {
         d:

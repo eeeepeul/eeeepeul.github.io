@@ -867,7 +867,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .scale-cell__heat {
   position: absolute;
   inset: 0;
-  opacity: 1; /* flat colours: no transparency */
+  opacity: 0.6; /* the heat shown at 60% */
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1152,7 +1152,8 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   /* a blank line (the height of one line) between paragraphs; line breaks in the text are kept */
   margin: 0 0 calc(35.5 * var(--u));
   white-space: pre-line;
-  word-break: normal;
+  /* a word (an eojeol) is kept whole: a line breaks between words only */
+  word-break: keep-all;
   overflow-wrap: break-word;
 }
 
@@ -2486,7 +2487,8 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 }
 
 .stage {
-  background: var(--c-aqua);
+  /* the margin between the boxes is white (the big black boxes lie over it) */
+  background: #ffffff;
   box-shadow: 0 0 0 1px var(--c-ink);
 }
 
@@ -2892,13 +2894,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   filter: url(#tone-chart);
 }
 
-.stage-cell--domino {
-  background: var(--c-navy);
-}
-
-.domino {
-  filter: brightness(1.4) saturate(0.75) url(#tone-tiles);
-}
+/* cell 16 (the tiles) keeps its own colours, as before the stage was recoloured */
 
 .stage-cell--sequence {
   background: #c7d3c3;
@@ -3084,4 +3080,219 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   box-shadow: inset 0 0 0 max(1px, 0.09cqw) #e8e2c7;
   pointer-events: none;
   z-index: 50;
+}
+
+/* ==== black and white ============================================================================
+   The whole stage in greys, as in the preview, its white being the pale #E6E7D7. Two plain sheets lie over
+   the stage, inside it, and no filter is put on the stage itself (that would make the filters of the pictures
+   inside it, the print look, very slow). The first turns what lies under it to greys and raises them until
+   the cream of the land (brightness 225 of 255) is full white (1.1333); the second is a plain #E6E7D7 laid
+   on by multiplying, which takes white to that colour and the greys with it. A box that is put above both
+   (z-index 600, see .visitors-bar) keeps a pure white #FFFFFF. Taking the rules of both sheets away puts the
+   colours back. */
+.stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 499;
+  pointer-events: none;
+  -webkit-backdrop-filter: grayscale(1) brightness(1.1333);
+  backdrop-filter: grayscale(1) brightness(1.1333);
+}
+
+.stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  background: #e6e7d7;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* what lies round the stage when the window is not of its shape, in the grey of the dark it was */
+.stage-shell {
+  background: #1b1b1a;
+}
+
+/* ==== the print look of the globe on the pictures of the other boxes ===========================
+   A fine grain is laid over the picture of the box (a small tile of noise, one pixel to a grain), and the
+   filter stage-print of StagePalette then cuts the colours into flat steps, so the shading breaks into
+   single-pixel grain between flat tones, as on the planet. The text of the boxes stays sharp. */
+.stage-cell--radar::before,
+.stage-cell--chart::before,
+.stage-cell--panel15::before,
+.stage-cell--strip14::before,
+.stage-cell--model::before,
+.stage-cell--clip::before,
+.stage-cell--graph::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 49;
+  background: url('/media/grain-128.png') 0 0 / 128px 128px;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.stage-cell--panel15,
+.stage-cell--strip14,
+.stage-cell--model {
+  filter: url(#stage-print);
+}
+
+/* cell 16 (the tiles): no grain, and a clear difference of brightness between the blue area, the ground
+   and the red line, so that the motion shows in black and white */
+.domino {
+  filter: url(#tone-tiles-bw);
+}
+
+/* the radar and the chart keep a dark of #262623 where the others have black */
+.stage-cell--radar,
+.stage-cell--chart {
+  filter: url(#stage-print-dim);
+}
+
+.stage-cell--clip {
+  filter: url(#tone-clip) url(#stage-print);
+}
+
+.stage-cell--graph {
+  filter: url(#tone-graph) url(#stage-print);
+}
+
+/* the clock of the visitor record: the box grows with its numbers, so they never run over its edge */
+.visitors-time {
+  width: max-content;
+  min-width: 11.6%;
+  padding: 0 0.7cqw;
+}
+
+/* the dark tone of the radar: #262623 as it shows (the page's greys take #252525 to it); the square of its
+   scope (the picture and the circle, on the right) is 30% lighter, #31312E, written #303030 */
+.stage-cell--radar {
+  background: #252525;
+}
+
+.radar-scope {
+  background: #303030;
+}
+
+
+/* ==== the box colours of cells 1, 3 and 11, as shown in the supplied pictures =====================
+   Written as the greys that the black and white of the page turns into the shown colours: #878787 is
+   #8A8A82 on the page (the shown #6A6A64 made 30% lighter), #464646 is #484844, #252525 is #262624. */
+.stage-bar,
+.about-title {
+  background: #878787;
+}
+
+.stage-bar__chip {
+  background: #464646;
+}
+
+.about,
+.about-face,
+.about-panel,
+.about-tree,
+.about-text,
+.about-notewrap,
+.about-note {
+  background: #252525;
+}
+
+/* the map's tool bar: a thin white outline (half the width the boxes on the left have) round the whole bar,
+   its fold button and each of the four tools; none round the bar's head. Drawn outside the squares, in
+   the grey between them, so that it shows against their pale faces. */
+.stage-cell--map .map-gis-toolbar,
+.stage-cell--map .map-gis-bar__fold,
+.stage-cell--map .map-gis-tool {
+  outline: max(0.5px, 0.045cqw) solid #ffffff;
+  outline-offset: 0;
+}
+
+/* the fold button shows a plus while the bar is folded away (the dash with an upright one across it) */
+.stage-cell--map .map-gis-bar__dash {
+  position: relative;
+}
+
+.stage-cell--map .map-gis-toolbar.is-folded .map-gis-bar__dash::after {
+  content: '';
+  position: absolute;
+  left: calc(8 * var(--u));
+  top: calc(-8 * var(--u));
+  width: calc(4 * var(--u));
+  height: calc(20 * var(--u));
+  background: inherit;
+}
+
+/* the margin's small graphics over the lower left (see MARGIN_GRAPHICS): over the cells, under the guide */
+.stage-margin-graphics {
+  position: absolute;
+  z-index: 60;
+  display: block;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* the globe's box cut out cleanly, as in the supplied picture: a black strip (3 units of the plan) along its
+   left and right edges, which joins the big black boxes, and a white line (1.9 units) under it, where it
+   meets the lower black box; the thin grey line round it is taken away */
+.stage-cell[data-stage-cell='4'] {
+  box-shadow:
+    0.15cqw 0 0 0 #060806,
+    -0.15cqw 0 0 0 #060806,
+    0 0.095cqw 0 0 #ffffff,
+    0.15cqw 0.095cqw 0 0 #ffffff,
+    -0.15cqw 0.095cqw 0 0 #ffffff;
+}
+
+.stage-cell[data-stage-cell='4']::after {
+  box-shadow: none;
+}
+
+/* the white line under the globe's box goes on along the top of the lower black box to its end (to the box
+   on the right), so the black does not stop short of it */
+.stage-block--lower {
+  box-sizing: border-box;
+  border-top: 0.095cqw solid #ffffff;
+}
+
+/* the visitor record's head (cell 5): a white bar with dark letters, its three boxes white with a dark line,
+   as the rulers of the globe's box. It lies above the page's greys, so its dark is written as the grey it
+   is to show (#292926). */
+.visitors-bar {
+  background: #ffffff;
+  /* above the #E6E7D7 sheet of the stage, so that it is a pure #FFFFFF */
+  z-index: 600;
+}
+
+.visitors-chip {
+  color: #292926;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 max(1px, 0.07cqw) #292926;
+}
+
+.visitors-active span,
+.visitors-active strong {
+  color: #292926;
+}
+
+.visitors-menu {
+  background: #ffffff;
+}
+
+.visitors-menu button {
+  color: #292926;
+}
+
+.visitors-menu li[aria-selected='true'] button,
+.visitors-menu button:hover {
+  background: #d5d5d0;
+}
+
+/* the second face of cell 3: its text keeps whole words on a line too */
+.about-text p {
+  word-break: keep-all;
 }

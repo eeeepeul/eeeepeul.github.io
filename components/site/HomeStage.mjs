@@ -19,6 +19,7 @@ import { StageSpectrum } from './StageSpectrum.mjs'
 import { StageHouse } from './StageHouse.mjs'
 import { StageVisitors } from './StageVisitors.mjs'
 import { StageVolume } from './StageVolume.mjs'
+import { StageLateFrame } from './StageLateFrame.mjs'
 import { StagePalette } from './StagePalette.mjs'
 
 // The home page as one fixed-proportion screen of panels. The cells are laid out on a
@@ -65,9 +66,13 @@ export const STAGE_CELLS = [
 // (nothing lies under cell 3: the lower band's box goes round it, along its right side and under it)
 export const STAGE_BLOCKS = [
   [0, 0, 426, 676],
-  [424, 792, 1986, 1123],
-  [0, 998, 424, 1123],
+  [423, 792, 1986, 1123],
+  [0, 998, 423, 1123],
 ]
+
+// Where the margin's own small graphics lie: [left, top, width, height] on the plan (the picture is 2000 x 685,
+// so 614 across is 3.257 of its pixels to a unit)
+export const MARGIN_GRAPHICS = [424, 794, 614, 210.3]
 
 // The place the panel reads out (to be tied to the map's own view later).
 export const LOCATION_READING = '09.0100\u00b0 N / 21.8000\u00b0 E'
@@ -132,7 +137,7 @@ export function HomeStage() {
       STAGE_BLOCKS.map((block, index) =>
         createElement('div', {
           key: `block-${index}`,
-          className: 'stage-block',
+          className: index === 1 ? 'stage-block stage-block--lower' : 'stage-block',
           'aria-hidden': 'true',
           style: getCellStyle([0, ...block]),
         })
@@ -381,7 +386,7 @@ export function HomeStage() {
               'aria-label': '칸 6, 스캔한 집',
               style: getCellStyle(cell),
             },
-            createElement('iframe', {
+            createElement(StageLateFrame, {
               className: 'stage-cell__frame',
               src: assetPath('panels/epeul-scanned-houses.html'),
               title: 'epeul scanned houses',
@@ -401,7 +406,7 @@ export function HomeStage() {
               'aria-label': '칸 11, 흐름 차트',
               style: getCellStyle(cell),
             },
-            createElement('iframe', {
+            createElement(StageLateFrame, {
               className: 'stage-cell__frame',
               src: assetPath('panels/flow-chart.html'),
               title: 'Flow chart',
@@ -452,7 +457,7 @@ export function HomeStage() {
             createElement(
               'div',
               { className: 'stage-cell__view' },
-              createElement('iframe', {
+              createElement(StageLateFrame, {
                 className: 'stage-cell__frame',
                 src: assetPath('panels/point-relief.html'),
                 title: 'Atlantic Point Relief',
@@ -473,6 +478,17 @@ export function HomeStage() {
           },
           createElement('span', { className: 'stage-cell__number', 'aria-hidden': 'true' }, number)
         )
+      }),
+      // the small graphics the margin round cells 9, 10 and 15 was given (bars, boxes, a column of hexagons),
+      // laid over the cells exactly as drawn: the picture is 2000 x 685 and covers 614 x 210.3 of the plan,
+      // from its left 424 and top 794
+      createElement('img', {
+        className: 'stage-margin-graphics',
+        src: assetPath('media/margin-graphics-bottom.webp'),
+        alt: '',
+        draggable: false,
+        'aria-hidden': 'true',
+        style: getCellStyle([0, MARGIN_GRAPHICS[0], MARGIN_GRAPHICS[1], MARGIN_GRAPHICS[0] + MARGIN_GRAPHICS[2], MARGIN_GRAPHICS[1] + MARGIN_GRAPHICS[3]]),
       }),
       createElement(StageGuide),
       SHOW_WELCOME ? createElement(StageWelcome) : null

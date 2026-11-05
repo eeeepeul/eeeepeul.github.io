@@ -98,8 +98,13 @@ function typingDelay(letter) {
 // was changed) they are typed out from the top, letter by letter and paragraph by paragraph, after
 // `delay` ms (the time the cube takes to arrive); until then, and when the cube turned by itself, the
 // whole text is shown. What is not typed yet holds its place invisibly, so the lines do not move.
-function NoteText({ paragraphs, run, delay }) {
+//
+// While it is typed the box follows the typing slowly, so the text keeps coming into view and it can be seen
+// that there is more below (`scroller` is the box). Taking hold of the box (wheel, touch, a press) stops
+// the following, so the visitor can read on their own.
+function NoteText({ paragraphs, run, delay, scroller }) {
   const [count, setCount] = useState(Infinity)
+  const typed = useRef(0)
   useEffect(() => {
     const still = !run || (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
     if (still) {
@@ -110,17 +115,71 @@ function NoteText({ paragraphs, run, delay }) {
     let index = 0
     let timer = 0
     setCount(0)
+    typed.current = 0
     const step = () => {
       index += 1
+      typed.current = index
       setCount(index)
       if (index < joined.length) {
-        // quicker than the song notes, as there is a lot more to type
-        timer = window.setTimeout(step, typingDelay(joined[index - 1]) * 0.55)
+        // a little quicker than the song notes, as there is a lot more to type, but not much (slower than at
+        // first: the text can be followed as it comes)
+        timer = window.setTimeout(step, typingDelay(joined[index - 1]) * 0.9)
       }
     }
     timer = window.setTimeout(step, delay)
     return () => window.clearTimeout(timer)
   }, [paragraphs, run, delay])
+
+  useEffect(() => {
+    const box = scroller && scroller.current
+    const still = !run || (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+    if (!box || still) return undefined
+    box.scrollTop = 0
+    let following = true
+    let frame = 0
+    const stop = () => {
+      following = false
+    }
+    const events = ['wheel', 'touchstart', 'pointerdown']
+    events.forEach((name) => box.addEventListener(name, stop, { passive: true }))
+
+    // where the typing has got to: the bottom of the letter last typed (of the paragraph's box when none yet)
+    const front = () => {
+      let left = typed.current
+      const items = box.querySelectorAll('p')
+      for (let i = 0; i < items.length; i += 1) {
+        const length = paragraphs[i] ? paragraphs[i].length : 0
+        if (left <= length || i === items.length - 1) {
+          const node = items[i].firstChild
+          if (node && node.nodeType === 3 && left > 0 && node.length > 0) {
+            const range = document.createRange()
+            range.setStart(node, Math.max(0, Math.min(node.length, left) - 1))
+            range.setEnd(node, Math.min(node.length, left))
+            const rect = range.getBoundingClientRect()
+            if (rect.height > 0) return rect.bottom
+          }
+          return items[i].getBoundingClientRect().top
+        }
+        left -= length
+      }
+      return null
+    }
+
+    const tick = () => {
+      frame = window.requestAnimationFrame(tick)
+      if (!following) return
+      const bottom = front()
+      if (bottom === null) return
+      const margin = 56 // the typing stays this far (px) above the foot of the box
+      const over = bottom - (box.getBoundingClientRect().bottom - margin)
+      if (over > 0) box.scrollTop += Math.min(2.2, 0.25 + over * 0.05)
+    }
+    frame = window.requestAnimationFrame(tick)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      events.forEach((name) => box.removeEventListener(name, stop))
+    }
+  }, [paragraphs, run, scroller])
 
   let before = 0
   return paragraphs.map((paragraph, index) => {
@@ -525,7 +584,7 @@ export function StageAbout() {
         createElement(
           'div',
           { className: 'about-note', ref: noteRef, onScroll: placeDot },
-          createElement(NoteText, { paragraphs: NOTES[language], run: noteRun, delay: 500 })
+          createElement(NoteText, { paragraphs: NOTES[language], run: noteRun, delay: 500, scroller: noteRef })
         ),
         createElement(
           'div',

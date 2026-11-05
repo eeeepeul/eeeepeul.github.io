@@ -70,7 +70,9 @@ export function StagePlayer() {
 
   useEffect(() => {
     const audio = new Audio()
-    audio.preload = 'auto'
+    // only what the player needs to show the length; the rest comes when the song is played, so it does
+    // not take the line from the pictures of the first screen
+    audio.preload = 'metadata'
     audioRef.current = audio
     audio.volume = getVolume()
     const stopVolume = subscribeVolume((value) => {

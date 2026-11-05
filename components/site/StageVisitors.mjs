@@ -124,7 +124,7 @@ export function StageVisitors() {
           createElement(
             'svg',
             { viewBox: '0 0 14 8', width: 14, height: 8, 'aria-hidden': 'true' },
-            createElement('path', { d: 'M1 1l6 6 6-6', fill: 'none', stroke: '#eae2c4', strokeWidth: 2 })
+            createElement('path', { d: 'M1 1l6 6 6-6', fill: 'none', stroke: '#292926', strokeWidth: 2 })
           )
         ),
         open

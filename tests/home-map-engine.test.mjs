@@ -31,7 +31,9 @@ test('the zoom video is muted, inline and preloaded so the wheel can scrub it', 
   assert.match(html, /<video[^>]*muted/)
   assert.match(html, /<video[^>]*playsInline|<video[^>]*playsinline/i)
   assert.match(html, /<video[^>]*preload="auto"/)
-  assert.match(html, new RegExp(`src="${ZOOM_VIDEO.src.replaceAll('/', '\\/')}"`))
+  // (the clip's own address is given when the planet is on the screen, so it does not share the line
+  // with the planet's pictures; see startVideo in DeepZoomMap)
+  assert.doesNotMatch(html, /<video[^>]*src=/)
   assert.match(html, new RegExp(`poster="${ZOOM_VIDEO.poster.replaceAll('/', '\\/')}"`))
 })
 

@@ -501,7 +501,8 @@ button:focus-visible,
 }
 
 .figma-home-map-engine[data-map-status="loading"] {
-  background: #f8f7f4;
+  /* the black of the sky, so the box is there from the first moment */
+  background: #060806;
 }
 
 .figma-home-map-engine[data-map-status="ready"] {

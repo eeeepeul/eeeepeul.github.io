@@ -746,6 +746,34 @@ export function DeepZoomMap() {
     if (videoNode.readyState >= 2) handleReady()
     else if (videoNode.error) handleError()
 
+    // The first screen needs the planet's pictures first: ask for them now, side by side with the code of
+    // the planet (which is big), instead of one after the other when the code has arrived.
+    ;[GLOBE.texture, GLOBE.milkyWay.texture, GLOBE.milkyWay2 ? GLOBE.milkyWay.texture.replace(/milky-way\.webp$/, 'milky-way-2.webp') : null]
+      .filter(Boolean)
+      .forEach((src) => {
+        const warm = new Image()
+        warm.decoding = 'async'
+        warm.src = assetPath(src.slice(1))
+      })
+    ;[withVersion(assetPath(GLOBE.landTexture.slice(1)))].forEach((src) => {
+      const warm = new Image()
+      warm.src = src
+    })
+
+    // The clip is needed only when the zoom reaches it: it is asked for once the planet is on the screen,
+    // so that it does not share the line with the planet's pictures.
+    let videoStarted = false
+    const startVideo = () => {
+      if (videoStarted || cancelled) return
+      videoStarted = true
+      if (!videoNode.getAttribute('src')) {
+        videoNode.src = assetPath(ZOOM_VIDEO.src.slice(1))
+        videoNode.load()
+      }
+    }
+    // the pages of their own and the song wait for the planet in the same way
+    const announcePlanet = () => window.dispatchEvent(new CustomEvent('stage:planet-ready'))
+
     // The planet loads on its own; until it is ready (or if WebGL is missing)
     // the wheel scrubs the clip straight away.
     import('../../lib/globe-scene.mjs')
@@ -774,11 +802,15 @@ export function DeepZoomMap() {
         globe.setVideoSource(canvasNode)
         globeSize = ''
         handleResize()
+        startVideo()
+        announcePlanet()
         if (!welcomeOpen) glideTimer = window.setTimeout(handleEntered, GLIDE_DELAY_MS)
       })
       .catch((error) => {
         // No WebGL or texture: the clip's own first frame stands in for the planet.
         console.error('globe failed to start', error)
+        startVideo()
+        announcePlanet()
         if (!welcomeOpen) handleEntered()
         if (!cancelled) setMode('video')
       })
@@ -852,7 +884,6 @@ export function DeepZoomMap() {
       createElement('video', {
         ref: videoRef,
         className: 'figma-deep-zoom-video',
-        src: assetPath(ZOOM_VIDEO.src.slice(1)),
         poster: assetPath(ZOOM_VIDEO.poster.slice(1)),
         muted: true,
         playsInline: true,
