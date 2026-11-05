@@ -116,7 +116,7 @@ const ramp = (stops, input, result) =>
 // own grayscale does), and the lightest grey, white, is the stage's pale #E6E7D7 instead of pure white.
 // Two steps: the grey is first raised until the cream of the land (the lightest picture of the stage)
 // reaches full white, and cut off there; then white is taken to the pale colour and the greys with it.
-const PALE = [230, 231, 215]
+const PALE = [227, 227, 216] // the page's white (#E3E3D8), as the sheet over the page
 const LUMA = [0.2126, 0.7152, 0.0722]
 const LIGHTEST_GREY = 225 // the brightness of the cream of the land, #EAE2C4
 const GREY_UP = LUMA.map((weight) => ((weight * 255) / LIGHTEST_GREY).toFixed(5))

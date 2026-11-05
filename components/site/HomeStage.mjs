@@ -21,6 +21,7 @@ import { StageVisitors } from './StageVisitors.mjs'
 import { StageVolume } from './StageVolume.mjs'
 import { StageLateFrame } from './StageLateFrame.mjs'
 import { StagePalette } from './StagePalette.mjs'
+import { StageToolbarTint } from './StageToolbarTint.mjs'
 
 // The home page as one fixed-proportion screen of panels. The cells are laid out on a
 // 2000 x 1126 plan and placed by percentage, so the whole stage scales with the window and
@@ -71,6 +72,64 @@ export const STAGE_BLOCKS = [
   // under the visitor record (cell 5), at the top right
   [1578, 0, 2000, 188],
 ]
+
+// The colours of the supplied palette laid on the black and white page: each a box on the plan, lying above
+// the page's grey sheets and mixed into what is under it, so the pictures, lines and letters under it keep
+// their own lights and darks and only take the colour ('multiply' deepens to the colour, 'screen' lifts the
+// darks towards it, 'color' gives the colour and keeps the lightness). [left, top, right, bottom, colour, mix]
+export const STAGE_TINTS = [
+  // cell 1: the LOC. label brown, the place readout a slate grey
+  [14, 16, 59, 37, '#270403', 'screen'],
+  [256, 16, 410, 37, '#373729', 'screen'],
+  // cell 2: the pictures a little deeper, the High/Low bar sage, the zoom readout brown
+  [44, 418, 412, 664, '#d0d0c8', 'multiply'],
+  [18, 426, 44, 656, '#e0dfc2', 'multiply'],
+  [322.5, 636, 406.5, 656, '#3d1f1b', 'screen'],
+  // cell 3: (its title bar is brown in the cube itself, so it turns with it) the gauge beside it a little deeper
+  [352, 689, 412, 992, '#ebebec', 'multiply'],
+  // (cell 5, the visitor record, has its colours on itself)
+  // cell 11: the dotted chart grey-green
+  [1552, 805, 1972, 941, '#9a9c8c', 'color'],
+  // cell 12: the player's frame and keys brown, its fields a little deeper
+  [12, 1004, 309, 1113, '#ebebe7', 'multiply'],
+  [12, 1004, 309, 1113, '#3d1f1b', 'screen'],
+  // cell 13: the frame round the sound strip brown
+  [309, 1003, 1972, 1011, '#f4cfc9', 'multiply'],
+  [309, 1105, 1972, 1113, '#f4cfc9', 'multiply'],
+  [309, 1011, 317, 1105, '#f4cfc9', 'multiply'],
+  [1964, 1011, 1972, 1105, '#f4cfc9', 'multiply'],
+]
+
+// The margin: the page between the boxes, where neither a box nor a big black box lies, as rectangles
+// (fractions of the stage) that do not overlap. It is worked out from the boxes on a grid of their own
+// edges, so it always fits them. It is coloured #D4D5BF (a box of that colour laid over it, mixed by
+// colour, so its fine graphics keep their lights and darks).
+export const MARGIN_COLOUR = '#d4d5bf'
+function marginRects() {
+  const boxes = [...STAGE_CELLS.map(([, ...box]) => box), ...STAGE_BLOCKS]
+  const xs = [...new Set([0, STAGE_WIDTH, ...boxes.flatMap(([l, , r]) => [l, r])])].sort((a, b) => a - b)
+  const ys = [...new Set([0, STAGE_HEIGHT, ...boxes.flatMap(([, t, , b]) => [t, b])])].sort((a, b) => a - b)
+  const covered = (x0, y0, x1, y1) => boxes.some(([l, t, r, b]) => l <= x0 && r >= x1 && t <= y0 && b >= y1)
+  const rects = []
+  for (let j = 0; j < ys.length - 1; j += 1) {
+    let start = null
+    for (let i = 0; i <= xs.length - 1; i += 1) {
+      const open = i < xs.length - 1 && !covered(xs[i], ys[j], xs[i + 1], ys[j + 1])
+      if (open && start === null) start = i
+      if (!open && start !== null) {
+        rects.push([xs[start], ys[j], xs[i], ys[j + 1]])
+        start = null
+      }
+    }
+  }
+  return rects
+}
+const MARGIN_PATH = marginRects()
+  .map(([l, t, r, b]) => {
+    const f = (v, whole) => (v / whole).toFixed(5)
+    return `M${f(l, STAGE_WIDTH)} ${f(t, STAGE_HEIGHT)}H${f(r, STAGE_WIDTH)}V${f(b, STAGE_HEIGHT)}H${f(l, STAGE_WIDTH)}Z`
+  })
+  .join('')
 
 // Where the margin's own small graphics lie: [left, top, width, height] on the plan (the picture is 2000 x 685,
 // so 614 across is 3.257 of its pixels to a unit)
@@ -492,6 +551,27 @@ export function HomeStage() {
         'aria-hidden': 'true',
         style: getCellStyle([0, MARGIN_GRAPHICS[0], MARGIN_GRAPHICS[1], MARGIN_GRAPHICS[0] + MARGIN_GRAPHICS[2], MARGIN_GRAPHICS[1] + MARGIN_GRAPHICS[3]]),
       }),
+      // the margin's colour (see MARGIN_COLOUR)
+      createElement(
+        'svg',
+        { className: 'stage-margin-clip', width: 0, height: 0, 'aria-hidden': 'true', focusable: 'false' },
+        createElement('clipPath', { id: 'stage-margin-clip', clipPathUnits: 'objectBoundingBox' }, createElement('path', { d: MARGIN_PATH }))
+      ),
+      createElement('div', {
+        className: 'stage-tint stage-tint--margin',
+        'aria-hidden': 'true',
+        style: { inset: 0, background: MARGIN_COLOUR, mixBlendMode: 'color', clipPath: 'url(#stage-margin-clip)' },
+      }),
+      // the palette's colours over the black and white page (see STAGE_TINTS)
+      STAGE_TINTS.map(([left, top, right, bottom, colour, mix], index) =>
+        createElement('div', {
+          key: `tint-${index}`,
+          className: 'stage-tint',
+          'aria-hidden': 'true',
+          style: { ...getCellStyle([0, left, top, right, bottom]), background: colour, mixBlendMode: mix },
+        })
+      ),
+      createElement(StageToolbarTint),
       createElement(StageGuide),
       SHOW_WELCOME ? createElement(StageWelcome) : null
     )

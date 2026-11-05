@@ -93,16 +93,22 @@ export function CompassCursor() {
     }
   }, [])
 
+  // Two marks on the same place: the first is white, laid on by difference, so it is white over the dark
+  // and nearly black over the white; the second, the palette's brown, is laid on by keeping the lighter of
+  // the two, so where the first went dark (over the white) the mark shows brown, and over the dark it stays
+  // white. So the mark is white, and brown wherever it lies over white, pixel by pixel.
+  const markStyle = {
+    transform: `translate3d(${position.x - 44}px, ${position.y - 44}px, 0)`,
+    '--compass-cursor-image': `url(${CURSOR_IMAGES[direction]})`,
+  } as CSSProperties
   return (
-    <div
-      className={`compass-cursor-mark compass-cursor-${direction}`}
-      aria-hidden="true"
-      style={{
-        transform: `translate3d(${position.x - 44}px, ${position.y - 44}px, 0)`,
-        '--compass-cursor-image': `url(${CURSOR_IMAGES[direction]})`,
-      } as CSSProperties}
-    >
-      <span className="compass-cursor-compass" />
-    </div>
+    <>
+      <div className={`compass-cursor-mark compass-cursor-${direction}`} aria-hidden="true" style={markStyle}>
+        <span className="compass-cursor-compass" />
+      </div>
+      <div className={`compass-cursor-mark compass-cursor-mark--tint compass-cursor-${direction}`} aria-hidden="true" style={markStyle}>
+        <span className="compass-cursor-compass" />
+      </div>
+    </>
   )
 }

@@ -77,6 +77,8 @@ button {
 }
 
 .compass-cursor-mark {
+  /* white, laid on by difference (see CompassCursor) */
+  mix-blend-mode: difference;
   position: fixed;
   top: 0;
   left: 0;
@@ -91,10 +93,20 @@ button {
   position: absolute;
   inset: 0;
   display: block;
-  background: var(--red);
+  background: #ffffff;
   mask: var(--compass-cursor-image) center / contain no-repeat;
   -webkit-mask: var(--compass-cursor-image) center / contain no-repeat;
   pointer-events: none;
+}
+
+/* the second mark: the palette's brown, keeping the lighter of it and what is under it */
+.compass-cursor-mark--tint {
+  z-index: 10001;
+  mix-blend-mode: lighten;
+}
+
+.compass-cursor-mark--tint .compass-cursor-compass {
+  background: #6a5750;
 }
 
 button:focus-visible,

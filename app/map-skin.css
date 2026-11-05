@@ -3418,3 +3418,193 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   height: calc(50 * var(--u));
   stroke-width: 1.9;
 }
+
+/* ==== colour: the supplied palette over the black and white page ==================================
+   The page stays black and white underneath (the two sheets above); its whites are laid a little greyer
+   and less yellow (#E3E3D8, as the supplied colour picture's), the margin a touch deeper (#DBDBCF on the
+   screen), and a few parts take the palette's colours from boxes laid above the sheets (STAGE_TINTS in
+   HomeStage.mjs), mixed into what is under them so nothing of the graphics changes. */
+.stage {
+  background: #d9d9d9;
+}
+
+.stage::after {
+  background: #e3e3d8;
+}
+
+.stage-tint {
+  position: absolute;
+  z-index: 501;
+  pointer-events: none;
+}
+
+/* while the welcome card or the guide lies over the page, its colours are not laid over them */
+.stage:has(> .welcome) .stage-tint,
+.stage:has(> .guide) .stage-tint {
+  opacity: 0;
+}
+
+/* the visitor record's chart above the page's grey sheets, in the colours it is to show (the brown blocks) */
+.visitors-chart {
+  position: relative;
+  z-index: 600;
+}
+
+/* the margin (the page between the boxes, where no big black box lies): #D0D1C8 on the screen */
+.stage {
+  background: #cfcfcf;
+}
+
+/* ---- the globe in colour: the map's box is cut out of the two grey sheets, so the globe shows the
+   palette it is drawn in (see the last pass in lib/globe-scene.mjs). What else lies in the box (the
+   rulers, the tool bar, the zoom bar) is put through the same black and white as the sheets (the filter
+   #stage-bw), so it looks as it did. While the welcome card or the guide is open the sheets are whole. */
+.stage::before,
+.stage::after {
+  clip-path: polygon(
+    evenodd,
+    0 0, 100% 0, 100% 100%, 0 100%, 0 0,
+    21.3% 1.0657%, 79% 1.0657%, 79% 70.3375%, 21.3% 70.3375%, 21.3% 1.0657%
+  );
+}
+
+.stage:has(> .welcome)::before,
+.stage:has(> .welcome)::after,
+.stage:has(> .guide)::before,
+.stage:has(> .guide)::after {
+  clip-path: none;
+}
+
+.stage-cell--map .figma-home-scene > :not(.figma-home-map-clip),
+.stage-cell--map .map-gis-chrome > * {
+  filter: url(#stage-bw);
+}
+
+/* the margin's lightness as the colour #D4D5BF has it (its colour is laid on from above, see MARGIN_COLOUR) */
+.stage {
+  background: #d1d1d1;
+}
+
+.stage-margin-clip {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* ---- the cube of cell 3 in the open: its box is cut out of both grey sheets (the sheets lie over the
+   whole stage and cannot turn with the cube), so the colours are on the cube's own parts and turn with it.
+   The title bar is brown with the rosy letters (#5E4A42, #967666) and its language mark has its own picture;
+   everything else of the cube is put through the same black and white as the sheets give (#stage-bw), as a
+   filter on each part. ------------------------------------------------------------------------------------ */
+.stage::before,
+.stage::after {
+  clip-path: polygon(
+    evenodd,
+    0 0, 100% 0, 100% 100%, 0 100%, 0 0,
+    21.3% 1.0657%, 79% 1.0657%, 79% 70.3375%, 21.3% 70.3375%, 21.3% 1.0657%,
+    0.6% 61.19%, 17.6% 61.19%, 17.6% 88.19%, 0.6% 88.19%, 0.6% 61.19%,
+    /* back the same way (the path is closed on the first corner, so what is left over must cancel out) */
+    21.3% 1.0657%
+  );
+}
+
+.stage:has(> .welcome)::before,
+.stage:has(> .welcome)::after,
+.stage:has(> .guide)::before,
+.stage:has(> .guide)::after {
+  clip-path: none;
+}
+
+.about-lang img {
+  filter: none;
+}
+
+.about-face {
+  background: transparent;
+}
+
+.about-face::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #494949;
+  filter: url(#stage-bw);
+  pointer-events: none;
+}
+
+.about-panel {
+  background: transparent;
+  border-color: transparent;
+}
+
+.about-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #747474;
+  filter: url(#stage-bw);
+  pointer-events: none;
+}
+
+.about-panel::after {
+  content: '';
+  position: absolute;
+  inset: calc(-2 * var(--u));
+  border: calc(2 * var(--u)) solid #f6f6f6;
+  filter: url(#stage-bw);
+  pointer-events: none;
+}
+
+.about-panel > :not(.about-title) {
+  position: relative;
+  filter: url(#stage-bw);
+}
+
+.about-title {
+  position: relative;
+  z-index: 1;
+  background: #5e4a42;
+  color: #967666;
+  border-bottom-color: #e3e3d8;
+}
+
+.stage-cell[data-stage-cell='3']::after {
+  filter: url(#stage-bw);
+}
+
+/* the visitor record: its ground is beige on the box itself, above the grey sheets (as its bar and chart are) */
+.visitors {
+  z-index: 600;
+  background: #c4bfaa;
+}
+
+/* ---- the visitor record's head in the title bar's colours (cell 3's): a brown bar, and its time, count and
+   range in the rosy brown of the title's letters, their boxes outlined in it. Above the grey sheets, so
+   the colours are as written. ------------------------------------------------------------------------- */
+.visitors-bar {
+  background: #5e4a42;
+}
+
+.visitors-chip {
+  color: #967666;
+  background: #5e4a42;
+  box-shadow: inset 0 0 0 max(1px, 0.07cqw) #967666;
+}
+
+.visitors-active span,
+.visitors-active strong {
+  color: #967666;
+}
+
+.visitors-menu {
+  background: #5e4a42;
+}
+
+.visitors-menu button {
+  color: #967666;
+}
+
+.visitors-menu li[aria-selected='true'] button,
+.visitors-menu button:hover {
+  background: #6a5750;
+}
