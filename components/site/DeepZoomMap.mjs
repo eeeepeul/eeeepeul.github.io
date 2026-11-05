@@ -42,7 +42,7 @@ const MAX_SPIN_SPEED = 0.16
 const SPIN_IDLE_MS = 90
 // Changes with every new set of the map's pictures: browsers keep pictures for minutes, and an old
 // copy of one picture next to the new others (e.g. frames without the land channel) breaks the look.
-const PICTURES = 'v=4'
+const PICTURES = 'v=5'
 const withVersion = (url) => `${url}?${PICTURES}`
 // This close below the hand-over the clip is already sought to its frame, so it is ready.
 const PRESEEK_Z = 0.45

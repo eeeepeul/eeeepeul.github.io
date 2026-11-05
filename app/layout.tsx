@@ -21,7 +21,7 @@ export const viewport: Viewport = {
 
 // The planet's pictures are asked for in the page's head, so they come down at the same time as the
 // code that draws the planet (which is big) instead of after it.
-const PLANET_PICTURES = ['maps/globe-map.webp', 'maps/globe-land.webp?v=4', 'maps/milky-way.webp', 'maps/milky-way-2.webp']
+const PLANET_PICTURES = ['maps/globe-map.webp', 'maps/globe-land.webp?v=5', 'maps/milky-way.webp', 'maps/milky-way-2.webp']
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   PLANET_PICTURES.forEach((picture) => preload(assetPath(picture), { as: 'image' }))
