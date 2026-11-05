@@ -3299,48 +3299,61 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   word-break: keep-all;
 }
 
-/* ---- the zoom slider along the bottom left of the map box: the supplied bar (704 x 58) shown at
-   0.572 of that on the 2000 plan, so it measures about 403 x 33 there (1 unit = 0.0286cqw). A small
+/* ---- the zoom slider along the bottom left of the map box: the supplied bar (704 x 59) shown at
+   0.572 of that on the 2000 plan, so it measures about 403 x 34 there (1 unit = 0.0286cqw). A small
    square at the left (all the way out), a bar with a triangle handle, a big square at the right (all
-   the way in); white (the page's cream) on the grey of the page's bars, with a black edge ----------- */
+   the way in). As in the supplied bar its lines are not even: the frame and the squares are heavier on
+   their top and left than on their bottom and right, so they stand out like pressed keys. Its greys are
+   written as the ones that the page's black and white sheets turn into the supplied colours (#86877C
+   ground, #53534D lines, #D7D8C7 cream). All places below are the supplied bar's pixels, less the frame. */
 .stage-cell--map .map-zoom-slider {
   --u: 0.0286cqw;
-  --ink: #2b2b28;
+  --ink: #515151;
+  --cream: #d2d2d2;
   position: absolute;
   z-index: 75;
   left: 0.8cqw;
   bottom: 0.1cqw;
   box-sizing: border-box;
   width: calc(704 * var(--u));
-  height: calc(58 * var(--u));
-  background: #878787;
-  outline: max(1px, 0.05cqw) solid #000;
-  outline-offset: calc(-1 * max(1px, 0.05cqw));
+  height: calc(59 * var(--u));
+  background: #838383;
+  border-style: solid;
+  border-color: #000;
+  border-width: calc(4 * var(--u)) calc(3 * var(--u)) calc(3 * var(--u)) calc(4 * var(--u));
   user-select: none;
   touch-action: none;
 }
 
 .stage-cell--map .map-zoom-slider__end {
   position: absolute;
+  box-sizing: border-box;
   padding: 0;
-  border: calc(2 * var(--u)) solid var(--ink);
+  border-style: solid;
+  border-color: var(--ink);
   border-radius: 0;
-  background: #fff;
+  background: var(--cream);
   cursor: pointer;
 }
 
+/* the small square: 16 across, its line 3 on the top and left, 2 on the bottom and right, a faint shadow
+   under it */
 .stage-cell--map .map-zoom-slider__end--out {
-  left: calc(18 * var(--u));
-  top: calc(21 * var(--u));
+  left: calc(14 * var(--u));
+  top: calc(18 * var(--u));
   width: calc(16 * var(--u));
   height: calc(16 * var(--u));
+  border-width: calc(3 * var(--u)) calc(2 * var(--u)) calc(2 * var(--u)) calc(3 * var(--u));
+  box-shadow: 0 var(--u) 0 #7b7b7b;
 }
 
+/* the big square: 33 across, its line 4 on the top and left, 2 on the bottom and right */
 .stage-cell--map .map-zoom-slider__end--in {
-  left: calc(651 * var(--u));
-  top: calc(14 * var(--u));
-  width: calc(31 * var(--u));
-  height: calc(31 * var(--u));
+  left: calc(645 * var(--u));
+  top: calc(9 * var(--u));
+  width: calc(33 * var(--u));
+  height: calc(33 * var(--u));
+  border-width: calc(4 * var(--u)) calc(2 * var(--u)) calc(2 * var(--u)) calc(4 * var(--u));
 }
 
 .stage-cell--map .map-zoom-slider__end:hover,
@@ -3349,11 +3362,12 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   outline: none;
 }
 
-/* the bar: a thin outlined channel (the hit area is taller than what is drawn) */
+/* the bar: a channel with a line of 2 round it and a faint shadow along the inside of its foot; the
+   element is the channel's inside, across, and taller than it, so it is easy to take hold of */
 .stage-cell--map .map-zoom-slider__track {
   position: absolute;
-  left: calc(42 * var(--u));
-  top: calc(10 * var(--u));
+  left: calc(38 * var(--u));
+  top: calc(6 * var(--u));
   width: calc(598 * var(--u));
   height: calc(46 * var(--u));
   cursor: pointer;
@@ -3363,36 +3377,38 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .stage-cell--map .map-zoom-slider__track::before {
   content: '';
   position: absolute;
-  inset: calc(15 * var(--u)) 0 auto 0;
+  left: calc(-2 * var(--u));
+  right: calc(-2 * var(--u));
+  top: calc(14 * var(--u));
   height: calc(12 * var(--u));
   box-sizing: border-box;
-  border: calc(1.6 * var(--u)) solid var(--ink);
+  border: calc(2 * var(--u)) solid var(--ink);
+  box-shadow: inset 0 calc(-1 * var(--u)) 0 #7d7d7d;
 }
 
 .stage-cell--map .map-zoom-slider__fill {
   position: absolute;
   left: 0;
-  top: calc(15 * var(--u));
-  height: calc(12 * var(--u));
-  box-sizing: border-box;
-  border: calc(1.6 * var(--u)) solid var(--ink);
-  background: #fff;
+  top: calc(16 * var(--u));
+  height: calc(8 * var(--u));
+  background: var(--cream);
+  box-shadow: inset 0 calc(-1 * var(--u)) 0 #c4c4c4;
 }
 
-/* the triangle handle under the bar, pointing up at the end of the fill */
+/* the triangle handle under the bar, pointing up at the end of the fill: 14 across, 12 high */
 .stage-cell--map .map-zoom-slider__handle {
   position: absolute;
-  top: calc(29 * var(--u));
-  width: calc(16 * var(--u));
-  height: calc(13 * var(--u));
-  margin-left: calc(-8 * var(--u));
-  background: var(--ink);
+  top: calc(27 * var(--u));
+  width: calc(14 * var(--u));
+  height: calc(12 * var(--u));
+  margin-left: calc(-7 * var(--u));
+  background: #575757;
   clip-path: polygon(50% 0, 100% 100%, 0 100%);
 }
 
 .stage-cell--map .map-zoom-slider__track:focus-visible .map-zoom-slider__handle,
 .stage-cell--map .map-zoom-slider.is-held .map-zoom-slider__handle {
-  background: #000;
+  background: #2b2b2b;
 }
 
 /* the icons of the bar a little heavier and larger, as in the supplied bar */
