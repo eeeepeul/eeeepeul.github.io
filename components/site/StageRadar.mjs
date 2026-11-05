@@ -2,6 +2,7 @@
 
 import { createElement, useEffect, useRef, useState } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
+import { RADAR_HOUSES, publishPeople } from '../../lib/visitor-people.mjs'
 
 // Cell 7: the radar and the scope. The radar is drawn on a plane of 446 x 314 units (the
 // supplied picture): a grid, readouts, three arcs, a turning sweep, and on it the houses (round dots,
@@ -12,12 +13,8 @@ const H = 314
 const CX = 226
 const CY = 293.3
 const SWEEP = [339.3, 124.7]
-const HOUSES = [
-  { x: 179, y: 165 },
-  { x: 208.7, y: 212.7 },
-  { x: 168.7, y: 243 },
-  { x: 182.7, y: 258.7 },
-]
+// (the houses are in lib/visitor-people.mjs, shared with the aerial picture of cell 2)
+const HOUSES = RADAR_HOUSES
 const SPEED = 7 // units a second
 const SWEEP_PERIOD = 6 // seconds for the sweep to go once round, always clockwise
 const TRAIL = 34.6 // degrees of glow left behind the line
@@ -236,6 +233,8 @@ export function StageRadar() {
         s.people.push(spawn(s.next))
         s.next += 1
       }
+      // the aerial picture of cell 2 shows the same people, walking to the same houses
+      publishPeople(s.people)
       if (now - drawn > 33) {
         drawn = now
         setPeople(s.people)
@@ -258,7 +257,7 @@ export function StageRadar() {
     createElement(
       'svg',
       { className: 'radar-plane', viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: 'none', role: 'img', 'aria-label': '집으로 오는 사람들의 레이더' },
-      createElement('rect', { width: W, height: H, fill: '#640609' }),
+      createElement('rect', { width: W, height: H, fill: '#252525' }),
       // the grid
       createElement('path', {
         d:

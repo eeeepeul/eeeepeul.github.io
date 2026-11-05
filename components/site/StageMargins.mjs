@@ -15,7 +15,7 @@ export function StageMargins({ boxes, width, height }) {
       'aria-hidden': 'true',
       focusable: 'false',
     },
-    h('path', { d: art.pale, fill: '#a9c6c5' }),
+    h('path', { d: art.pale, fill: '#f1f3f2' }),
     h('path', { d: art.hair, fill: 'none', stroke: '#3e7d7e', strokeWidth: 0.55 }),
     h('path', { d: art.cross, fill: 'none', stroke: '#3e7d7e', strokeWidth: 0.55 }),
     h('path', { d: art.heavy, fill: '#3e7d7e' }),

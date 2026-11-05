@@ -16,6 +16,7 @@
   var MAJOR = 0.5 // the strength of a stronger line
   var WIDTH_MINOR = 0.45 // line widths, in pixels
   var WIDTH_MAJOR = 0.75
+  var AXES_OPACITY = 0.35 // how strong the axes, their ticks and their numbers are (0 to 1): 30% less than 0.5
   var REACH = 2.0 // how far the grid reaches from the middle on each side, in half-widths of the houses' ground (the longer side of it): it is gone by then
   var SOFT = 0.2 // how much of that reach, from the middle, is kept at full strength before it begins to fade
 
@@ -48,6 +49,15 @@
   function frame() {
     requestAnimationFrame(frame)
     if (!world) return
+    // the axes and the grid stand on the floor of the houses themselves (known once the cubes are made),
+    // not on the lowest point of the whole model, which has loose scan particles about it
+    if (typeof window.__houseGround === 'number' && world.groundY !== window.__houseGround - 0.06) {
+      // (half a cube lower than the lowest surface, where the lowest cubes end; the axis keeps its height)
+      var height = world.topY - world.groundY
+      world.groundY = window.__houseGround - 0.06
+      world.topY = world.groundY + height
+      last = ''
+    }
     var o = viewer.getCameraOrbit(), t = viewer.getCameraTarget(), fov = viewer.getFieldOfView()
     var W = viewer.clientWidth, H = viewer.clientHeight
     var key = [o.theta, o.phi, o.radius, t.x, t.y, t.z, fov, W, H].join(',')
@@ -141,15 +151,19 @@
     // the axes of the drawing, crossing in the middle of the houses: x and z along the ground, both
     // ways from the middle, and y standing up from it, with a tick at every unit and a number at every
     // five (the numbers count away from the middle)
+    // (drawn at half strength: the axes are a quiet drawing under the houses)
+    f.save()
+    f.globalAlpha = AXES_OPACITY
     var ox = w.cx, oz = w.cz
     var lenX = Math.ceil(w.hx * 1.15), lenZ = Math.ceil(w.hz * 1.1), lenY = Math.ceil((w.topY - w.groundY) * 2.4)
-    line(f, ox - lenX, gy, oz, ox + lenX, gy, oz, 0.7, 0.8)
-    line(f, ox, gy, oz - lenZ, ox, gy, oz + lenZ, 0.7, 0.8)
-    line(f, ox, gy, oz, ox, gy + lenY, oz, 0.7, 0.8)
+    // (pure white, a little thicker, for a brighter drawing; the quiet comes from AXES_OPACITY)
+    line(f, ox - lenX, gy, oz, ox + lenX, gy, oz, 1, 1.1)
+    line(f, ox, gy, oz - lenZ, ox, gy, oz + lenZ, 1, 1.1)
+    line(f, ox, gy, oz, ox, gy + lenY, oz, 1, 1.1)
     f.font = '9px ui-monospace, Menlo, monospace'
-    f.fillStyle = 'rgba(255,255,255,0.7)'
+    f.fillStyle = '#ffffff'
     function tick(x, y, z, dx, dy, dz, label) {
-      line(f, x, y, z, x + dx, y + dy, z + dz, 0.55, 0.7)
+      line(f, x, y, z, x + dx, y + dy, z + dz, 1, 0.95)
       if (label !== null && project(x + dx * 2.2, y + dy * 2.2, z + dz * 2.2, A)) f.fillText(label, A[0] - 3, A[1] + 3)
     }
     for (var a = -lenX; a <= lenX; a++) {
@@ -168,6 +182,7 @@
     name(ox, gy, oz + lenZ + 0.8, 'Z')
     name(ox, gy + lenY + 0.4, oz, 'Y')
     name(ox + 0.4, gy, oz + 0.9, '0')
+    f.restore()
   }
 
   function start() {

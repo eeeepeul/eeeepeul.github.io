@@ -3,6 +3,7 @@
 import { createElement, useEffect, useRef, useState } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
 import { StageHeat } from './StageHeat.mjs'
+import { StagePeople } from './StagePeople.mjs'
 import { StageVisits } from './StageVisits.mjs'
 
 // Cell 2: a High-to-Low scale down the left edge, the picture of the cell (an aerial view, 1610 x 977,
@@ -132,7 +133,9 @@ export function StageScaleCell() {
           draggable: false,
         }),
         // the heat over the houses, in the same box as the picture so that it zooms with it
-        createElement(StageHeat)
+        createElement(StageHeat),
+        // the people coming to the houses (the stars of the radar in cell 7), seen from above
+        createElement(StagePeople)
       )
     ),
     // the pencil-drawn version, shown only to the right of the bar; it zooms like the first picture
@@ -150,7 +153,7 @@ export function StageScaleCell() {
         }),
         // red circles for the visits to the houses, counted as if live; only seen where this picture is.
         // They are placed by the houses of the aerial picture, so they sit in its frame as well.
-        createElement('div', { className: 'scale-cell__aerial' }, createElement(StageVisits))
+        createElement('div', { className: 'scale-cell__aerial' }, createElement(StageVisits), createElement(StagePeople))
       )
     ),
     createElement(

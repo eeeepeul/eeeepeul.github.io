@@ -42,7 +42,7 @@ const MAX_SPIN_SPEED = 0.16
 const SPIN_IDLE_MS = 90
 // Changes with every new set of the map's pictures: browsers keep pictures for minutes, and an old
 // copy of one picture next to the new others (e.g. frames without the land channel) breaks the look.
-const PICTURES = 'v=4'
+const PICTURES = 'v=5'
 const withVersion = (url) => `${url}?${PICTURES}`
 // This close below the hand-over the clip is already sought to its frame, so it is ready.
 const PRESEEK_Z = 0.45
@@ -358,6 +358,8 @@ export function DeepZoomMap() {
     let heldSince = 0
     // the clip's frame the frame canvas holds just now (read from the frame itself)
     let shownFrame = -1
+    // the zoom the zoom slider was last told
+    let announcedZoom = -1
 
     const getFrameScale = () => {
       const width = globeCanvasNode.getBoundingClientRect().width
@@ -460,6 +462,11 @@ export function DeepZoomMap() {
       const state = applyCameraFrame(rootNode, nodes, progress, view)
       syncGlobeSize(state)
       rootNode.dataset.mapZoom = zoom.toFixed(3)
+      // tells the zoom slider how far in the view is
+      if (Math.abs(zoom - announcedZoom) > 0.0015) {
+        announcedZoom = zoom
+        window.dispatchEvent(new CustomEvent('map:zoom', { detail: { z: zoom, max: ZOOM_END } }))
+      }
       rootNode.dataset.mapShownFrame = String(shownFrame)
       if (view) {
         drawHouses(canvasNode, view, lastFrame, houses)
@@ -729,6 +736,16 @@ export function DeepZoomMap() {
     }
     window.addEventListener('map:layers', readLayers)
     window.addEventListener('map:reset', handleReset)
+    // the zoom slider asks for a zoom (z), which the view then moves to as it does for the wheel
+    const handleZoomTo = (event) => {
+      const wanted = Number(event.detail?.z)
+      if (!Number.isFinite(wanted) || (mode === 'loading' && globe)) return
+      glide = null
+      const target = Math.min(ZOOM_END, Math.max(0, wanted))
+      turnTarget = target < ZOOM_ASLANT ? target : target + ASLANT_HOLD
+      requestFrame()
+    }
+    window.addEventListener('map:zoom-to', handleZoomTo)
     window.addEventListener('map:satellite', handleSatellite)
     rootNode.addEventListener('wheel', handleWheel, { passive: false })
     rootNode.addEventListener('pointerdown', handlePointerDown)
@@ -745,6 +762,34 @@ export function DeepZoomMap() {
     // The video may have loaded before hydration attached the listeners.
     if (videoNode.readyState >= 2) handleReady()
     else if (videoNode.error) handleError()
+
+    // The first screen needs the planet's pictures first: ask for them now, side by side with the code of
+    // the planet (which is big), instead of one after the other when the code has arrived.
+    ;[GLOBE.texture, GLOBE.milkyWay.texture, GLOBE.milkyWay2 ? GLOBE.milkyWay.texture.replace(/milky-way\.webp$/, 'milky-way-2.webp') : null]
+      .filter(Boolean)
+      .forEach((src) => {
+        const warm = new Image()
+        warm.decoding = 'async'
+        warm.src = assetPath(src.slice(1))
+      })
+    ;[withVersion(assetPath(GLOBE.landTexture.slice(1)))].forEach((src) => {
+      const warm = new Image()
+      warm.src = src
+    })
+
+    // The clip is needed only when the zoom reaches it: it is asked for once the planet is on the screen,
+    // so that it does not share the line with the planet's pictures.
+    let videoStarted = false
+    const startVideo = () => {
+      if (videoStarted || cancelled) return
+      videoStarted = true
+      if (!videoNode.getAttribute('src')) {
+        videoNode.src = assetPath(ZOOM_VIDEO.src.slice(1))
+        videoNode.load()
+      }
+    }
+    // the pages of their own and the song wait for the planet in the same way
+    const announcePlanet = () => window.dispatchEvent(new CustomEvent('stage:planet-ready'))
 
     // The planet loads on its own; until it is ready (or if WebGL is missing)
     // the wheel scrubs the clip straight away.
@@ -774,11 +819,15 @@ export function DeepZoomMap() {
         globe.setVideoSource(canvasNode)
         globeSize = ''
         handleResize()
+        startVideo()
+        announcePlanet()
         if (!welcomeOpen) glideTimer = window.setTimeout(handleEntered, GLIDE_DELAY_MS)
       })
       .catch((error) => {
         // No WebGL or texture: the clip's own first frame stands in for the planet.
         console.error('globe failed to start', error)
+        startVideo()
+        announcePlanet()
         if (!welcomeOpen) handleEntered()
         if (!cancelled) setMode('video')
       })
@@ -799,6 +848,7 @@ export function DeepZoomMap() {
       window.removeEventListener('resize', handleResize)
       window.removeEventListener('map:layers', readLayers)
       window.removeEventListener('map:reset', handleReset)
+      window.removeEventListener('map:zoom-to', handleZoomTo)
       window.removeEventListener('stage:entered', handleEntered)
       window.removeEventListener('map:satellite', handleSatellite)
       rootNode.removeEventListener('wheel', handleWheel)
@@ -852,7 +902,6 @@ export function DeepZoomMap() {
       createElement('video', {
         ref: videoRef,
         className: 'figma-deep-zoom-video',
-        src: assetPath(ZOOM_VIDEO.src.slice(1)),
         poster: assetPath(ZOOM_VIDEO.poster.slice(1)),
         muted: true,
         playsInline: true,

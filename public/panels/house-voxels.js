@@ -145,6 +145,8 @@
       })
     })
     var span = Math.max(1e-6, maxY - minY)
+    // the houses' own floor, for the grid and the axes of the drawing (house-grid.js): they stand on it
+    window.__houseGround = minY
 
     var cubes = []
     tri.forEach(function (t) {

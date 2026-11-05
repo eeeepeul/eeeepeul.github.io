@@ -867,7 +867,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .scale-cell__heat {
   position: absolute;
   inset: 0;
-  opacity: 1; /* flat colours: no transparency */
+  opacity: 0.6; /* the heat shown at 60% */
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1152,7 +1152,8 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   /* a blank line (the height of one line) between paragraphs; line breaks in the text are kept */
   margin: 0 0 calc(35.5 * var(--u));
   white-space: pre-line;
-  word-break: normal;
+  /* a word (an eojeol) is kept whole: a line breaks between words only */
+  word-break: keep-all;
   overflow-wrap: break-word;
 }
 
@@ -2486,7 +2487,8 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 }
 
 .stage {
-  background: var(--c-aqua);
+  /* the margin between the boxes is white (the big black boxes lie over it) */
+  background: #ffffff;
   box-shadow: 0 0 0 1px var(--c-ink);
 }
 
@@ -2892,13 +2894,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   filter: url(#tone-chart);
 }
 
-.stage-cell--domino {
-  background: var(--c-navy);
-}
-
-.domino {
-  filter: brightness(1.4) saturate(0.75) url(#tone-tiles);
-}
+/* cell 16 (the tiles) keeps its own colours, as before the stage was recoloured */
 
 .stage-cell--sequence {
   background: #c7d3c3;
@@ -3067,6 +3063,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .stage-cell:is(
     [data-stage-cell='1'],
     [data-stage-cell='2'],
+    [data-stage-cell='5'],
     [data-stage-cell='9'],
     [data-stage-cell='10'],
     [data-stage-cell='11'],
@@ -3084,4 +3081,530 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   box-shadow: inset 0 0 0 max(1px, 0.09cqw) #e8e2c7;
   pointer-events: none;
   z-index: 50;
+}
+
+/* ==== black and white ============================================================================
+   The whole stage in greys, as in the preview, its white being the pale #E6E7D7. Two plain sheets lie over
+   the stage, inside it, and no filter is put on the stage itself (that would make the filters of the pictures
+   inside it, the print look, very slow). The first turns what lies under it to greys and raises them until
+   the cream of the land (brightness 225 of 255) is full white (1.1333); the second is a plain #E6E7D7 laid
+   on by multiplying, which takes white to that colour and the greys with it. A box that is put above both
+   (z-index 600, see .visitors-bar) keeps a pure white #FFFFFF. Taking the rules of both sheets away puts the
+   colours back. */
+.stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 499;
+  pointer-events: none;
+  -webkit-backdrop-filter: grayscale(1) brightness(1.1333);
+  backdrop-filter: grayscale(1) brightness(1.1333);
+}
+
+.stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  background: #e6e7d7;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* what lies round the stage when the window is not of its shape, in the grey of the dark it was */
+.stage-shell {
+  background: #1b1b1a;
+}
+
+/* ==== the print look of the globe on the pictures of the other boxes ===========================
+   A fine grain is laid over the picture of the box (a small tile of noise, one pixel to a grain), and the
+   filter stage-print of StagePalette then cuts the colours into flat steps, so the shading breaks into
+   single-pixel grain between flat tones, as on the planet. The text of the boxes stays sharp. */
+.stage-cell--radar::before,
+.stage-cell--chart::before,
+.stage-cell--panel15::before,
+.stage-cell--strip14::before,
+.stage-cell--model::before,
+.stage-cell--clip::before,
+.stage-cell--graph::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 49;
+  background: url('/media/grain-128.png') 0 0 / 128px 128px;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.stage-cell--panel15,
+.stage-cell--strip14,
+.stage-cell--model {
+  filter: url(#stage-print);
+}
+
+/* cell 16 (the tiles): no grain, and a clear difference of brightness between the blue area, the ground
+   and the red line, so that the motion shows in black and white */
+.domino {
+  filter: url(#tone-tiles-bw);
+}
+
+/* the radar and the chart keep a dark of #262623 where the others have black */
+.stage-cell--radar,
+.stage-cell--chart {
+  filter: url(#stage-print-dim);
+}
+
+.stage-cell--clip {
+  filter: url(#tone-clip) url(#stage-print);
+}
+
+.stage-cell--graph {
+  filter: url(#tone-graph) url(#stage-print);
+}
+
+/* the clock of the visitor record: the box grows with its numbers, so they never run over its edge */
+.visitors-time {
+  width: max-content;
+  min-width: 11.6%;
+  padding: 0 0.7cqw;
+}
+
+/* the dark tone of the radar: #262623 as it shows (the page's greys take #252525 to it); the square of its
+   scope (the picture and the circle, on the right) is 30% lighter, #31312E, written #303030 */
+.stage-cell--radar {
+  background: #252525;
+}
+
+.radar-scope {
+  background: #303030;
+}
+
+
+/* ==== the box colours of cells 1, 3 and 11, as shown in the supplied pictures =====================
+   Written as the greys that the black and white of the page turns into the shown colours: #878787 is
+   #8A8A82 on the page (the shown #6A6A64 made 30% lighter), #464646 is #484844, #252525 is #262624. */
+.stage-bar,
+.about-title {
+  background: #878787;
+}
+
+.stage-bar__chip {
+  background: #464646;
+}
+
+.about,
+.about-face,
+.about-panel,
+.about-tree,
+.about-text,
+.about-notewrap,
+.about-note {
+  background: #252525;
+}
+
+/* the map's tool bar: a thin white outline (half the width the boxes on the left have) round the whole bar,
+   its fold button and each of the four tools; none round the bar's head. Drawn outside the squares, in
+   the grey between them, so that it shows against their pale faces. */
+.stage-cell--map .map-gis-toolbar,
+.stage-cell--map .map-gis-bar__fold,
+.stage-cell--map .map-gis-tool {
+  outline: max(0.5px, 0.045cqw) solid #ffffff;
+  outline-offset: 0;
+}
+
+/* the fold button shows a plus while the bar is folded away (the dash with an upright one across it) */
+.stage-cell--map .map-gis-bar__dash {
+  position: relative;
+}
+
+.stage-cell--map .map-gis-toolbar.is-folded .map-gis-bar__dash::after {
+  content: '';
+  position: absolute;
+  left: calc(8 * var(--u));
+  top: calc(-8 * var(--u));
+  width: calc(4 * var(--u));
+  height: calc(20 * var(--u));
+  background: inherit;
+}
+
+/* the margin's small graphics over the lower left (see MARGIN_GRAPHICS): over the cells, under the guide */
+.stage-margin-graphics {
+  position: absolute;
+  z-index: 60;
+  display: block;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* the globe's box cut out cleanly, as in the supplied picture: a black strip (3 units of the plan) along its
+   left and right edges, which joins the big black boxes, and a white line (1.9 units) under it, where it
+   meets the lower black box; the thin grey line round it is taken away */
+.stage-cell[data-stage-cell='4'] {
+  box-shadow:
+    0.15cqw 0 0 0 #060806,
+    -0.15cqw 0 0 0 #060806,
+    0 0.095cqw 0 0 #ffffff,
+    0.15cqw 0.095cqw 0 0 #ffffff,
+    -0.15cqw 0.095cqw 0 0 #ffffff;
+}
+
+.stage-cell[data-stage-cell='4']::after {
+  box-shadow: none;
+}
+
+/* the white line under the globe's box goes on along the top of the lower black box to its end (to the box
+   on the right), so the black does not stop short of it */
+.stage-block--lower {
+  box-sizing: border-box;
+  border-top: 0.095cqw solid #ffffff;
+}
+
+/* the visitor record's head (cell 5): a white bar with dark letters, its three boxes white with a dark line,
+   as the rulers of the globe's box. It lies above the page's greys, so its dark is written as the grey it
+   is to show (#292926). */
+.visitors-bar {
+  /* white at 40%: above the #E6E7D7 sheet of the stage (z-index 600), so it is a pure white that lets what
+     is under it show through */
+  background: rgba(255, 255, 255, 0.4);
+  z-index: 600;
+}
+
+.visitors-chip {
+  color: #292926;
+  background: rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 0 0 max(1px, 0.07cqw) #292926;
+}
+
+.visitors-active span,
+.visitors-active strong {
+  color: #292926;
+}
+
+.visitors-menu {
+  background: #ffffff;
+}
+
+.visitors-menu button {
+  color: #292926;
+}
+
+.visitors-menu li[aria-selected='true'] button,
+.visitors-menu button:hover {
+  background: #d5d5d0;
+}
+
+/* the second face of cell 3: its text keeps whole words on a line too */
+.about-text p {
+  word-break: keep-all;
+}
+
+/* ---- the zoom slider along the bottom left of the map box: the supplied bar (704 x 59) shown at
+   0.572 of that on the 2000 plan, so it measures about 403 x 34 there (1 unit = 0.0286cqw). A small
+   square at the left (all the way out), a bar with a triangle handle, a big square at the right (all
+   the way in). As in the supplied bar its lines are not even: the frame and the squares are heavier on
+   their top and left than on their bottom and right, so they stand out like pressed keys. Its greys are
+   written as the ones that the page's black and white sheets turn into the supplied colours (#86877C
+   ground, #53534D lines, #D7D8C7 cream). All places below are the supplied bar's pixels, less the frame. */
+.stage-cell--map .map-zoom-slider {
+  --u: 0.0286cqw;
+  --ink: #515151;
+  --cream: #d2d2d2;
+  position: absolute;
+  z-index: 75;
+  left: 0.8cqw;
+  bottom: 0.1cqw;
+  box-sizing: border-box;
+  width: calc(704 * var(--u));
+  height: calc(59 * var(--u));
+  background: #838383;
+  border-style: solid;
+  border-color: #000;
+  border-width: calc(4 * var(--u)) calc(3 * var(--u)) calc(3 * var(--u)) calc(4 * var(--u));
+  user-select: none;
+  touch-action: none;
+}
+
+.stage-cell--map .map-zoom-slider__end {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 0;
+  border-style: solid;
+  border-color: var(--ink);
+  border-radius: 0;
+  background: var(--cream);
+  cursor: pointer;
+}
+
+/* the small square: 16 across, its line 3 on the top and left, 2 on the bottom and right, a faint shadow
+   under it */
+.stage-cell--map .map-zoom-slider__end--out {
+  left: calc(14 * var(--u));
+  top: calc(18 * var(--u));
+  width: calc(16 * var(--u));
+  height: calc(16 * var(--u));
+  border-width: calc(3 * var(--u)) calc(2 * var(--u)) calc(2 * var(--u)) calc(3 * var(--u));
+  box-shadow: 0 var(--u) 0 #7b7b7b;
+}
+
+/* the big square: 33 across, its line 4 on the top and left, 2 on the bottom and right */
+.stage-cell--map .map-zoom-slider__end--in {
+  left: calc(645 * var(--u));
+  top: calc(9 * var(--u));
+  width: calc(33 * var(--u));
+  height: calc(33 * var(--u));
+  border-width: calc(4 * var(--u)) calc(2 * var(--u)) calc(2 * var(--u)) calc(4 * var(--u));
+}
+
+.stage-cell--map .map-zoom-slider__end:hover,
+.stage-cell--map .map-zoom-slider__end:focus-visible {
+  background: #bdbdbd;
+  outline: none;
+}
+
+/* the bar: a channel with a line of 2 round it and a faint shadow along the inside of its foot; the
+   element is the channel's inside, across, and taller than it, so it is easy to take hold of */
+.stage-cell--map .map-zoom-slider__track {
+  position: absolute;
+  left: calc(38 * var(--u));
+  top: calc(6 * var(--u));
+  width: calc(598 * var(--u));
+  height: calc(46 * var(--u));
+  cursor: pointer;
+  outline: none;
+}
+
+.stage-cell--map .map-zoom-slider__track::before {
+  content: '';
+  position: absolute;
+  left: calc(-2 * var(--u));
+  right: calc(-2 * var(--u));
+  top: calc(14 * var(--u));
+  height: calc(12 * var(--u));
+  box-sizing: border-box;
+  border: calc(2 * var(--u)) solid var(--ink);
+  box-shadow: inset 0 calc(-1 * var(--u)) 0 #7d7d7d;
+}
+
+.stage-cell--map .map-zoom-slider__fill {
+  position: absolute;
+  left: 0;
+  top: calc(16 * var(--u));
+  height: calc(8 * var(--u));
+  background: var(--cream);
+  box-shadow: inset 0 calc(-1 * var(--u)) 0 #c4c4c4;
+}
+
+/* the triangle handle under the bar, pointing up at the end of the fill: 14 across, 12 high */
+.stage-cell--map .map-zoom-slider__handle {
+  position: absolute;
+  top: calc(27 * var(--u));
+  width: calc(14 * var(--u));
+  height: calc(12 * var(--u));
+  margin-left: calc(-7 * var(--u));
+  background: #575757;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.stage-cell--map .map-zoom-slider__track:focus-visible .map-zoom-slider__handle,
+.stage-cell--map .map-zoom-slider.is-held .map-zoom-slider__handle {
+  background: #2b2b2b;
+}
+
+/* the icons of the bar a little heavier and larger, as in the supplied bar */
+.stage-cell--map .map-gis-bar__body > .map-gis-tool .map-gis-icon,
+.stage-cell--map .map-gis-lasso > .map-gis-tool .map-gis-icon {
+  width: calc(50 * var(--u));
+  height: calc(50 * var(--u));
+  stroke-width: 1.9;
+}
+
+/* ==== colour: the supplied palette over the black and white page ==================================
+   The page stays black and white underneath (the two sheets above); its whites are laid a little greyer
+   and less yellow (#E3E3D8, as the supplied colour picture's), the margin a touch deeper (#DBDBCF on the
+   screen), and a few parts take the palette's colours from boxes laid above the sheets (STAGE_TINTS in
+   HomeStage.mjs), mixed into what is under them so nothing of the graphics changes. */
+.stage {
+  background: #d9d9d9;
+}
+
+.stage::after {
+  background: #e3e3d8;
+}
+
+.stage-tint {
+  position: absolute;
+  z-index: 501;
+  pointer-events: none;
+}
+
+/* while the welcome card or the guide lies over the page, its colours are not laid over them */
+.stage:has(> .welcome) .stage-tint,
+.stage:has(> .guide) .stage-tint {
+  opacity: 0;
+}
+
+/* the visitor record's chart above the page's grey sheets, in the colours it is to show (the brown blocks) */
+.visitors-chart {
+  position: relative;
+  z-index: 600;
+}
+
+/* the margin (the page between the boxes, where no big black box lies): #D0D1C8 on the screen */
+.stage {
+  background: #cfcfcf;
+}
+
+/* ---- the globe in colour: the map's box is cut out of the two grey sheets, so the globe shows the
+   palette it is drawn in (see the last pass in lib/globe-scene.mjs). What else lies in the box (the
+   rulers, the tool bar, the zoom bar) is put through the same black and white as the sheets (the filter
+   #stage-bw), so it looks as it did. While the welcome card or the guide is open the sheets are whole. */
+.stage::before,
+.stage::after {
+  clip-path: polygon(
+    evenodd,
+    0 0, 100% 0, 100% 100%, 0 100%, 0 0,
+    21.3% 1.0657%, 79% 1.0657%, 79% 70.3375%, 21.3% 70.3375%, 21.3% 1.0657%
+  );
+}
+
+.stage:has(> .welcome)::before,
+.stage:has(> .welcome)::after,
+.stage:has(> .guide)::before,
+.stage:has(> .guide)::after {
+  clip-path: none;
+}
+
+.stage-cell--map .figma-home-scene > :not(.figma-home-map-clip),
+.stage-cell--map .map-gis-chrome > * {
+  filter: url(#stage-bw);
+}
+
+/* the margin's lightness as the colour #D4D5BF has it (its colour is laid on from above, see MARGIN_COLOUR) */
+.stage {
+  background: #d1d1d1;
+}
+
+.stage-margin-clip {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* ---- the cube of cell 3 in the open: its box is cut out of both grey sheets (the sheets lie over the
+   whole stage and cannot turn with the cube), so the colours are on the cube's own parts and turn with it.
+   The title bar is brown with the rosy letters (#5E4A42, #967666) and its language mark has its own picture;
+   everything else of the cube is put through the same black and white as the sheets give (#stage-bw), as a
+   filter on each part. ------------------------------------------------------------------------------------ */
+.stage::before,
+.stage::after {
+  clip-path: polygon(
+    evenodd,
+    0 0, 100% 0, 100% 100%, 0 100%, 0 0,
+    21.3% 1.0657%, 79% 1.0657%, 79% 70.3375%, 21.3% 70.3375%, 21.3% 1.0657%,
+    0.6% 61.19%, 17.6% 61.19%, 17.6% 88.19%, 0.6% 88.19%, 0.6% 61.19%,
+    /* back the same way (the path is closed on the first corner, so what is left over must cancel out) */
+    21.3% 1.0657%
+  );
+}
+
+.stage:has(> .welcome)::before,
+.stage:has(> .welcome)::after,
+.stage:has(> .guide)::before,
+.stage:has(> .guide)::after {
+  clip-path: none;
+}
+
+.about-lang img {
+  filter: none;
+}
+
+.about-face {
+  background: transparent;
+}
+
+.about-face::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #494949;
+  filter: url(#stage-bw);
+  pointer-events: none;
+}
+
+.about-panel {
+  background: transparent;
+  border-color: transparent;
+}
+
+.about-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #747474;
+  filter: url(#stage-bw);
+  pointer-events: none;
+}
+
+.about-panel::after {
+  content: '';
+  position: absolute;
+  inset: calc(-2 * var(--u));
+  border: calc(2 * var(--u)) solid #f6f6f6;
+  filter: url(#stage-bw);
+  pointer-events: none;
+}
+
+.about-panel > :not(.about-title) {
+  position: relative;
+  filter: url(#stage-bw);
+}
+
+.about-title {
+  position: relative;
+  z-index: 1;
+  background: #5e4a42;
+  color: #967666;
+  border-bottom-color: #e3e3d8;
+}
+
+.stage-cell[data-stage-cell='3']::after {
+  filter: url(#stage-bw);
+}
+
+/* the visitor record: its ground is beige on the box itself, above the grey sheets (as its bar and chart are) */
+.visitors {
+  z-index: 600;
+  background: #c4bfaa;
+}
+
+/* ---- the visitor record's head in the title bar's colours (cell 3's): a brown bar, and its time, count and
+   range in the rosy brown of the title's letters, their boxes outlined in it. Above the grey sheets, so
+   the colours are as written. ------------------------------------------------------------------------- */
+.visitors-bar {
+  background: #5e4a42;
+}
+
+.visitors-chip {
+  color: #967666;
+  background: #5e4a42;
+  box-shadow: inset 0 0 0 max(1px, 0.07cqw) #967666;
+}
+
+.visitors-active span,
+.visitors-active strong {
+  color: #967666;
+}
+
+.visitors-menu {
+  background: #5e4a42;
+}
+
+.visitors-menu button {
+  color: #967666;
+}
+
+.visitors-menu li[aria-selected='true'] button,
+.visitors-menu button:hover {
+  background: #6a5750;
 }

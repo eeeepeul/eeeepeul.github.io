@@ -19,7 +19,13 @@ test('the main page renders the Figma sidebar as native UI instead of a flattene
   assert.match(html, /class="map-gis-toolbar"/)
   assert.match(html, /aria-label="시점 초기화"/)
   assert.doesNotMatch(html, /aria-label="색 지도 켜기"/)
-  assert.match(html, /aria-label="올가미 도구 켜기"/)
+  // the bar's second button opens the zoom bar (which is not there until it is pressed); the lasso is gone
+  assert.match(html, /aria-label="확대 축소 바 열기"/)
+  // (its icon, the two arrows along the diagonal, is really drawn: the button is not left blank)
+  assert.match(html, /aria-label="확대 축소 바 열기"[^>]*><svg[^>]*><path d="M4 10V4h6"/)
+  // the bar has three buttons and no empty place under them
+  assert.doesNotMatch(html, /map-gis-tool--empty/)
+  assert.doesNotMatch(html, /올가미|map-zoom-slider/)
   // The map page is the map alone: no page links, house link, zoom bar or side panel.
   assert.doesNotMatch(html, /map-gis-zoombar|class="house-link"|<aside/)
   assert.doesNotMatch(html, /<main class="experience-shell landing-shell"><nav class="page-route-nav"/)

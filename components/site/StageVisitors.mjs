@@ -124,7 +124,7 @@ export function StageVisitors() {
           createElement(
             'svg',
             { viewBox: '0 0 14 8', width: 14, height: 8, 'aria-hidden': 'true' },
-            createElement('path', { d: 'M1 1l6 6 6-6', fill: 'none', stroke: '#eae2c4', strokeWidth: 2 })
+            createElement('path', { d: 'M1 1l6 6 6-6', fill: 'none', stroke: '#967666', strokeWidth: 2 })
           )
         ),
         open
@@ -168,7 +168,9 @@ export function StageVisitors() {
           y: ROW_TOPS[block.row],
           width: block.x1 - block.x0,
           height: ROW_HEIGHT,
-          fill: '#9ebbb0',
+          // (the chart lies above the page's grey sheets, so these are the colours as they are seen: the
+          // blocks the palette's brown, the bars and the cursor the greys they showed in before)
+          fill: '#b0a899',
         })
       ),
       bars.map((bar, index) =>
@@ -178,7 +180,7 @@ export function StageVisitors() {
           y: ROW_TOPS[bar.row],
           width: bar.width,
           height: ROW_HEIGHT,
-          fill: '#0a1d21',
+          fill: '#151412',
         })
       ),
       now
@@ -187,7 +189,7 @@ export function StageVisitors() {
             y: ROW_TOPS[cursorRow],
             width: 5,
             height: ROW_HEIGHT,
-            fill: '#a8080e',
+            fill: '#31302b',
           })
         : null
     )
