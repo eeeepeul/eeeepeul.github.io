@@ -61,13 +61,15 @@ export const STAGE_CELLS = [
 ]
 
 // The big boxes that lie under the cells, grouping them (as in the supplied drawing): [left, top, right,
-// bottom] on the plan. One holds the two cells at the top left, the other the whole lower band; they are
+// bottom] on the plan. One holds the two cells at the top left, one the whole lower band, one the visitor record at the top right; they are
 // plain black, so the pale margin between the cells reads as a few clear groups instead of many pieces.
 // (nothing lies under cell 3: the lower band's box goes round it, along its right side and under it)
 export const STAGE_BLOCKS = [
   [0, 0, 426, 676],
   [423, 792, 1986, 1123],
   [0, 998, 423, 1123],
+  // under the visitor record (cell 5), at the top right
+  [1578, 0, 2000, 188],
 ]
 
 // Where the margin's own small graphics lie: [left, top, width, height] on the plan (the picture is 2000 x 685,

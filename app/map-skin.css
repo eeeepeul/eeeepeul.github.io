@@ -3063,6 +3063,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .stage-cell:is(
     [data-stage-cell='1'],
     [data-stage-cell='2'],
+    [data-stage-cell='5'],
     [data-stage-cell='9'],
     [data-stage-cell='10'],
     [data-stage-cell='11'],
@@ -3263,14 +3264,15 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
    as the rulers of the globe's box. It lies above the page's greys, so its dark is written as the grey it
    is to show (#292926). */
 .visitors-bar {
-  background: #ffffff;
-  /* above the #E6E7D7 sheet of the stage, so that it is a pure #FFFFFF */
+  /* white at 40%: above the #E6E7D7 sheet of the stage (z-index 600), so it is a pure white that lets what
+     is under it show through */
+  background: rgba(255, 255, 255, 0.4);
   z-index: 600;
 }
 
 .visitors-chip {
   color: #292926;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.4);
   box-shadow: inset 0 0 0 max(1px, 0.07cqw) #292926;
 }
 
@@ -3295,4 +3297,108 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 /* the second face of cell 3: its text keeps whole words on a line too */
 .about-text p {
   word-break: keep-all;
+}
+
+/* ---- the zoom slider along the bottom left of the map box: the supplied bar (704 x 58) shown at
+   0.572 of that on the 2000 plan, so it measures about 403 x 33 there (1 unit = 0.0286cqw). A small
+   square at the left (all the way out), a bar with a triangle handle, a big square at the right (all
+   the way in); white (the page's cream) on the grey of the page's bars, with a black edge ----------- */
+.stage-cell--map .map-zoom-slider {
+  --u: 0.0286cqw;
+  --ink: #2b2b28;
+  position: absolute;
+  z-index: 75;
+  left: 0.8cqw;
+  bottom: 0.1cqw;
+  box-sizing: border-box;
+  width: calc(704 * var(--u));
+  height: calc(58 * var(--u));
+  background: #878787;
+  outline: max(1px, 0.05cqw) solid #000;
+  outline-offset: calc(-1 * max(1px, 0.05cqw));
+  user-select: none;
+  touch-action: none;
+}
+
+.stage-cell--map .map-zoom-slider__end {
+  position: absolute;
+  padding: 0;
+  border: calc(2 * var(--u)) solid var(--ink);
+  border-radius: 0;
+  background: #fff;
+  cursor: pointer;
+}
+
+.stage-cell--map .map-zoom-slider__end--out {
+  left: calc(18 * var(--u));
+  top: calc(21 * var(--u));
+  width: calc(16 * var(--u));
+  height: calc(16 * var(--u));
+}
+
+.stage-cell--map .map-zoom-slider__end--in {
+  left: calc(651 * var(--u));
+  top: calc(14 * var(--u));
+  width: calc(31 * var(--u));
+  height: calc(31 * var(--u));
+}
+
+.stage-cell--map .map-zoom-slider__end:hover,
+.stage-cell--map .map-zoom-slider__end:focus-visible {
+  background: #bdbdbd;
+  outline: none;
+}
+
+/* the bar: a thin outlined channel (the hit area is taller than what is drawn) */
+.stage-cell--map .map-zoom-slider__track {
+  position: absolute;
+  left: calc(42 * var(--u));
+  top: calc(10 * var(--u));
+  width: calc(598 * var(--u));
+  height: calc(46 * var(--u));
+  cursor: pointer;
+  outline: none;
+}
+
+.stage-cell--map .map-zoom-slider__track::before {
+  content: '';
+  position: absolute;
+  inset: calc(15 * var(--u)) 0 auto 0;
+  height: calc(12 * var(--u));
+  box-sizing: border-box;
+  border: calc(1.6 * var(--u)) solid var(--ink);
+}
+
+.stage-cell--map .map-zoom-slider__fill {
+  position: absolute;
+  left: 0;
+  top: calc(15 * var(--u));
+  height: calc(12 * var(--u));
+  box-sizing: border-box;
+  border: calc(1.6 * var(--u)) solid var(--ink);
+  background: #fff;
+}
+
+/* the triangle handle under the bar, pointing up at the end of the fill */
+.stage-cell--map .map-zoom-slider__handle {
+  position: absolute;
+  top: calc(29 * var(--u));
+  width: calc(16 * var(--u));
+  height: calc(13 * var(--u));
+  margin-left: calc(-8 * var(--u));
+  background: var(--ink);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.stage-cell--map .map-zoom-slider__track:focus-visible .map-zoom-slider__handle,
+.stage-cell--map .map-zoom-slider.is-held .map-zoom-slider__handle {
+  background: #000;
+}
+
+/* the icons of the bar a little heavier and larger, as in the supplied bar */
+.stage-cell--map .map-gis-bar__body > .map-gis-tool .map-gis-icon,
+.stage-cell--map .map-gis-lasso > .map-gis-tool .map-gis-icon {
+  width: calc(50 * var(--u));
+  height: calc(50 * var(--u));
+  stroke-width: 1.9;
 }

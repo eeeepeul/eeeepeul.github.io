@@ -358,6 +358,8 @@ export function DeepZoomMap() {
     let heldSince = 0
     // the clip's frame the frame canvas holds just now (read from the frame itself)
     let shownFrame = -1
+    // the zoom the zoom slider was last told
+    let announcedZoom = -1
 
     const getFrameScale = () => {
       const width = globeCanvasNode.getBoundingClientRect().width
@@ -460,6 +462,11 @@ export function DeepZoomMap() {
       const state = applyCameraFrame(rootNode, nodes, progress, view)
       syncGlobeSize(state)
       rootNode.dataset.mapZoom = zoom.toFixed(3)
+      // tells the zoom slider how far in the view is
+      if (Math.abs(zoom - announcedZoom) > 0.0015) {
+        announcedZoom = zoom
+        window.dispatchEvent(new CustomEvent('map:zoom', { detail: { z: zoom, max: ZOOM_END } }))
+      }
       rootNode.dataset.mapShownFrame = String(shownFrame)
       if (view) {
         drawHouses(canvasNode, view, lastFrame, houses)
@@ -729,6 +736,16 @@ export function DeepZoomMap() {
     }
     window.addEventListener('map:layers', readLayers)
     window.addEventListener('map:reset', handleReset)
+    // the zoom slider asks for a zoom (z), which the view then moves to as it does for the wheel
+    const handleZoomTo = (event) => {
+      const wanted = Number(event.detail?.z)
+      if (!Number.isFinite(wanted) || (mode === 'loading' && globe)) return
+      glide = null
+      const target = Math.min(ZOOM_END, Math.max(0, wanted))
+      turnTarget = target < ZOOM_ASLANT ? target : target + ASLANT_HOLD
+      requestFrame()
+    }
+    window.addEventListener('map:zoom-to', handleZoomTo)
     window.addEventListener('map:satellite', handleSatellite)
     rootNode.addEventListener('wheel', handleWheel, { passive: false })
     rootNode.addEventListener('pointerdown', handlePointerDown)
@@ -831,6 +848,7 @@ export function DeepZoomMap() {
       window.removeEventListener('resize', handleResize)
       window.removeEventListener('map:layers', readLayers)
       window.removeEventListener('map:reset', handleReset)
+      window.removeEventListener('map:zoom-to', handleZoomTo)
       window.removeEventListener('stage:entered', handleEntered)
       window.removeEventListener('map:satellite', handleSatellite)
       rootNode.removeEventListener('wheel', handleWheel)

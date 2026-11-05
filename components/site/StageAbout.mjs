@@ -25,6 +25,11 @@ const SONGS = {
   },
 }
 
+// Each song has one "explain" under it. The first song's is out when the page opens; the others come out when
+// their song is pressed. Only one song is open at a time, so the tree always fits its box.
+const SONG_IDS = ['a', 'b', 'c', 'd']
+const FIRST_OPEN = { a: true, b: false, c: false, d: false }
+
 const TREE = {
   id: 'epeul',
   label: 'epeul',
@@ -37,16 +42,11 @@ const TREE = {
           id: 'a',
           label: '9+1',
           song: '9+1',
-          kids: [
-            { id: 'a1', label: 'explain' },
-            { id: 'a2', label: 'explain' },
-            { id: 'a3', label: 'explain' },
-            { id: 'a4', label: 'explain' },
-          ],
+          kids: [{ id: 'a1', label: 'explain' }],
         },
-        { id: 'b', label: 'if and only if', song: 'if and only if', kids: [] },
-        { id: 'c', label: 'saffron', song: 'saffron', kids: [] },
-        { id: 'd', label: 'a&d', song: 'a&d', kids: [] },
+        { id: 'b', label: 'if and only if', song: 'if and only if', kids: [{ id: 'b1', label: 'explain' }] },
+        { id: 'c', label: 'saffron', song: 'saffron', kids: [{ id: 'c1', label: 'explain' }] },
+        { id: 'd', label: 'a&d', song: 'a&d', kids: [{ id: 'd1', label: 'explain' }] },
       ],
     },
   ],
@@ -102,13 +102,14 @@ function typingDelay(letter) {
 // While it is typed the box follows the typing slowly, so the text keeps coming into view and it can be seen
 // that there is more below (`scroller` is the box). Taking hold of the box (wheel, touch, a press) stops
 // the following, so the visitor can read on their own.
-function NoteText({ paragraphs, run, delay, scroller }) {
+function NoteText({ paragraphs, run, delay, scroller, onTyping }) {
   const [count, setCount] = useState(Infinity)
   const typed = useRef(0)
   useEffect(() => {
     const still = !run || (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
     if (still) {
       setCount(Infinity)
+      if (onTyping) onTyping(false)
       return undefined
     }
     const joined = paragraphs.join('')
@@ -116,6 +117,7 @@ function NoteText({ paragraphs, run, delay, scroller }) {
     let timer = 0
     setCount(0)
     typed.current = 0
+    if (onTyping) onTyping(true)
     const step = () => {
       index += 1
       typed.current = index
@@ -124,11 +126,14 @@ function NoteText({ paragraphs, run, delay, scroller }) {
         // a little quicker than the song notes, as there is a lot more to type, but not much (slower than at
         // first: the text can be followed as it comes)
         timer = window.setTimeout(step, typingDelay(joined[index - 1]) * 0.9)
+      } else if (onTyping) {
+        // all of it is there: the cube may turn by itself again (after its usual wait)
+        onTyping(false)
       }
     }
     timer = window.setTimeout(step, delay)
     return () => window.clearTimeout(timer)
-  }, [paragraphs, run, delay])
+  }, [paragraphs, run, delay, onTyping])
 
   useEffect(() => {
     const box = scroller && scroller.current
@@ -333,13 +338,15 @@ function TreeNode({ node, depth, last, open, selected, onToggle, onSelect }) {
 }
 
 export function StageAbout() {
-  const [open, setOpen] = useState({})
+  const [open, setOpen] = useState(FIRST_OPEN)
   const [selected, setSelected] = useState('a')
   const [selectedLabel, setSelectedLabel] = useState('9+1')
   // which song's note shows under the tree
   const [song, setSong] = useState('9+1')
   const [typed, setTyped] = useState(0)
   const [noteRun, setNoteRun] = useState(0)
+  // true while the second face's text is being typed out
+  const [noteTyping, setNoteTyping] = useState(false)
   const [page, setPage] = useState(0)
   // the language mark in the title: the second picture (hanja) is the one it opens on; pressing it swaps
   const [language, setLanguage] = useState('hanja')
@@ -423,11 +430,13 @@ export function StageAbout() {
   const [paused, setPaused] = useState(false)
 
   // by itself, to the other face and back
+  // (not while the text of the second face is still being typed out on it: it turns TURN_MS after the last
+  // letter, so the text can be read to its end)
   useEffect(() => {
-    if (paused || dragging) return undefined
+    if (paused || dragging || (noteTyping && page === 1)) return undefined
     const timer = window.setTimeout(() => setPage((current) => 1 - current), TURN_MS)
     return () => window.clearTimeout(timer)
-  }, [page, paused, dragging])
+  }, [page, paused, dragging, noteTyping])
 
   // the cube's turn is a number from 0 (first page) to 1 (second), set straight on the element so the
   // page is not redrawn at every pixel of the swipe
@@ -550,7 +559,13 @@ export function StageAbout() {
             last: true,
             open,
             selected,
-            onToggle: (id) => setOpen((current) => ({ ...current, [id]: current[id] === false })),
+            onToggle: (id) =>
+              setOpen((current) => {
+                const opening = current[id] === false
+                // opening one song's explain closes the others
+                const others = opening && SONG_IDS.includes(id) ? Object.fromEntries(SONG_IDS.map((song) => [song, false])) : {}
+                return { ...current, ...others, [id]: opening }
+              }),
             onSelect: (node) => {
               setSelected(node.id)
               setSelectedLabel(node.label)
@@ -558,6 +573,8 @@ export function StageAbout() {
               if (node.song) {
                 setSong(node.song)
                 setTyped((count) => count + 1)
+                // and its explain comes out (the other songs' go in)
+                setOpen((current) => ({ ...current, ...Object.fromEntries(SONG_IDS.map((id) => [id, id === node.id])) }))
               }
             },
           })
@@ -584,7 +601,7 @@ export function StageAbout() {
         createElement(
           'div',
           { className: 'about-note', ref: noteRef, onScroll: placeDot },
-          createElement(NoteText, { paragraphs: NOTES[language], run: noteRun, delay: 500, scroller: noteRef })
+          createElement(NoteText, { paragraphs: NOTES[language], run: noteRun, delay: 500, scroller: noteRef, onTyping: setNoteTyping })
         ),
         createElement(
           'div',
