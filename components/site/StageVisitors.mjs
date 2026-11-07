@@ -10,10 +10,15 @@ import { createElement, useEffect, useMemo, useState } from 'react'
 const ROW_WIDTH = 744
 const ROW_HEIGHT = 82
 const ROW_TOPS = [8, 92, 176]
+// The days of the week in three capital letters, Monday first. Each is its own made-up record (its seed); the one that opens is today's.
 const RANGES = [
-  { label: '1 day', seed: 11 },
-  { label: '3 day', seed: 23 },
-  { label: '7 day', seed: 37 },
+  { label: 'MON', seed: 11 },
+  { label: 'TUE', seed: 23 },
+  { label: 'WED', seed: 37 },
+  { label: 'THU', seed: 41 },
+  { label: 'FRI', seed: 53 },
+  { label: 'SAT', seed: 67 },
+  { label: 'SUN', seed: 79 },
 ]
 const BAR_WIDTHS = [4, 4, 4, 6, 6, 8, 8, 10, 12, 14, 20, 28]
 
@@ -64,7 +69,10 @@ export function StageVisitors() {
   const [now, setNow] = useState(null)
 
   useEffect(() => {
-    setNow(new Date())
+    const first = new Date()
+    setNow(first)
+    // it opens on today's day of the week (Monday is 0)
+    setRange((first.getDay() + 6) % 7)
     const tick = window.setInterval(() => setNow(new Date()), 1000)
     return () => {
       window.clearInterval(tick)
@@ -117,7 +125,7 @@ export function StageVisitors() {
             className: 'visitors-chip visitors-select',
             'aria-haspopup': 'listbox',
             'aria-expanded': open,
-            'aria-label': `방문 기록 기간, 현재 ${RANGES[range].label}`,
+            'aria-label': `방문 기록 요일, 현재 ${RANGES[range].label}`,
             onClick: () => setOpen((value) => !value),
           },
           createElement('span', null, RANGES[range].label),

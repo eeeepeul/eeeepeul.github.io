@@ -1,0 +1,233 @@
+/* A "rollout panel" look, as in the supplied picture (3ds Max): square corners, hard one-pixel bevels,
+   a title bar with a small minus box that folds the group away, etched group boxes, small tight
+   controls. Only shapes and edges live here; no colour is chosen. Edges are laid as light and dark
+   veils over whatever colour is underneath, so every part keeps the colour it already had. */
+
+:root {
+  --max-hi: rgba(255, 255, 255, 0.7);
+  --max-lo: rgba(0, 0, 0, 0.3);
+  --max-line: rgba(0, 0, 0, 0.45);
+}
+
+/* ---- buttons: raised, and sunk while pressed ---------------------------------------------------- */
+.drawing-pad__clear,
+.drawing-pad__input,
+.custom-sidebar-input,
+.pixel-custom-row-arrow,
+.sidebar-close-button,
+.sidebar-menu-trigger,
+.page-route-link,
+.max-rollout-toggle {
+  border-radius: 0;
+  box-shadow: inset 1px 1px 0 var(--max-hi), inset -1px -1px 0 var(--max-lo), 0 0 0 1px var(--max-line);
+}
+
+.drawing-pad__clear:active,
+.drawing-pad__input:active,
+.custom-sidebar-input:active,
+.pixel-custom-row-arrow:active:not(:disabled),
+.sidebar-close-button:active,
+.sidebar-menu-trigger:active,
+.page-route-link:active,
+.max-rollout-toggle:active {
+  box-shadow: inset 1px 1px 0 var(--max-lo), inset -1px -1px 0 var(--max-hi), 0 0 0 1px var(--max-line);
+}
+
+/* ---- panels: square, with a hard edge ----------------------------------------------------------- */
+.color-panel.sidebar-panel,
+.drawing-pad,
+.about-panel,
+.map-gis-lasso__panel {
+  border-radius: 0;
+}
+
+/* ---- rollouts: a title bar with a minus box, and the group etched under it ---------------------- */
+.pixel-custom-row-header {
+  gap: 6px;
+  height: 20px;
+  padding: 0 3px;
+  font-weight: 600;
+  box-shadow: inset 1px 1px 0 var(--max-hi), inset -1px -1px 0 var(--max-lo);
+  justify-content: flex-start;
+}
+
+.pixel-custom-row-header > .pixel-custom-row-arrows {
+  margin-left: auto;
+}
+
+.max-rollout-toggle {
+  position: relative;
+  flex: none;
+  width: 11px;
+  height: 11px;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* the minus; an upright stroke across it makes a plus while the group is folded away */
+.max-rollout-toggle::before,
+.max-rollout-toggle::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 50%;
+  height: 1px;
+  background: currentColor;
+}
+
+.max-rollout-toggle::after {
+  left: 50%;
+  right: auto;
+  top: 2px;
+  bottom: 2px;
+  width: 1px;
+  height: auto;
+  display: none;
+}
+
+.max-rollout-toggle[aria-expanded='false']::after {
+  display: block;
+}
+
+.pixel-custom-row.is-folded {
+  min-height: 0;
+}
+
+/* the group box: a groove (a dark line with a light one under it) drawn outside, so the layout is as before */
+.pixel-custom-swatches {
+  box-shadow: 0 0 0 1px var(--max-lo), 1px 1px 0 1px var(--max-hi);
+}
+
+/* ---- small tight controls ----------------------------------------------------------------------- */
+.drawing-pad__swatch,
+.drawing-pad__size {
+  border-radius: 0;
+}
+
+/* ---- the map page: the same edges on its bars and buttons -------------------------------------- */
+.stage-cell--map .map-gis-tool,
+.stage-cell--map .map-gis-bar__fold,
+.visitors-chip,
+.visitors-select,
+.map-zoom-slider__button {
+  border-radius: 0;
+  box-shadow: inset 1px 1px 0 var(--max-hi), inset -1px -1px 0 var(--max-lo);
+}
+
+.stage-cell--map .map-gis-tool:active,
+.stage-cell--map .map-gis-bar__fold:active,
+.stage-cell--map .map-gis-tool.is-pressed {
+  box-shadow: inset 1px 1px 0 var(--max-lo), inset -1px -1px 0 var(--max-hi);
+}
+
+/* title bars of the panels: raised, as a rollout's title is */
+.about-title,
+.stage-cell--map .map-gis-bar__head {
+  box-shadow: inset 1px 1px 0 var(--max-hi), inset -1px -1px 0 var(--max-lo);
+}
+
+/* ---- the player: sunken fields, raised keys ------------------------------------------------------ */
+.player-field,
+.scale-cell__percent {
+  border-radius: 0;
+  box-shadow: inset 1px 1px 0 var(--max-lo), inset 2px 2px 0 var(--max-line), inset -1px -1px 0 var(--max-hi);
+}
+
+.player-button,
+.player-drop,
+.scale-cell__step,
+.stage-cell--map .map-zoom-slider__end {
+  border-radius: 0;
+  box-shadow: inset 1px 1px 0 var(--max-hi), inset -1px -1px 0 var(--max-lo), inset -2px -2px 0 var(--max-line);
+}
+
+.player-button:active:not(:disabled),
+.player-button.is-pressed,
+.player-drop:active,
+.scale-cell__step:active:not(:disabled),
+.stage-cell--map .map-zoom-slider__end:active {
+  box-shadow: inset 1px 1px 0 var(--max-lo), inset 2px 2px 0 var(--max-line), inset -1px -1px 0 var(--max-hi);
+}
+
+.player-button:disabled,
+.scale-cell__step:disabled {
+  box-shadow: inset 1px 1px 0 var(--max-hi), inset -1px -1px 0 var(--max-lo);
+}
+
+/* ---- everything else: one rule for each kind of part ------------------------------------------- */
+
+/* panels and bars: a raised edge */
+.page-route-nav,
+.drawing-pad,
+.stage-bar,
+.visitors-bar,
+.visitors-menu,
+.player-menu,
+.map-layers,
+.welcome__card,
+.guide__note,
+.figma-sidebar-card,
+.stage-cell--map .map-gis-toolbar {
+  border-radius: 0;
+  box-shadow: inset 1px 1px 0 var(--max-hi), inset -1px -1px 0 var(--max-lo);
+}
+
+/* boxes that hold a picture or a readout: sunken */
+.pixel-sidebar-preview,
+.welcome__field,
+.map-layers__check {
+  border-radius: 0;
+  box-shadow: inset 1px 1px 0 var(--max-lo), inset 2px 2px 0 var(--max-line), inset -1px -1px 0 var(--max-hi);
+}
+
+/* small buttons and tiles: raised; the chosen one is sunk */
+.drawing-pad__swatch,
+.drawing-pad__size,
+.pixel-custom-swatch,
+.about-lang,
+.welcome__enter,
+.welcome__again,
+.figma-distance-arrow-button,
+.figma-sidebar-chip,
+.visitors-menu button {
+  border-radius: 0;
+  box-shadow: inset 1px 1px 0 var(--max-hi), inset -1px -1px 0 var(--max-lo);
+}
+
+.drawing-pad__swatch.is-selected,
+.drawing-pad__size.is-selected,
+.pixel-custom-swatch.is-selected,
+.visitors-menu li[aria-selected='true'] button,
+.drawing-pad__swatch:active,
+.drawing-pad__size:active,
+.pixel-custom-swatch:active,
+.about-lang:active,
+.welcome__enter:active,
+.welcome__again:active,
+.figma-distance-arrow-button:active,
+.visitors-menu button:active {
+  box-shadow: inset 1px 1px 0 var(--max-lo), inset 2px 2px 0 var(--max-line), inset -1px -1px 0 var(--max-hi);
+}
+
+/* the tile of the character that is chosen keeps its own line round it, as before */
+.pixel-custom-swatch.is-selected {
+  box-shadow: inset 1px 1px 0 var(--max-lo), inset 2px 2px 0 var(--max-line), inset -1px -1px 0 var(--max-hi), inset 0 0 0 1px #7d7d7d;
+}
+
+.about-panel {
+  box-shadow: inset 1px 1px 0 var(--max-hi), inset -1px -1px 0 var(--max-lo);
+}
+
+/* ---- the guide (the notes over the stage): the fixed-width face ---------------------------------- */
+.guide,
+.guide__note,
+.guide__line,
+.guide__text,
+.guide__legal {
+  font-family: 'Nanum Gothic Coding', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-weight: 400;
+}

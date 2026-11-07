@@ -18,6 +18,14 @@
 
 @font-face {
   font-family: "Nanum Gothic Coding";
+  src: url('/media/NanumGothicCoding-Regular.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Nanum Gothic Coding";
   src: url('/media/NanumGothicCoding-Bold.woff2') format('woff2');
   font-style: normal;
   font-weight: 700;

@@ -24,6 +24,13 @@ const NOTES = [
   { box: [554, 1016, 509, 64], text: LEAD },
 ]
 
+// the links at the foot of the guide; spacing is measured on the letters as drawn in the face of the
+// guide (Nanum Gothic Coding): the gap after each letter is brought to 0.233em
+const LEGAL_LINKS = [
+  { page: 'privacy', text: '개인정보처리방침', spacing: [-0.011, 0.004, 0.02, 0.087, -0.069, -0.058, 0.077] },
+  { page: 'terms', text: '이용약관', spacing: [0.015, 0.067, 0.124] },
+]
+
 export function StageGuide() {
   const [open, setOpen] = useState(false)
 
@@ -73,8 +80,17 @@ export function StageGuide() {
     h(
       'nav',
       { className: 'guide__legal', 'aria-label': '정책 문서' },
-      h('a', { href: `${assetPath('privacy')}/` }, '개인정보처리방침'),
-      h('a', { href: `${assetPath('terms')}/` }, '이용약관')
+      LEGAL_LINKS.map(({ page, text, spacing }) =>
+        h(
+          'a',
+          { key: page, href: `${assetPath(page)}/` },
+          // every letter takes its own small spacing after it (in em), so the gaps between the drawn
+          // letters are even: the letters are all the same width on the line, but not as drawn
+          Array.from(text, (letter, index) =>
+            h('span', { key: index, style: spacing[index] ? { letterSpacing: `${spacing[index]}em` } : undefined }, letter)
+          )
+        )
+      )
     )
   )
 }

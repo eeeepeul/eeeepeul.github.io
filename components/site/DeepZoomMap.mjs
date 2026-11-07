@@ -298,6 +298,8 @@ export function DeepZoomMap() {
   const canvasRef = useRef(null)
   const globeCanvasRef = useRef(null)
   const hotspotRefs = useRef([])
+  // where a press on a house began, to tell a press from a drag that ends there
+  const houseDown = useRef(null)
   const legendNumberedRef = useRef(null)
   const legendSymbolsRef = useRef(null)
   const progressRef = useRef(0)
@@ -940,8 +942,25 @@ export function DeepZoomMap() {
           hotspotRefs.current[index] = node
         },
         className: `figma-deep-zoom-target-hit figma-deep-zoom-house-hit ${house.id}`,
-        'aria-label': house.id,
+        // a house is a song: the 1st house plays the 1st song, the 2nd the 2nd, and so on (see StagePlayer)
+        role: 'button',
+        tabIndex: 0,
+        'aria-label': `${index + 1}번 곡 재생`,
         'data-map-house-target': house.id,
+        onPointerDown: (event) => {
+          houseDown.current = { x: event.clientX, y: event.clientY }
+        },
+        onClick: (event) => {
+          // a drag that happens to end on a house is not a press
+          const down = houseDown.current
+          if (down && Math.hypot(event.clientX - down.x, event.clientY - down.y) > 6) return
+          window.dispatchEvent(new CustomEvent('stage:play-track', { detail: { index } }))
+        },
+        onKeyDown: (event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return
+          event.preventDefault()
+          window.dispatchEvent(new CustomEvent('stage:play-track', { detail: { index } }))
+        },
       })
     )
   )

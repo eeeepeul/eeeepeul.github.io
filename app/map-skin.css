@@ -1691,31 +1691,56 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   align-items: center;
 }
 
-.player-label--artist { top: 8%; height: 26.4%; }
-.player-label--track { top: 39%; height: 26.4%; }
+/* the labels stay level with the middles of the fields (20.2% and 52.1%) */
+.player-label--artist { top: 7%; height: 26.4%; }
+.player-label--track { top: 38.9%; height: 26.4%; }
 
 .player-field {
   position: absolute;
-  left: 14%;
-  width: 83%;
+  /* the label's left margin is 2.5%; the gap from "Artist:" to the field is the same (2.5% + the label's 7.74% + 2.5%),
+     and so is the space between the field's edge and its text */
+  left: 12.74%;
+  width: 84.26%;
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  padding: 0 1.4%;
+  /* the gap before the text is the same as the gaps above and below it, counted from the inside of the
+     field's dark edge (2px) */
+  padding: 0 1.4% 0 calc(2.5% + 1.5px);
   background: #fff;
   overflow: hidden;
   white-space: nowrap;
 }
 
-.player-field--artist { top: 8%; height: 26.4%; }
-.player-field--track { top: 39%; height: 26.4%; padding-right: 10%; }
+/* the height is the capital letters' height plus twice the gap (5.9px at this size) plus the field's dark edge
+   (2px above, 1px below); the middles stay where they were (21.2% and 52.2%) */
+/* the text's line is cut to the height of the capital letters (from the top of a capital to the baseline), so
+   the flex box centres the letters themselves and not their line; 0.5px lower, as the edge above is a pixel
+   thicker than the one below */
+.player-field__text {
+  display: block;
+  position: relative;
+  top: 0.5px;
+}
+
+@supports (text-box: trim-both cap alphabetic) {
+  .player-field__text {
+    text-box: trim-both cap alphabetic;
+  }
+}
+
+/* two tall fields close together: 28.4% high, 3.5% between them and 3.5% above the keys */
+.player-field--artist { top: 6%; height: 28.4%; }
+.player-field--track { top: 37.9%; height: 28.4%; padding-right: calc(8% + 2px); }
 
 .player-drop {
+  /* a combo box: the arrow's button is a square standing inside the right end of the track field, just inside
+     its edge (2px above, 1px below, 1px at the right), as high as the field's inside */
   position: absolute;
-  top: 40.5%;
-  left: 89.1%;
-  width: 7.9%;
-  height: 24.5%;
+  top: calc(37.9% + 2px);
+  right: calc(3% + 1px);
+  height: calc(28.4% - 3px);
+  aspect-ratio: 1;
   display: grid;
   place-items: center;
   padding: 0;
@@ -1727,9 +1752,9 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .player-drop i {
   width: 0;
   height: 0;
-  border-left: 0.5cqw solid transparent;
-  border-right: 0.5cqw solid transparent;
-  border-top: 0.55cqw solid #6f6f6f;
+  border-left: 0.36cqw solid transparent;
+  border-right: 0.36cqw solid transparent;
+  border-top: 0.4cqw solid #6f6f6f;
 }
 
 .player-menu {
@@ -1886,7 +1911,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   flex-direction: column;
   align-items: stretch;
   gap: 0;
-  width: calc(124 * var(--u));
+  width: calc(100 * var(--u));
   min-height: 0;
   padding: 0;
   background: #a0a0a0;
@@ -1943,8 +1968,10 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .stage-cell--map .map-gis-logo {
   display: block;
   width: 100%;
-  height: calc(73 * var(--u));
-  margin: 0 0 calc(2 * var(--u));
+  /* the box follows the picture (300 x 219), so the gaps above and below it are the bar's own padding */
+  aspect-ratio: 300 / 219;
+  height: auto;
+  margin: 0;
 }
 
 .stage-cell--map .map-gis-logo img {
@@ -1959,8 +1986,8 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   display: grid;
   place-items: center;
   box-sizing: border-box;
-  width: calc(100 * var(--u));
-  height: calc(100 * var(--u));
+  width: calc(76 * var(--u));
+  height: calc(76 * var(--u));
   padding: 0;
   color: #111;
   background: #cbcbcb;
@@ -2184,7 +2211,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   background: #4b4b4b;
   border: max(1px, calc(1 * var(--u))) solid #d3d3d3;
   color: #f0f0f0;
-  font-size: calc(16 * var(--u));
+  font-size: calc(15 * var(--u));
   letter-spacing: -0.075em;
 }
 
@@ -2560,10 +2587,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
     var(--c-red) 0%,
     #c0020e 10%,
     #f2dab9 42%,
-    var(--c-aqua) 74%,
-    var(--c-aqua) 86%,
-    var(--c-red) 90%,
-    var(--c-red) 100%
+    #fff 100%
   );
 }
 
@@ -3586,14 +3610,15 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 }
 
 .visitors-chip {
-  color: #967666;
+  /* the letters are the cream of the "LOC." label's (its edge stays the rosy brown) */
+  color: #eae2c4;
   background: #5e4a42;
   box-shadow: inset 0 0 0 max(1px, 0.07cqw) #967666;
 }
 
 .visitors-active span,
 .visitors-active strong {
-  color: #967666;
+  color: #eae2c4;
 }
 
 .visitors-menu {
@@ -3601,7 +3626,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 }
 
 .visitors-menu button {
-  color: #967666;
+  color: #eae2c4;
 }
 
 .visitors-menu li[aria-selected='true'] button,
@@ -3615,15 +3640,259 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   right: calc(33 * var(--u));
   bottom: calc(24 * var(--u));
   display: flex;
-  gap: calc(28 * var(--u));
-  font-size: max(11px, calc(22 * var(--u)));
+  gap: calc(18 * var(--u));
+  /* the same size as the notes' words, with no floor, so the two always agree */
+  font-size: calc(15 * var(--u));
 }
 .guide__legal a {
+  /* a button, in the colours of the notes: their ground and line, an edge raised by two veils */
+  display: block;
+  padding: calc(5 * var(--u)) calc(14 * var(--u));
   color: var(--c-cream, #eae2c4);
-  text-decoration: underline;
+  background: var(--c-navy, #4b4b4b);
+  border: max(1px, calc(1 * var(--u))) solid var(--c-aqua, #d3d3d3);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.35), inset -1px -1px 0 rgba(0, 0, 0, 0.35);
+  text-decoration: none;
+  white-space: nowrap;
 }
 .guide__legal a:hover,
 .guide__legal a:focus-visible {
   outline: 1px solid var(--c-cream, #eae2c4);
-  outline-offset: 3px;
+  outline-offset: 2px;
+}
+.guide__legal a:active {
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.35), inset -1px -1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* while the guide is open the visitor record's boxes (kept above the page's grey sheets, z-index 600) go back
+   to the level of the other boxes, so the guide dims them as it dims the rest */
+.stage:has(> .guide) .visitors,
+.stage:has(> .guide) .visitors-bar,
+.stage:has(> .guide) .visitors-chart {
+  z-index: auto;
+}
+
+/* ---- the text has more below: a dotted way for the scroll mark, and a stepped band with an arrow at the foot ---- */
+.about-track::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: max(1px, calc(2 * var(--u)));
+  margin-left: calc(-1 * max(1px, calc(2 * var(--u))) / 2);
+  background: repeating-linear-gradient(to bottom, currentColor 0 calc(4 * var(--u)), transparent calc(4 * var(--u)) calc(9 * var(--u)));
+  color: var(--c-cream, #f6f6f6);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* a band of squares thinning out to nothing: a row of a quarter of the squares, a row of a half, then two
+   solid rows at the foot; hard edges, no gradient. It shows only while there is more text below. */
+.about-more {
+  --band: var(--c-red-deep, #747474);
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 16px;
+  background:
+    linear-gradient(var(--band), var(--band)) 0 8px / 100% 8px no-repeat,
+    conic-gradient(var(--band) 25%, transparent 0 50%, var(--band) 0 75%, transparent 0) 0 4px / 4px 4px repeat-x,
+    conic-gradient(var(--band) 25%, transparent 0) 0 0 / 4px 4px repeat-x;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.about-notewrap[data-more='1'] .about-more {
+  opacity: 1;
+}
+
+/* ---- the list of songs, as in the supplied picture of a "Selection" group: a group box with a groove round it and
+   and in it the songs as plain raised buttons one under the other, their names in the
+   middle; the song that is playing is a button pushed in; a song not ready is a button with pale letters.
+   The list stands above the page's colour sheets (z-index 501; they blend over everything under them, and turn
+   the player's navy into the brown it shows), so it carries the colours the player shows (the beige of its buttons and fields) ---- */
+.player-menu {
+  --pm-ground: #d4cdbf;
+  --pm-key: #d4cdbf;
+  --pm-key-in: #c6bdad;
+  --pm-key-hover: #dbd5c8;
+  --pm-text: #5e4a43;
+  --pm-dim: #a59a8e;
+  z-index: 600;
+  left: 12.74%;
+  width: 84.26%;
+  bottom: 63.5%;
+  /* 0.4cqw to the groove, its line (1px), and 0.4cqw from the line to the buttons */
+  padding: calc(0.8cqw + 1px);
+  background: var(--pm-ground);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0.5cqw 1.6cqw rgba(0, 0, 0, 0.25);
+}
+
+/* the groove: a dark line with a light one under it, the same distance (0.4cqw) in from the edge on every side, and the
+   buttons the same distance (0.4cqw) in from the groove */
+.player-menu::before {
+  content: '';
+  position: absolute;
+  inset: 0.4cqw;
+  border: 1px solid rgba(0, 0, 0, 0.28);
+  box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.75), inset 1px 1px 0 rgba(255, 255, 255, 0.75);
+  pointer-events: none;
+}
+
+.player-menu li + li {
+  margin-top: 0.15cqw;
+}
+
+.player-menu button {
+  justify-content: center;
+  gap: 0;
+  padding: 0.42cqw 0.45cqw;
+  font-size: 0.5cqw;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--pm-text);
+  background: var(--pm-key);
+  border: 0;
+  /* barely raised: a pale line up and to the left, a faint dark one down and to the right, nothing round it */
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.55), inset -1px -1px 0 rgba(0, 0, 0, 0.22);
+}
+
+.player-menu button:hover:not(:disabled) {
+  background: var(--pm-key-hover);
+}
+
+/* the song that is playing: a button pushed in */
+.player-menu li[aria-selected='true'] button {
+  background: var(--pm-key-in);
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.28), inset -1px -1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.player-menu button:disabled {
+  color: var(--pm-dim);
+}
+
+.player-menu em {
+  color: inherit;
+}
+
+/* the picture's buttons have no little squares before the names */
+.player-menu__icon {
+  display: none;
+}
+
+/* ---- the visitor record's head: the letters a little larger, and the range chip wide enough that its arrow stands
+   clear of its word (the arrow is sized with the letters; it had a fixed size, so it ran into the "y" of "day") ---- */
+.visitors-bar {
+  font-size: 0.58cqw;
+}
+
+.visitors-active {
+  left: 61.2%;
+}
+
+.visitors-range {
+  inset: 0 auto 0 82.2%;
+  width: 17.3%;
+}
+
+.visitors-select {
+  gap: 0.35cqw;
+  padding: 0 0.45cqw;
+}
+
+.visitors-select svg {
+  flex: none;
+  width: 0.62cqw;
+  height: 0.36cqw;
+}
+
+/* ---- the visitor record's range list (1 day, 3 day, 7 day), like the list of songs: a beige panel with a groove
+   round it, and in it plain beige buttons one under the other, their names in the middle; the range in use is a
+   button pushed in ---- */
+.visitors-menu {
+  --vm-ground: #d4cdbf;
+  --vm-key: #d4cdbf;
+  --vm-key-in: #c6bdad;
+  --vm-key-hover: #dbd5c8;
+  --vm-text: #5e4a43;
+  z-index: 600;
+  margin: 0.15cqw 0 0;
+  padding: calc(0.5cqw + 1px);
+  background: var(--vm-ground);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0.5cqw 1.6cqw rgba(0, 0, 0, 0.25);
+}
+
+/* the groove, 0.25cqw in from the edge on every side, and the buttons 0.25cqw in from the groove */
+.visitors-menu::before {
+  content: '';
+  position: absolute;
+  inset: 0.25cqw;
+  border: 1px solid rgba(0, 0, 0, 0.28);
+  box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.75), inset 1px 1px 0 rgba(255, 255, 255, 0.75);
+  pointer-events: none;
+}
+
+.visitors-menu li + li {
+  margin-top: 0.15cqw;
+}
+
+.visitors-menu button {
+  display: block;
+  width: 100%;
+  padding: 0.4cqw 0.2cqw;
+  font: inherit;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--vm-text);
+  background: var(--vm-key);
+  border: 0;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.55), inset -1px -1px 0 rgba(0, 0, 0, 0.22);
+}
+
+.visitors-menu button:hover {
+  background: var(--vm-key-hover);
+}
+
+.visitors-menu li[aria-selected='true'] button {
+  background: var(--vm-key-in);
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.28), inset -1px -1px 0 rgba(255, 255, 255, 0.55);
+}
+
+/* The bar (with its list) and the barcode under it both lie at z-index 600, and the barcode comes later, so it was drawn
+   over the list. The bar goes one above it, so the list is whole over the bars. */
+.visitors-bar {
+  z-index: 601;
+}
+
+/* the days of the week are seven short buttons in the list: a little lower than the song list's */
+.visitors-menu button {
+  padding: 0.26cqw 0.2cqw;
+}
+
+/* three capital letters are shorter than "1 day" was: the range chip is narrower, so the arrow stands the same
+   distance from the letters as the letters do from the chip's edge (about 7px) */
+.visitors-range {
+  inset: 0 auto 0 84.3%;
+  width: 15.2%;
+}
+
+/* the Active chip moved to the right, so the space between it and the day chip is about 2px */
+.visitors-active {
+  left: 63.4%;
+}
+
+/* the title bar's words are not shown, only read out by a screen reader */
+.about-title__name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }

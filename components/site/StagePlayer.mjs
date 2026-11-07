@@ -68,6 +68,19 @@ export function StagePlayer() {
     if (andPlay) audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
   }
 
+  // The houses on the map ask for a song by its number (see DeepZoomMap): the 1st house plays the 1st song, and so on.
+  // A press is a touch of the page, so the sound is allowed to start.
+  const loadRef = useRef(load)
+  loadRef.current = load
+  useEffect(() => {
+    const onPlayTrack = (event) => {
+      const index = Number(event.detail && event.detail.index)
+      if (Number.isInteger(index)) loadRef.current(index)
+    }
+    window.addEventListener('stage:play-track', onPlayTrack)
+    return () => window.removeEventListener('stage:play-track', onPlayTrack)
+  }, [])
+
   useEffect(() => {
     const audio = new Audio()
     // only what the player needs to show the length; the rest comes when the song is played, so it does
@@ -112,11 +125,13 @@ export function StagePlayer() {
     load(playable[0])
     const events = ['pointerdown', 'keydown', 'touchstart']
     const release = () => events.forEach((name) => window.removeEventListener(name, unlock, true))
-    function unlock() {
+    function unlock(event) {
       const context = contextRef.current
       const audio = audioRef.current
       if (context && context.state === 'suspended') context.resume().catch(() => {})
-      if (audio && audio.paused) audio.play().catch(() => {})
+      // the space bar is the play/pause key (see below): it must not also start the song here, or it would be paused again at once
+      const isSpace = event && event.type === 'keydown' && event.code === 'Space'
+      if (!isSpace && audio && audio.paused) audio.play().catch(() => {})
       release()
     }
     const check = window.setTimeout(() => {
@@ -160,6 +175,23 @@ export function StagePlayer() {
       audio.pause()
     }
   }
+  // The space bar plays and pauses, wherever the visitor is on the page, unless the key already means something where
+  // it is (a button, a link, a field).
+  const toggleRef = useRef(toggle)
+  toggleRef.current = toggle
+  useEffect(() => {
+    const onSpace = (event) => {
+      if (event.code !== 'Space' || event.repeat || event.defaultPrevented) return
+      if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return
+      const target = event.target
+      if (target && target.closest && target.closest('input, textarea, select, button, a[href], summary, [contenteditable="true"], [role="button"]')) return
+      event.preventDefault()
+      toggleRef.current()
+    }
+    window.addEventListener('keydown', onSpace)
+    return () => window.removeEventListener('keydown', onSpace)
+  }, [])
+
   const stop = () => {
     const audio = audioRef.current
     if (!loaded || !audio) return
@@ -198,9 +230,9 @@ export function StagePlayer() {
     'div',
     { className: 'player', onBlur: (event) => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false) } },
     createElement('span', { className: 'player-label player-label--artist' }, 'Artist:'),
-    createElement('output', { className: 'player-field player-field--artist' }, loaded ? ARTIST : ''),
+    createElement('output', { className: 'player-field player-field--artist' }, createElement('span', { className: 'player-field__text' }, loaded ? ARTIST : '')),
     createElement('span', { className: 'player-label player-label--track' }, 'Track:'),
-    createElement('output', { className: 'player-field player-field--track' }, loaded ? TRACKS[current].title : ''),
+    createElement('output', { className: 'player-field player-field--track' }, createElement('span', { className: 'player-field__text' }, loaded ? TRACKS[current].title : '')),
     createElement(
       'button',
       {
@@ -234,7 +266,7 @@ export function StagePlayer() {
                     setOpen(false)
                   },
                 },
-                createElement('span', { className: 'player-menu__no' }, String(index + 1).padStart(2, '0')),
+                createElement('span', { className: 'player-menu__icon', 'aria-hidden': 'true' }),
                 track.title,
                 track.src ? null : createElement('em', null, ' — 준비 중')
               )

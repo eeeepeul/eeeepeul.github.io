@@ -7,6 +7,7 @@ import { RotateNotice } from '../components/site/RotateNotice'
 import { SharedVisitRecorder } from '../components/site/SharedVisitRecorder'
 import './globals.css'
 import './map-skin.css'
+import './max-ui.css'
 
 export const metadata: Metadata = {
   title: 'Pixel CCTV — if and only if',
