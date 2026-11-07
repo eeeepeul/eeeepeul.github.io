@@ -5488,28 +5488,44 @@ button:focus-visible,
   image-rendering: pixelated;
 }
 
-/* a phone held upright: the stage is only a thin strip, so ask for the phone to be turned on its side */
+/* a phone held upright: first a notice (RotateNotice), then the stage itself turned a quarter turn */
 .rotate-notice {
-  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  background: #17161b;
+  color: #eae2c4;
+  font-size: 17px;
+  text-align: center;
 }
 
-@media (max-width: 800px) and (orientation: portrait) and (pointer: coarse) {
-  body:has(.stage-shell) .rotate-notice {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    padding: 24px;
-    background: #17161b;
-    color: #eae2c4;
-    font-size: 17px;
-    text-align: center;
-  }
-  .rotate-notice p {
-    margin: 0;
-  }
+.rotate-notice p {
+  margin: 0;
+}
+
+html[data-force-landscape],
+html[data-force-landscape] body {
+  overflow: hidden;
+  background: #17161b;
+}
+
+html[data-force-landscape] .stage-shell {
+  position: fixed;
+  inset: auto;
+  top: 0;
+  left: 0;
+  width: 100dvh;
+  height: 100vw;
+  transform-origin: 0 0;
+  transform: translateX(100vw) rotate(90deg);
+}
+
+html[data-force-landscape] .stage {
+  width: min(100dvh, calc(100vw * 2000 / 1126));
 }
