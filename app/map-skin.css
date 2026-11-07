@@ -1886,7 +1886,7 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   flex-direction: column;
   align-items: stretch;
   gap: 0;
-  width: calc(124 * var(--u));
+  width: calc(100 * var(--u));
   min-height: 0;
   padding: 0;
   background: #a0a0a0;
@@ -1943,8 +1943,10 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .stage-cell--map .map-gis-logo {
   display: block;
   width: 100%;
-  height: calc(73 * var(--u));
-  margin: 0 0 calc(2 * var(--u));
+  /* the box follows the picture (300 x 219), so the gaps above and below it are the bar's own padding */
+  aspect-ratio: 300 / 219;
+  height: auto;
+  margin: 0;
 }
 
 .stage-cell--map .map-gis-logo img {
@@ -1959,8 +1961,8 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   display: grid;
   place-items: center;
   box-sizing: border-box;
-  width: calc(100 * var(--u));
-  height: calc(100 * var(--u));
+  width: calc(76 * var(--u));
+  height: calc(76 * var(--u));
   padding: 0;
   color: #111;
   background: #cbcbcb;
