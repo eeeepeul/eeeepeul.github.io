@@ -149,6 +149,12 @@ export function StagePlayer() {
   const loopRef = useRef(loop)
   loopRef.current = loop
 
+  // Whichever way a song is chosen (the houses on the map, the list, the keys, the end of the last song) the tree in
+  // cell 3 follows it: it opens that song's "explain" and shows its note (see StageAbout).
+  useEffect(() => {
+    if (current >= 0) window.dispatchEvent(new CustomEvent('stage:track-selected', { detail: { index: current } }))
+  }, [current])
+
   const loaded = current >= 0
   const next = () => {
     if (!playable.length) return

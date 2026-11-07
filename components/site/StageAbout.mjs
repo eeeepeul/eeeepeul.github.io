@@ -339,7 +339,8 @@ function TreeNode({ node, depth, last, open, selected, onToggle, onSelect }) {
 
 export function StageAbout() {
   const [open, setOpen] = useState(FIRST_OPEN)
-  const [selected, setSelected] = useState('a')
+  // the page opens on the first song, with its explain selected (as for every song the player plays)
+  const [selected, setSelected] = useState('a1')
   const [selectedLabel, setSelectedLabel] = useState('9+1')
   // which song's note shows under the tree
   const [song, setSong] = useState('9+1')
@@ -351,6 +352,25 @@ export function StageAbout() {
   // the language mark in the title: the second picture (hanja) is the one it opens on; pressing it swaps
   const [language, setLanguage] = useState('hanja')
   const [dragging, setDragging] = useState(false)
+  // The song playing in the player (cell 12) is the song the tree is on: its "explain" is selected, its folder
+  // is the one that is open, and its note is the one that shows. `following` holds the song the tree is on now,
+  // so a song chosen again (or the one the page opened on) does not set the typing off once more.
+  const following = useRef('9+1')
+  useEffect(() => {
+    const folders = TREE.kids[0].kids
+    const onTrack = (event) => {
+      const folder = folders[Number(event.detail && event.detail.index)]
+      if (!folder || following.current === folder.song) return
+      following.current = folder.song
+      setSelected(folder.kids[0].id)
+      setSelectedLabel(folder.label)
+      setSong(folder.song)
+      setTyped((count) => count + 1)
+      setOpen(Object.fromEntries(SONG_IDS.map((id) => [id, id === folder.id])))
+    }
+    window.addEventListener('stage:track-selected', onTrack)
+    return () => window.removeEventListener('stage:track-selected', onTrack)
+  }, [])
   const rootRef = useRef(null)
   const turnRef = useRef(0)
   const drag = useRef(null)
@@ -574,6 +594,7 @@ export function StageAbout() {
               setSelectedLabel(node.label)
               // a song shows what it is about; the other names leave the text as it was
               if (node.song) {
+                following.current = node.song
                 setSong(node.song)
                 setTyped((count) => count + 1)
                 // and its explain comes out (the other songs' go in)
