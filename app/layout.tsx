@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { preload } from 'react-dom'
 import { assetPath } from '../lib/asset-path.mjs'
 import { CompassCursor } from '../components/site/CompassCursor'
-import { SiteLegalFooter } from '../components/legal/SiteLegalFooter'
+import { RotateNotice } from '../components/site/RotateNotice'
 import { SharedVisitRecorder } from '../components/site/SharedVisitRecorder'
 import './globals.css'
 import './map-skin.css'
@@ -32,7 +32,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <SharedVisitRecorder />
         <CompassCursor />
         {children}
-        <SiteLegalFooter />
+        <RotateNotice />
       </body>
     </html>
   )

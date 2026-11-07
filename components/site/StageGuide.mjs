@@ -1,6 +1,7 @@
 'use client'
 
 import { createElement as h, useEffect, useState } from 'react'
+import { assetPath } from '../../lib/asset-path.mjs'
 
 // The guide: the info button of the map's bar dims the whole stage and lays a note over each of the
 // boxes (the supplied layout, ten notes). A note is a small white tab, a line "name ····· : name"
@@ -67,6 +68,13 @@ export function StageGuide() {
         h('p', { className: 'guide__line' }, h('span', null, 'section01'), h('i', { className: 'guide__dots', 'aria-hidden': 'true' }), h('span', null, ': section01')),
         h('p', { className: 'guide__text' }, text)
       )
+    ),
+    // the policy links show only while the guide is open
+    h(
+      'nav',
+      { className: 'guide__legal', 'aria-label': '정책 문서' },
+      h('a', { href: `${assetPath('privacy')}/` }, '개인정보처리방침'),
+      h('a', { href: `${assetPath('terms')}/` }, '이용약관')
     )
   )
 }
