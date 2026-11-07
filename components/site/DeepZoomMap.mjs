@@ -519,9 +519,14 @@ export function DeepZoomMap() {
         let step = gap * (1 - Math.exp(-delta / ZOOM_SMOOTHING_MS))
         step = Math.max(-maxStep, Math.min(maxStep, step))
         let next = zoom + step
-        if (globe && inClip && next < ZOOM_CLIP_END && shownFrame >= ZOOM_PATH.handFrame && (heldSince === 0 || timestamp - heldSince < HOLD_LIMIT_MS)) {
+        // The view waits for the clip only where it shows the clip (from the hand-over in). Just below the
+        // hand-over the planet is on the screen, so there is no frame to wait for: holding there (it used to,
+        // for half a second at a time, every step) made the zoom out of the island stop and start.
+        const onClip = zoom >= ZOOM_HAND
+        if (globe && onClip && next < ZOOM_CLIP_END && shownFrame >= ZOOM_PATH.handFrame && (heldSince === 0 || timestamp - heldSince < HOLD_LIMIT_MS)) {
           const ahead = getClipZoom(Math.min(200, shownFrame + FRAME_LEAD))
-          const behind = getClipZoom(Math.max(ZOOM_PATH.handFrame, shownFrame - FRAME_LEAD))
+          // going out, the frames near the hand-over are the last of the clip: past them the planet takes over
+          const behind = shownFrame - FRAME_LEAD <= ZOOM_PATH.handFrame ? -Infinity : getClipZoom(shownFrame - FRAME_LEAD)
           const held = step > 0 ? Math.min(next, Math.max(ahead, zoom)) : Math.max(next, Math.min(behind, zoom))
           if (held === zoom) heldSince = heldSince || timestamp
           else heldSince = 0
