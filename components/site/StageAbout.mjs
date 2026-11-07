@@ -371,6 +371,8 @@ export function StageAbout() {
     dot.style.top = `${ratio * 100}%`
     dot.style.transform = `translateY(${-ratio * 100}%)`
     dot.style.opacity = reach > 0 ? '1' : '0'
+    // more text below: the foot of the box shows a stepped band and a small arrow (see .about-more)
+    if (note.parentElement) note.parentElement.dataset.more = reach - note.scrollTop > 3 ? '1' : '0'
     const state = pulse.current
     const now = performance.now()
     const dt = now - state.time
@@ -538,7 +540,8 @@ export function StageAbout() {
       createElement(
         'header',
         { className: 'about-title' },
-        "Description of Epeul's Data",
+        // the words are not shown (only read out), the bar keeps its language mark
+        createElement('span', { className: 'about-title__name' }, "Description of Epeul's Data"),
         languageMark('lang-front')
       ),
       createElement(
@@ -594,7 +597,12 @@ export function StageAbout() {
     createElement(
       'div',
       { className: 'about-panel about-panel--note' },
-      createElement('header', { className: 'about-title' }, "Description of Epeul's Data", languageMark('lang-side')),
+      createElement(
+        'header',
+        { className: 'about-title' },
+        createElement('span', { className: 'about-title__name' }, "Description of Epeul's Data"),
+        languageMark('lang-side')
+      ),
       createElement(
         'div',
         { className: 'about-notewrap' },
@@ -607,7 +615,8 @@ export function StageAbout() {
           'div',
           { className: 'about-track', ref: trackRef, onPointerDown: onTrackDown, 'aria-hidden': 'true' },
           createElement('i', { className: 'about-dot', ref: dotRef })
-        )
+        ),
+        createElement('div', { className: 'about-more', 'aria-hidden': 'true' })
       )
     )
   )

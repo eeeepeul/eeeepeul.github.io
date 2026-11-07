@@ -70,7 +70,8 @@ export const STAGE_BLOCKS = [
   [423, 792, 1986, 1123],
   [0, 998, 423, 1123],
   // under the visitor record (cell 5), at the top right
-  [1578, 0, 2000, 188],
+  // (its left edge is the map's right edge, 1580, so the map's ruler ends exactly on it)
+  [1580, 0, 2000, 188],
 ]
 
 // The colours of the supplied palette laid on the black and white page: each a box on the plan, lying above
@@ -81,9 +82,9 @@ export const STAGE_TINTS = [
   // cell 1: the LOC. label brown, the place readout a slate grey
   [14, 16, 59, 37, '#270403', 'screen'],
   [256, 16, 410, 37, '#373729', 'screen'],
-  // cell 2: the pictures a little deeper, the High/Low bar sage, the zoom readout brown
+  // cell 2: the pictures a little deeper, the High/Low bar sage (its Low end, a pale warm grey), the zoom readout brown
   [44, 418, 412, 664, '#d0d0c8', 'multiply'],
-  [18, 426, 44, 656, '#e0dfc2', 'multiply'],
+  [18, 426, 44, 656, '#e0e0d0', 'multiply'],
   [322.5, 636, 406.5, 656, '#3d1f1b', 'screen'],
   // cell 3: (its title bar is brown in the cube itself, so it turns with it) the gauge beside it a little deeper
   [352, 689, 412, 992, '#ebebec', 'multiply'],

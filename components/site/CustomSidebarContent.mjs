@@ -417,6 +417,8 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
 
 function PixelCustomRow({ section, selectedIndex, onSelect }) {
   const [page, setPage] = useState(0)
+  // the title bar's minus box folds the group away (and a plus brings it back)
+  const [folded, setFolded] = useState(false)
   const pageCount = Math.ceil(section.itemCount / CUSTOM_PAGE_SIZE)
   const { firstItemIndex, trackWidth, trackOffset, swatchBasis } = getCustomRowLayout(
     section.itemCount,
@@ -426,7 +428,7 @@ function PixelCustomRow({ section, selectedIndex, onSelect }) {
   return createElement(
     'section',
     {
-      className: 'pixel-custom-row',
+      className: `pixel-custom-row${folded ? ' is-folded' : ''}`,
       'aria-label': section.label,
       'data-custom-label': section.label,
       'data-item-count': section.itemCount,
@@ -435,8 +437,15 @@ function PixelCustomRow({ section, selectedIndex, onSelect }) {
     createElement(
       'div',
       { className: 'pixel-custom-row-header' },
+      createElement('button', {
+        type: 'button',
+        className: 'max-rollout-toggle',
+        'aria-expanded': !folded,
+        'aria-label': folded ? `${section.label} 펼치기` : `${section.label} 접기`,
+        onClick: () => setFolded((value) => !value),
+      }),
       createElement('span', null, section.label),
-      pageCount > 1
+      pageCount > 1 && !folded
         ? createElement(
             'span',
             { className: 'pixel-custom-row-arrows' },
@@ -465,7 +474,7 @@ function PixelCustomRow({ section, selectedIndex, onSelect }) {
           )
         : null
     ),
-    createElement(
+    folded ? null : createElement(
       'div',
       { className: 'pixel-custom-swatches' },
       createElement(
