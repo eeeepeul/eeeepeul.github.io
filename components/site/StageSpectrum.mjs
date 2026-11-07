@@ -123,9 +123,20 @@ export function StageSpectrum() {
         edge[x * ROWS + y] = smooth(0, 22, Math.min(x, COLUMNS - 1 - x)) * smooth(0, 11, Math.min(y, ROWS - 1 - y))
       }
     }
+    // the grain and the specks are fixed to the place (they do not move), so they are worked out once and not for every
+    // point of every picture
+    const grainEdge = new Float32Array(COLUMNS * ROWS)
+    const grainSpeck = new Float32Array(COLUMNS * ROWS)
+    for (let y = 0; y < ROWS; y += 1) {
+      for (let x = 0; x < COLUMNS; x += 1) {
+        grainEdge[y * COLUMNS + x] = grainAt(x, y, 1)
+        grainSpeck[y * COLUMNS + x] = grainAt(x, y, 2)
+      }
+    }
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     let frame = 0
     let lastTick = 0
+    let wasDrawn = false
     let bins = null
 
     // which analyser bin feeds each column, spread on a log scale from low to high notes
@@ -176,8 +187,10 @@ export function StageSpectrum() {
     const streaks = makeNoise(5, 38, 7)
     const lumps = makeNoise(14, 19, 13)
 
+    // returns whether any mark was drawn this time
     const compose = (now, dt) => {
       const t = now / 1000
+      let drawn = false
       wash.fill(0)
       core.fill(0)
       for (let i = 0; i < marks.length; i += 1) {
@@ -194,6 +207,7 @@ export function StageSpectrum() {
         mark.open += (target - mark.open) * (1 - Math.exp(-dt / (target > mark.open ? 0.28 : 1.1)))
         const a = mark.open
         if (a < 0.03) continue
+        drawn = true
         // each mark wanders sideways and up and down at its own pace, so the gaps keep changing
         const cx = mark.x + Math.sin(t * mark.speed * 0.45 + mark.phase) * mark.roam + Math.sin(t * mark.speed * 0.2 + mark.phase * 1.7) * mark.roam * 0.5
         const cy = mark.y + Math.cos(t * mark.speed * 0.6 + mark.phase) * 7 * SCALE
@@ -230,23 +244,33 @@ export function StageSpectrum() {
           }
         }
       }
+      return drawn
     }
 
     // a box blur, sideways then up and down, run over the field: the edges melt like wet paint
     const temp = new Float32Array(COLUMNS * ROWS)
     const boxBlur = (from, to, rx, ry) => {
-      for (let x = 0; x < COLUMNS; x += 1) {
-        for (let y = 0; y < ROWS; y += 1) {
-          let sum = 0
-          for (let k = -rx; k <= rx; k += 1) sum += from[Math.max(0, Math.min(COLUMNS - 1, x + k)) * ROWS + y]
-          temp[x * ROWS + y] = sum / (2 * rx + 1)
+      // sideways: along each row, the sum of the 2rx+1 points about each one (the edge point repeated past the edge)
+      const widthX = 2 * rx + 1
+      for (let y = 0; y < ROWS; y += 1) {
+        let sum = 0
+        for (let k = -rx; k <= rx; k += 1) sum += from[Math.max(0, Math.min(COLUMNS - 1, k)) * ROWS + y]
+        temp[y] = sum / widthX
+        for (let x = 1; x < COLUMNS; x += 1) {
+          sum += from[Math.min(COLUMNS - 1, x + rx) * ROWS + y] - from[Math.max(0, x - rx - 1) * ROWS + y]
+          temp[x * ROWS + y] = sum / widthX
         }
       }
+      // up and down
+      const widthY = 2 * ry + 1
       for (let x = 0; x < COLUMNS; x += 1) {
-        for (let y = 0; y < ROWS; y += 1) {
-          let sum = 0
-          for (let k = -ry; k <= ry; k += 1) sum += temp[x * ROWS + Math.max(0, Math.min(ROWS - 1, y + k))]
-          to[x * ROWS + y] = sum / (2 * ry + 1)
+        const base = x * ROWS
+        let sum = 0
+        for (let k = -ry; k <= ry; k += 1) sum += temp[base + Math.max(0, Math.min(ROWS - 1, k))]
+        to[base] = sum / widthY
+        for (let y = 1; y < ROWS; y += 1) {
+          sum += temp[base + Math.min(ROWS - 1, y + ry)] - temp[base + Math.max(0, y - ry - 1)]
+          to[base + y] = sum / widthY
         }
       }
     }
@@ -276,11 +300,12 @@ export function StageSpectrum() {
           let k = (246 - gray) / 168
           // grain along the wash's soft edges, then flat steps of tone
           const edgeZone = 4 * k * (1 - k)
-          k = Math.round((k + (grainAt(x, y, 1) - 0.5) * 0.5 * edgeZone) * TONE_STEPS) / TONE_STEPS
+          const place = y * COLUMNS + x
+          k = Math.round((k + (grainEdge[place] - 0.5) * 0.5 * edgeZone) * TONE_STEPS) / TONE_STEPS
           k = Math.max(0, Math.min(1, k))
           // single dark specks in the paper
-          if (k < 0.2 && grainAt(x, y, 2) < SPECKS) k = 1
-          const i = (y * COLUMNS + x) * 4
+          if (k < 0.2 && grainSpeck[place] < SPECKS) k = 1
+          const i = place * 4
           data[i] = PAPER[0] + (INK[0] - PAPER[0]) * k
           data[i + 1] = PAPER[1] + (INK[1] - PAPER[1]) * k
           data[i + 2] = PAPER[2] + (INK[2] - PAPER[2]) * k
@@ -296,7 +321,11 @@ export function StageSpectrum() {
       const dt = Math.min(0.1, (now - lastTick) / 1000)
       lastTick = now
       listen(dt)
-      compose(now, dt)
+      const drawn = compose(now, dt)
+      // with nothing to show (and the blank strip already on the canvas) there is nothing to draw: it is drawn once more
+      // as the last mark goes, and then not again until a mark opens
+      if (!drawn && !wasDrawn) return
+      wasDrawn = drawn
       paint()
     }
 

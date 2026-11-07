@@ -1,7 +1,7 @@
 'use client'
 
 import { createElement as h, useEffect, useRef } from 'react'
-import { HEAT_ASPECT, heatAt, heatColor } from '../../lib/heat-field.mjs'
+import { HEAT_ASPECT, HEAT_BAND_COLORS, heatGrid } from '../../lib/heat-field.mjs'
 
 // The heat over the four houses of cell 2's picture (lib/heat-field.mjs). It is drawn on a small
 // canvas (the heat is soft, so a coarse picture is enough, and it is made smooth by the browser's
@@ -26,17 +26,23 @@ export function StageHeat() {
     let frame = 0
     let last = -1e9
 
+    const heat = new Float32Array(COLUMNS * ROWS)
     const paint = (time) => {
       const data = image.data
-      for (let y = 0; y < ROWS; y += 1) {
-        for (let x = 0; x < COLUMNS; x += 1) {
-          const [r, g, b, a] = heatColor(heatAt((x + 0.5) / COLUMNS, (y + 0.5) / ROWS, time))
-          const i = (y * COLUMNS + x) * 4
-          data[i] = r
-          data[i + 1] = g
-          data[i + 2] = b
-          data[i + 3] = a * 255
+      heatGrid(time, COLUMNS, ROWS, heat)
+      for (let i = 0; i < heat.length; i += 1) {
+        const value = heat[i]
+        const at = i * 4
+        // nothing is drawn where there is hardly any heat; elsewhere the band's flat colour
+        if (value < 0.3) {
+          data[at + 3] = 0
+          continue
         }
+        const [r, g, b] = HEAT_BAND_COLORS[Math.min(7, Math.floor(Math.min(1, value) * 7))]
+        data[at] = r
+        data[at + 1] = g
+        data[at + 2] = b
+        data[at + 3] = 255
       }
       context.putImageData(image, 0, 0)
     }
