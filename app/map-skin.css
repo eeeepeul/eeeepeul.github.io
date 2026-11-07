@@ -3608,3 +3608,22 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
 .visitors-menu button:hover {
   background: #6a5750;
 }
+
+/* the policy links at the bottom right of the guide */
+.guide__legal {
+  position: absolute;
+  right: calc(33 * var(--u));
+  bottom: calc(24 * var(--u));
+  display: flex;
+  gap: calc(28 * var(--u));
+  font-size: max(11px, calc(22 * var(--u)));
+}
+.guide__legal a {
+  color: var(--c-cream, #eae2c4);
+  text-decoration: underline;
+}
+.guide__legal a:hover,
+.guide__legal a:focus-visible {
+  outline: 1px solid var(--c-cream, #eae2c4);
+  outline-offset: 3px;
+}
