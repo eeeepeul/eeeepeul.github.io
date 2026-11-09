@@ -290,22 +290,33 @@ export function DrawingPad() {
   return createElement(
     'section',
     { className: 'drawing-pad', 'aria-label': '그림판', ref: padRef },
-    createElement('canvas', {
-      ref: canvasRef,
-      className: 'drawing-pad__canvas',
-      width: COLUMNS,
-      height: ROWS,
-      // over the board the pointer is a paintbrush in the colour chosen (an eraser when the eraser is chosen)
-      style: {
-        width: '100%',
-        height: ROWS * SCALE,
-        '--brush-cursor': brushCursor(colour),
-      },
-      onPointerDown: onDown,
-      onPointerMove: onMove,
-      onPointerUp: onUp,
-      onPointerCancel: onUp,
-    }),
+    // The board sits in a box of its own (as wide as the pad, ROWS * SCALE high) and the canvas fills the box without taking
+    // part in its size: the board may be made wider by the Paint window (more squares), and that must not make the pad wider.
+    createElement(
+      'div',
+      { className: 'drawing-pad__board', // 203 is what the pad has always been wide inside (221 with its padding and line, see .second-stage .drawing-pad)
+      style: { position: 'relative', width: '100%', minWidth: 203, height: ROWS * SCALE + 2 } },
+      createElement('canvas', {
+        ref: canvasRef,
+        className: 'drawing-pad__canvas',
+        width: COLUMNS,
+        height: ROWS,
+        // over the board the pointer is a paintbrush in the colour chosen (an eraser when the eraser is chosen)
+        style: {
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: '100%',
+          height: '100%',
+          boxSizing: 'border-box',
+          '--brush-cursor': brushCursor(colour),
+        },
+        onPointerDown: onDown,
+        onPointerMove: onMove,
+        onPointerUp: onUp,
+        onPointerCancel: onUp,
+      })
+    ),
     // the key that opens the large Paint window (StagePaint), at the board's upper right
     createElement('button', {
       type: 'button',

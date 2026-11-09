@@ -203,6 +203,57 @@ export function StagePaint() {
     sheet.scrollTop += box.top - wantTop
   }, [cell])
 
+  // The wheel button (the middle one) takes hold of the board: while it is held the board follows the pointer. The sheet moves under
+  // the window (it is scrolled), so it works as far as the board is larger than the sheet (zoomed in, or in full screen).
+  useEffect(() => {
+    if (!open) return undefined
+    const sheet = sheetRef.current
+    if (!sheet) return undefined
+    let grab = null
+    const down = (event) => {
+      if (event.button !== 1) return
+      event.preventDefault()
+      grab = { x: event.clientX, y: event.clientY, left: sheet.scrollLeft, top: sheet.scrollTop }
+      sheet.classList.add('is-grabbed')
+      try {
+        sheet.setPointerCapture(event.pointerId)
+      } catch {
+        // the move is followed on the window instead
+      }
+    }
+    const move = (event) => {
+      if (!grab) return
+      const box = sheet.getBoundingClientRect()
+      const scale = box.width / sheet.offsetWidth || 1
+      sheet.scrollLeft = grab.left - (event.clientX - grab.x) / scale
+      sheet.scrollTop = grab.top - (event.clientY - grab.y) / scale
+    }
+    const up = () => {
+      grab = null
+      sheet.classList.remove('is-grabbed')
+    }
+    // the browser's own scrolling by the wheel button must not start
+    const mouseDown = (event) => {
+      if (event.button === 1) event.preventDefault()
+    }
+    sheet.addEventListener('pointerdown', down, true)
+    sheet.addEventListener('mousedown', mouseDown, true)
+    sheet.addEventListener('auxclick', mouseDown, true)
+    sheet.addEventListener('pointermove', move)
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    sheet.addEventListener('pointercancel', up)
+    return () => {
+      sheet.removeEventListener('pointerdown', down, true)
+      sheet.removeEventListener('mousedown', mouseDown, true)
+      sheet.removeEventListener('auxclick', mouseDown, true)
+      sheet.removeEventListener('pointermove', move)
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      sheet.removeEventListener('pointercancel', up)
+    }
+  }, [open, maximized])
+
   // [ and ] (the pad's keys too) change the brush: the window only shows it
   if (!open) return null
 
@@ -239,7 +290,7 @@ export function StagePaint() {
   }
 
   const onDown = (event) => {
-    if (!current) return
+    if (!current || event.button !== 0) return
     event.preventDefault()
     const kind = toolRef.current
     const cell = cellAt(event)

@@ -7500,3 +7500,13 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
   box-sizing: border-box;
   border-radius: 0;
 }
+
+/* the wheel button holds the board: a hand while it is held; the sheet can be moved about as far as the board is larger than it */
+.paint__sheet {
+  overflow: auto;
+}
+
+.paint__sheet.is-grabbed,
+.paint__sheet.is-grabbed .paint__canvas {
+  cursor: grabbing;
+}
