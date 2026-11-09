@@ -6,7 +6,7 @@ import { brandMarkSvg } from '../../lib/brand-mark.mjs'
 // mooeemee mark, and the three keys (the first, the second, the info key), with the house under them. It is drawn 73 x 363
 // (the supplied bar, 296 high, and one more place for the house) and made to fit its box (see .stage-tools in globals.css).
 // The house is the 2D house of the page (the one that stood in the corner of the room), drawn with no box round it: it
-// goes to the main page. The three keys, and the fold box, only stand there for now: they do nothing on this page.
+// goes to the main page. The second key is the music key (it opens the CD Player window); the first and the info key, and the fold box, only stand there for now.
 function Icon({ children }) {
   return createElement(
     'svg',
@@ -33,10 +33,11 @@ const INFO = [
   createElement('circle', { key: 'a', cx: 12, cy: 12, r: 8.5 }),
   createElement('path', { key: 'b', d: 'M12 11v5.5M12 7.6v.2' }),
 ]
-const EXPAND = [
-  createElement('path', { key: 'a', d: 'M4 10V4h6' }),
-  createElement('path', { key: 'b', d: 'M4 4l16 16' }),
-  createElement('path', { key: 'c', d: 'M20 14v6h-6' }),
+// the music key: two eighth notes joined by a beam
+const MUSIC = [
+  createElement('path', { key: 'a', d: 'M9 18V6l10-2v12' }),
+  createElement('circle', { key: 'b', cx: 6.5, cy: 18, r: 2.5 }),
+  createElement('circle', { key: 'c', cx: 16.5, cy: 16, r: 2.5 }),
 ]
 
 export function StageToolBar({ houseHref = '/', houseLabel = '메인 화면으로 이동' }) {
@@ -61,8 +62,15 @@ export function StageToolBar({ houseHref = '/', houseLabel = '메인 화면으�
     ),
     createElement(
       'button',
-      { type: 'button', className: 'stage-tools__tool stage-tools__tool--two', 'aria-label': '확대 축소 바 열기', title: '확대 축소 바 열기' },
-      createElement(Icon, null, EXPAND)
+      {
+        type: 'button',
+        className: 'stage-tools__tool stage-tools__tool--two',
+        'aria-label': '음악 플레이어',
+        title: '음악 플레이어',
+        // the CD Player window (StageCdPlayer) opens in the room, and closes when the key is pressed again
+        onClick: () => window.dispatchEvent(new CustomEvent('stage:toggle-cd-player')),
+      },
+      createElement(Icon, null, MUSIC)
     ),
     createElement(
       'button',

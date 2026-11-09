@@ -6111,6 +6111,10 @@ html[data-force-landscape] .stage {
   cursor: default;
 }
 
+.stage-tools__tool--two {
+  cursor: pointer;
+}
+
 .stage-tools__tool--one {
   top: 88px;
 }
@@ -6573,4 +6577,297 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
 .stage-loading__key:disabled {
   color: var(--shade);
   cursor: default;
+}
+
+/* ---- the CD Player window (supplied picture, the classic Windows player) in the tool bar's colours; it stands in the middle
+   of the room, drawn in stage pixels ---- */
+.cd-player-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 55;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.cd-player {
+  --face: #c7c7ba;
+  --light: #e8e8da;
+  --shade: #a4a696;
+  --dark: #646653;
+  --ink: #292926;
+  box-sizing: border-box;
+  width: 380px;
+  padding: 3px;
+  color: var(--ink);
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  box-shadow: 1px 1px 0 #000000, 6px 8px 0 rgba(0, 0, 0, 0.25);
+  font-family: Tahoma, 'MS Sans Serif', 'Helvetica Neue', Arial, sans-serif;
+  pointer-events: auto;
+}
+
+.cd-player__title {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 26px;
+  padding: 0 3px 0 4px;
+  color: var(--light);
+  background: linear-gradient(to right, var(--dark), #b3b4a2);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.cd-player__disc {
+  width: 17px;
+  height: 17px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--dark) 0 2px, #dcdccd 3px 6px, #a4a696 7px 8px);
+}
+
+.cd-player__name {
+  flex: 1 1 auto;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.cd-player__wbtn {
+  position: relative;
+  width: 20px;
+  height: 18px;
+  padding: 0;
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  cursor: pointer;
+}
+
+.cd-player__wbtn::before,
+.cd-player__wbtn::after {
+  content: '';
+  position: absolute;
+  background: var(--ink);
+}
+
+.cd-player__wbtn--min::before {
+  left: 4px;
+  bottom: 3px;
+  width: 7px;
+  height: 2px;
+}
+
+.cd-player__wbtn--max::before {
+  left: 3px;
+  top: 2px;
+  width: 8px;
+  height: 7px;
+  background: transparent;
+  border: 1px solid var(--ink);
+  border-top-width: 2px;
+}
+
+.cd-player__wbtn--close::before,
+.cd-player__wbtn--close::after {
+  left: 50%;
+  top: 50%;
+  width: 9px;
+  height: 1.5px;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.cd-player__wbtn--close::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.cd-player__wbtn--min::after,
+.cd-player__wbtn--max::after {
+  display: none;
+}
+
+.cd-player__wbtn:active {
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+}
+
+.cd-player__menubar {
+  display: flex;
+  gap: 2px;
+  padding: 3px 2px 2px;
+  font-size: 13px;
+}
+
+.cd-player__menu {
+  position: relative;
+}
+
+.cd-player__menu > button {
+  padding: 2px 8px;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.cd-player__menu > button:hover,
+.cd-player__menu > button.is-open {
+  color: var(--light);
+  background: var(--dark);
+}
+
+.cd-player__drop {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  top: 100%;
+  min-width: 190px;
+  margin: 0;
+  padding: 2px;
+  list-style: none;
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.25);
+}
+
+.cd-player__drop button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 3px 10px 3px 4px;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.cd-player__drop button:hover:not(:disabled) {
+  color: var(--light);
+  background: var(--dark);
+}
+
+.cd-player__drop button:disabled {
+  color: var(--shade);
+  cursor: default;
+}
+
+.cd-player__tick {
+  display: inline-block;
+  width: 16px;
+}
+
+.cd-player__display {
+  margin: 2px 0 4px;
+  padding: 2px;
+  background: #787968;
+  border: 2px solid;
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+}
+
+.cd-player__wave {
+  display: block;
+  width: 100%;
+  height: 190px;
+  background: #787968;
+}
+
+.cd-player__keys {
+  display: flex;
+  align-items: stretch;
+  height: 34px;
+  padding: 2px;
+  border: 2px solid;
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+}
+
+.cd-player__key {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  cursor: pointer;
+}
+
+.cd-player__key:active {
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+}
+
+.cd-player__key--play {
+  flex: 0 0 96px;
+}
+
+.cd-player__key--stop,
+.cd-player__key--back,
+.cd-player__key--next {
+  flex: 0 0 34px;
+}
+
+.cd-player__key i {
+  display: block;
+  background: var(--ink);
+}
+
+.cd-player__key i.is-play {
+  width: 13px;
+  height: 15px;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+.cd-player__key i.is-pause {
+  width: 13px;
+  height: 15px;
+  clip-path: polygon(0 0, 35% 0, 35% 100%, 0 100%, 0 0, 65% 0, 100% 0, 100% 100%, 65% 100%, 65% 0);
+}
+
+.cd-player__key i.is-stop {
+  width: 11px;
+  height: 11px;
+  background: var(--shade);
+}
+
+.cd-player__key i.is-back,
+.cd-player__key i.is-next {
+  width: 16px;
+  height: 13px;
+  clip-path: polygon(0 50%, 50% 0, 50% 50%, 100% 0, 100% 100%, 50% 50%, 50% 100%);
+}
+
+.cd-player__key i.is-next {
+  transform: scaleX(-1);
+}
+
+.cd-player__slider {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0 4px;
+  accent-color: var(--dark);
+  cursor: pointer;
+}
+
+.cd-player__status {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.cd-player__status span {
+  flex: 1 1 0;
+  padding: 3px 6px;
+  white-space: nowrap;
+  border: 1px solid;
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+}
+
+.cd-player.is-folded {
+  width: 240px;
 }

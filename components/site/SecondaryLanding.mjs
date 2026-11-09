@@ -17,6 +17,7 @@ import { CustomSidebarContent } from './CustomSidebarContent.mjs'
 import { HouseInteriorWorld } from './HouseInteriorWorld.mjs'
 import { LandingFrame } from './LandingFrame.mjs'
 import { StageLoadingDialog } from './StageLoadingDialog.mjs'
+import { StageCdPlayer } from './StageCdPlayer.mjs'
 
 const INITIAL_CHARACTER_IDS = Array.from({ length: 6 }, (_, index) => `npc-${index + 1}`)
 const SHARED_CHARACTER_PREFIX = 'shared-character-'
@@ -189,6 +190,7 @@ export function SecondaryLanding({ initialCustomView = false }) {
       }),
       // box 4-1 of the stage: the pad is there on both pages, not only on the custom one
       createElement(DrawingPad),
+      createElement(StageCdPlayer),
       createElement(StageLoadingDialog, { job: loadingJob, onComplete: completeLoading, onCancel: closeLoading })
     ),
     // the right bar is the same on both pages (the pad in box 4-1 is too), so nothing disappears between them
