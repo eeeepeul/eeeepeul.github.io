@@ -266,3 +266,8 @@
   background: #5e4a42;
   box-shadow: none;
 }
+
+/* the list of days comes down below the cell of the visitor record, so the cell does not cut it off: MON to SUN show whole */
+.stage-cell--visitors {
+  overflow: visible;
+}
