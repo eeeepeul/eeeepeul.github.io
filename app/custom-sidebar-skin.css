@@ -1,16 +1,16 @@
-/* The right bar of second/custom/ in the olive grid of the map's tool picture (olive ground #837d50, cells #898346 and #696336, black one-pixel lines); first it was a light grey ground, the dashed grey bars and boxes, the
+/* The right bar of second/custom/ in the olive grid of the map's tool picture (olive-grey ground #979887, pale cells #dcdccd, title bars #646655, lines #595948); first it was a light grey ground, the dashed grey bars and boxes, the
    framed pictures for the colours, the dark red input bar. Only the look: what each part does is as it was.
    The bar is drawn 287 pixels wide and made as wide as its panel (--k), so everything in it keeps its proportion
    (the supplied picture divided by 2.449). Loaded after max-ui.css, whose raised edges it takes off here. */
 
 .pixel-custom-sidebar {
   --k: 1.1115; /* a panel 319 pixels wide */
-  --bar: #696336;
-  --ground: #837d50;
-  --box: #898346;
-  --dash: #080500;
-  --ink: #e6e0b0;
-  --edge: #080500;
+  --bar: #646655;
+  --ground: #979887;
+  --box: #dcdccd;
+  --dash: #595948;
+  --ink: #e8e8da;
+  --edge: #595948;
   --red: #7a0006;
   width: 287px;
   height: calc(100% / var(--k));
@@ -32,7 +32,7 @@
 .color-panel:has(.pixel-custom-sidebar),
 .second-stage .color-panel:has(.pixel-custom-sidebar) {
   padding: 0;
-  background: var(--ground, #837d50);
+  background: var(--ground, #979887);
   box-shadow: none;
 }
 
@@ -72,7 +72,7 @@
   height: 32px;
   justify-self: stretch;
   padding: 0 6px 0 12px;
-  color: #c9c38f;
+  color: #c7c7ba;
   background: var(--bar);
   border: 0;
   font-size: 10px;
@@ -83,7 +83,7 @@
   height: 22px;
   display: grid;
   place-items: center;
-  color: #e6e0b0;
+  color: #292926;
   background: var(--box);
   font-size: 10px;
   font-style: normal;
@@ -116,7 +116,7 @@
 }
 
 .pixel-custom-sidebar .pixel-sidebar-tool-stack span:first-child {
-  border-color: #e6e0b0;
+  border-color: #292926;
 }
 
 .pixel-custom-sidebar .pixel-sidebar-tool-expression img {
@@ -200,8 +200,8 @@
 .pixel-custom-sidebar .pixel-custom-row-arrow {
   width: 16px;
   height: 15px;
-  color: #080500;
-  background: #a39d62;
+  color: #292926;
+  background: #dcdccd;
   box-shadow: none;
   font-size: 13px;
   line-height: 13px;
