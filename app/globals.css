@@ -5346,20 +5346,139 @@ button:focus-visible,
   gap: 5px;
 }
 
-.drawing-pad__swatch {
+.drawing-pad__colour {
   box-sizing: border-box;
-  width: 16px;
-  height: 16px;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  width: 60px;
+  height: 14px;
+  padding: 0 4px;
+  background: #f4f4f1;
+}
+
+.drawing-pad__swatch {
+  flex: none;
+  box-sizing: border-box;
+  width: 10px;
+  height: 10px;
   padding: 0;
-  border: 1px solid #111;
+  border: 0;
   border-radius: 0;
   cursor: pointer;
 }
 
-.drawing-pad__swatch.is-selected,
-.drawing-pad__size.is-selected {
-  outline: 2px solid #111;
-  outline-offset: 1px;
+.drawing-pad .drawing-pad__colour .drawing-pad__swatch,
+.drawing-pad .drawing-pad__colour .drawing-pad__swatch:active {
+  box-shadow: none;
+}
+
+/* the colour chooser: two bars at the pad's lower left; the top one is the hue, the bottom one the lightness */
+.drawing-pad__chooser {
+  position: absolute;
+  left: 8px;
+  bottom: 58px;
+  z-index: 5;
+  display: grid;
+  gap: 8px;
+  width: 150px;
+  box-sizing: border-box;
+  padding: 10px 10px 12px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+}
+
+.drawing-pad__bar {
+  display: block;
+  width: 100%;
+  height: 12px;
+  margin: 0;
+  padding: 0;
+  background: var(--track, linear-gradient(90deg, #ee3a2c, #f5c542 12%, #7be03a 30%, #4af0f0 50%, #1a1ae8 66%, #e83af0 82%, #ee3a2c));
+  border-radius: 6px;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.drawing-pad__bar::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  background: radial-gradient(circle, var(--dot, #d9392b) 0 36%, #fff 40%);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.drawing-pad__bar::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: radial-gradient(circle, var(--dot, #d9392b) 0 36%, #fff 40%);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.drawing-pad__hex {
+  box-sizing: border-box;
+  width: 40px;
+  min-width: 0;
+  padding: 0;
+  color: #111;
+  background: transparent;
+  border: 0;
+  outline: none;
+  font: 8px/12px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.drawing-pad__arrows,
+.drawing-pad__sizes {
+  display: flex;
+  flex: none;
+  gap: 1px;
+}
+
+.drawing-pad__arrow,
+.drawing-pad__size {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  height: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.drawing-pad__arrow {
+  width: 15px;
+  background: #fdfdd6;
+  box-shadow: inset 0 0 0 1px #c9c99a;
+}
+
+.drawing-pad__arrow svg {
+  display: block;
+  width: 7px;
+  height: 7px;
+  fill: #111;
+}
+
+.drawing-pad__size {
+  width: 15px;
+  color: #111;
+  background: #d9d9d9;
+  font: 700 12px/12px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.drawing-pad__arrow:disabled,
+.drawing-pad__size:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .drawing-pad__sep {
@@ -5369,27 +5488,13 @@ button:focus-visible,
   background: rgba(0, 0, 0, 0.35);
 }
 
-.drawing-pad__size {
-  display: grid;
-  place-items: center;
-  width: 16px;
-  height: 16px;
-  padding: 0;
-  background: #fbfbf7;
-  border: 1px solid #111;
-  cursor: pointer;
-}
-
-.drawing-pad__size i {
-  display: block;
-  background: #111;
-}
-
 .drawing-pad__clear {
+  box-sizing: border-box;
+  height: 16px;
   margin-left: auto;
-  padding: 1px 6px;
+  padding: 0 6px;
   color: #111;
-  background: #fbfbf7;
+  background: #fff;
   border: 1px solid #111;
   font: 9px/12px 'Helvetica Neue', Helvetica, Arial, sans-serif;
   letter-spacing: 0.06em;
