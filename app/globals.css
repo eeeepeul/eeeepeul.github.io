@@ -7557,11 +7557,10 @@ body:has(.second-stage :is(button, a[href], select, summary, label, [role='butto
    thumb, and a raised key with a small black arrow at each end. They show where a board is larger than its frame: the drawing
    pad (when the Paint window has made the board wider) and the sheet of the Paint window (zoomed in, or in full screen) ---- */
 .drawing-pad__scroll {
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: hidden;
 }
 
-.drawing-pad__scroll::-webkit-scrollbar,
 .paint__sheet::-webkit-scrollbar {
   width: 14px;
   height: 14px;
@@ -7572,19 +7571,16 @@ body:has(.second-stage :is(button, a[href], select, summary, label, [role='butto
   background-size: 2px 2px;
 }
 
-.drawing-pad__scroll::-webkit-scrollbar-corner,
 .paint__sheet::-webkit-scrollbar-corner {
   background: #c7c7ba;
 }
 
-.drawing-pad__scroll::-webkit-scrollbar-thumb,
 .paint__sheet::-webkit-scrollbar-thumb {
   background: #c7c7ba;
   border: 2px solid;
   border-color: #e8e8da #646653 #646653 #e8e8da;
 }
 
-.drawing-pad__scroll::-webkit-scrollbar-button:single-button,
 .paint__sheet::-webkit-scrollbar-button:single-button {
   display: block;
   width: 14px;
@@ -7598,17 +7594,14 @@ body:has(.second-stage :is(button, a[href], select, summary, label, [role='butto
   box-sizing: border-box;
 }
 
-.drawing-pad__scroll::-webkit-scrollbar-button:single-button:active,
 .paint__sheet::-webkit-scrollbar-button:single-button:active {
   border-color: #646653 #e8e8da #e8e8da #646653;
 }
 
-.drawing-pad__scroll::-webkit-scrollbar-button:horizontal:decrement,
 .paint__sheet::-webkit-scrollbar-button:horizontal:decrement {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M8 1v10L2 6z' fill='%23292926'/%3E%3C/svg%3E");
 }
 
-.drawing-pad__scroll::-webkit-scrollbar-button:horizontal:increment,
 .paint__sheet::-webkit-scrollbar-button:horizontal:increment {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M4 1v10l6-5z' fill='%23292926'/%3E%3C/svg%3E");
 }
@@ -7619,4 +7612,67 @@ body:has(.second-stage :is(button, a[href], select, summary, label, [role='butto
 
 .paint__sheet::-webkit-scrollbar-button:vertical:increment {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M1 4h10L6 10z' fill='%23292926'/%3E%3C/svg%3E");
+}
+
+/* the bar that moves a wider board along under the pad's board, as the classic windows' bar (see above): it lies over the
+   board's lowest rows (14 high), so the pad is not made taller by it and nothing under it is covered */
+.drawing-pad__hbar {
+  position: absolute;
+  z-index: 3;
+  left: 9px;
+  right: 9px;
+  /* the board is the first thing in the pad (after its 8px padding and 1px line), 378 high: the bar is on its lower edge */
+  top: calc(8px + 1px + 378px - 14px - 1px);
+  display: flex;
+  height: 14px;
+}
+
+.drawing-pad__hkey {
+  flex: 0 0 14px;
+  padding: 0;
+  background-color: #c7c7ba;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 10px 10px;
+  border: 2px solid;
+  border-color: #e8e8da #646653 #646653 #e8e8da;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.drawing-pad__hkey:active {
+  border-color: #646653 #e8e8da #e8e8da #646653;
+}
+
+.drawing-pad__hkey--left {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M8 1v10L2 6z' fill='%23292926'/%3E%3C/svg%3E");
+}
+
+.drawing-pad__hkey--right {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M4 1v10l6-5z' fill='%23292926'/%3E%3C/svg%3E");
+}
+
+.drawing-pad__htrack {
+  position: relative;
+  flex: 1 1 auto;
+  background-color: #dcdccd;
+  background-image: linear-gradient(45deg, #cdcdbe 25%, transparent 25%, transparent 75%, #cdcdbe 75%),
+    linear-gradient(45deg, #cdcdbe 25%, transparent 25%, transparent 75%, #cdcdbe 75%);
+  background-position: 0 0, 1px 1px;
+  background-size: 2px 2px;
+}
+
+.drawing-pad__hthumb {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: #c7c7ba;
+  border: 2px solid;
+  border-color: #e8e8da #646653 #646653 #e8e8da;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.drawing-pad__hthumb:active {
+  border-color: #646653 #e8e8da #e8e8da #646653;
 }

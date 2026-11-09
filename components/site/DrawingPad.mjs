@@ -244,6 +244,46 @@ export function DrawingPad() {
     window.setTimeout(() => setSaved(false), 1400)
   }
 
+  // The bar under the board that moves a wider board along (it lies over the board's lowest rows, so the pad does not grow):
+  // whether it shows, how much of the board the pad shows (0 to 1) and where that part begins (0 to 1 of what is left over).
+  const scrollRef = useRef(null)
+  const trackRef = useRef(null)
+  const [bar, setBar] = useState({ visible: false, ratio: 1, at: 0 })
+  const syncBar = () => {
+    const frame = scrollRef.current
+    if (!frame) return
+    const visible = frame.scrollWidth > frame.clientWidth + 1
+    const ratio = visible ? frame.clientWidth / frame.scrollWidth : 1
+    const room = frame.scrollWidth - frame.clientWidth
+    const at = visible && room > 0 ? frame.scrollLeft / room : 0
+    setBar((now) => (now.visible === visible && Math.abs(now.ratio - ratio) < 0.001 && Math.abs(now.at - at) < 0.001 ? now : { visible, ratio, at }))
+  }
+  useEffect(() => {
+    syncBar()
+  })
+  const moveBy = (amount) => {
+    const frame = scrollRef.current
+    if (frame) frame.scrollLeft += amount
+  }
+  const dragThumb = (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    const frame = scrollRef.current
+    const track = trackRef.current
+    if (!frame || !track) return
+    const scale = track.getBoundingClientRect().width / track.offsetWidth || 1
+    const start = { x: event.clientX, left: frame.scrollLeft }
+    const move = (moveEvent) => {
+      frame.scrollLeft = start.left + ((moveEvent.clientX - start.x) / scale) * (frame.scrollWidth / track.offsetWidth)
+    }
+    const end = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', end)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', end)
+  }
+
   // What the large Paint window (StagePaint) works the board through: the pad's own canvas, colour, brush, history, input and
   // save. It is handed over by a ref that is renewed at each render, so the window always finds the present state.
   const boardRef = useRef(null)
@@ -296,7 +336,17 @@ export function DrawingPad() {
     // as the pad's tools (203 is what the pad has always been wide inside: 221 with its padding and line).
     createElement(
       'div',
-      { className: 'drawing-pad__scroll', style: { width: '100%', minWidth: 203 } },
+      {
+        className: 'drawing-pad__scroll',
+        ref: scrollRef,
+        style: { width: '100%', minWidth: 203 },
+        onScroll: syncBar,
+        // a sideways wheel (or the wheel with shift held) moves a wider board along
+        onWheel: (event) => {
+          const amount = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.shiftKey ? event.deltaY : 0
+          if (amount) moveBy(amount)
+        },
+      },
       createElement(
         'div',
         { className: 'drawing-pad__board', style: { position: 'relative', width: `${(widthNow() / COLUMNS) * 100}%`, height: ROWS * SCALE + 2 } },
@@ -322,6 +372,33 @@ export function DrawingPad() {
         })
       )
     ),
+    bar.visible
+      ? createElement(
+          'div',
+          { className: 'drawing-pad__hbar', role: 'scrollbar', 'aria-orientation': 'horizontal', 'aria-label': '그림판 옆으로 움직이기' },
+          createElement('button', { type: 'button', className: 'drawing-pad__hkey drawing-pad__hkey--left', tabIndex: -1, 'aria-label': '왼쪽으로', onClick: () => moveBy(-24) }),
+          createElement(
+            'div',
+            {
+              className: 'drawing-pad__htrack',
+              ref: trackRef,
+              onPointerDown: (event) => {
+                if (event.target !== event.currentTarget) return
+                const box = event.currentTarget.getBoundingClientRect()
+                const frame = scrollRef.current
+                const before = event.clientX < box.left + (box.width - 0) * (bar.at * (1 - bar.ratio) + bar.ratio / 2)
+                if (frame) frame.scrollLeft += (before ? -1 : 1) * frame.clientWidth * 0.9
+              },
+            },
+            createElement('i', {
+              className: 'drawing-pad__hthumb',
+              style: { width: `${bar.ratio * 100}%`, left: `${bar.at * (1 - bar.ratio) * 100}%` },
+              onPointerDown: dragThumb,
+            })
+          ),
+          createElement('button', { type: 'button', className: 'drawing-pad__hkey drawing-pad__hkey--right', tabIndex: -1, 'aria-label': '오른쪽으로', onClick: () => moveBy(24) })
+        )
+      : null,
     // the key that opens the large Paint window (StagePaint), at the board's upper right
     createElement('button', {
       type: 'button',
