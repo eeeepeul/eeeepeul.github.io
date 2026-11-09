@@ -5938,7 +5938,8 @@ html[data-force-landscape] .stage {
   z-index: 5;
   left: 14px;
   top: 66px;
-  width: 150px;
+  width: 158px; /* as wide as the month box above it (344 - 2 x 14 - 18 - 140), so their right edges are one line */
+  box-sizing: border-box;
   margin: 0;
   padding: 2px;
   list-style: none;
