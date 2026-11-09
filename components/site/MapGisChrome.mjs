@@ -60,8 +60,8 @@ function ToolButton({ label, icon, pressed, onClick, href, extraClass = '' }) {
 export function MapGisChrome({ homeHref = '/' }) {
   const [infoOpen, setInfoOpen] = useState(false)
   const [folded, setFolded] = useState(false)
-  // whether the zoom bar (the second button) is out
-  const [zoomOpen, setZoomOpen] = useState(false)
+  // whether the zoom bar (the second button) is out: it is out from the start (the button shows pressed), and the button puts it away
+  const [zoomOpen, setZoomOpen] = useState(true)
   // Where the bar has been dragged to, in cqw from the map box's top left (null: where it starts).
   const [place, setPlace] = useState(null)
   const barRef = useRef(null)
