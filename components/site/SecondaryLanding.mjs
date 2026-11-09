@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, createElement, useEffect, useRef, useState } from 'react'
+import { Fragment, createElement, useCallback, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { assetPath } from '../../lib/asset-path.mjs'
 import {
@@ -16,6 +16,7 @@ import { DrawingPad } from './DrawingPad.mjs'
 import { CustomSidebarContent } from './CustomSidebarContent.mjs'
 import { HouseInteriorWorld } from './HouseInteriorWorld.mjs'
 import { LandingFrame } from './LandingFrame.mjs'
+import { StageLoadingDialog } from './StageLoadingDialog.mjs'
 
 const INITIAL_CHARACTER_IDS = Array.from({ length: 6 }, (_, index) => `npc-${index + 1}`)
 const SHARED_CHARACTER_PREFIX = 'shared-character-'
@@ -38,6 +39,9 @@ export function SecondaryLanding({ initialCustomView = false }) {
   // What was drawn and put on the match, worn by the characters this visitor added.
   const [characterAccessories, setCharacterAccessories] = useState({})
   const nextCharacterNumber = useRef(7)
+  // the "Loading..." window that shows while a character is being put in (see StageLoadingDialog)
+  const [loadingJob, setLoadingJob] = useState(null)
+  const closeLoading = useCallback(() => setLoadingJob(null), [])
 
   useEffect(() => {
     setCharacterCustomizations((currentCustomizations) => {
@@ -130,9 +134,9 @@ export function SecondaryLanding({ initialCustomView = false }) {
     setActiveCharacterId(localCharacterId)
 
     const store = getSharedCharacterStore()
-    if (!store) return
+    if (!store) return Promise.resolve()
 
-    void store
+    return store
       .recordCharacter(selectedCustomization, CHARACTER_WORLD_ID)
       .then((character) => {
         const sharedCharacterId = `${SHARED_CHARACTER_PREFIX}${character.id}`
@@ -158,6 +162,12 @@ export function SecondaryLanding({ initialCustomView = false }) {
       })
   }
 
+  // the input key: the character goes into the room and the "Loading..." window shows until it is recorded
+  const handleInput = (customization) => {
+    const promise = addCharacter(customization)
+    setLoadingJob({ id: Date.now(), promise })
+  }
+
   return createElement(LandingFrame, {
     stage: true,
     houseHref: assetPath(''),
@@ -174,10 +184,11 @@ export function SecondaryLanding({ initialCustomView = false }) {
         characterAccessories,
       }),
       // box 4-1 of the stage: the pad is there on both pages, not only on the custom one
-      createElement(DrawingPad)
+      createElement(DrawingPad),
+      createElement(StageLoadingDialog, { job: loadingJob, onClose: closeLoading })
     ),
     // the right bar is the same on both pages (the pad in box 4-1 is too), so nothing disappears between them
     panelLabel: '캐릭터 커스터마이징 사이드바',
-    panel: createElement(CustomSidebarContent, { onInput: addCharacter }),
+    panel: createElement(CustomSidebarContent, { onInput: handleInput }),
   })
 }

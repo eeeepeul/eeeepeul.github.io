@@ -5936,9 +5936,9 @@ html[data-force-landscape] .stage {
 .stage-calendar__menu {
   position: absolute;
   z-index: 5;
-  left: 14px;
+  left: 17px; /* the month box's own edge on the left is a shade as dark as the ground (3px), so its line is seen 3px in: the list starts there */
   top: 66px;
-  width: 158px; /* as wide as the month box above it (344 - 2 x 14 - 18 - 140), so their right edges are one line */
+  width: 155px; /* ... and its right edge is the box's right edge (14 + 158 = 172), so both sides are one line with the box above */
   box-sizing: border-box;
   margin: 0;
   padding: 2px;
@@ -6447,4 +6447,130 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
 .stage-room-status__key:focus-visible {
   outline: 1px solid #292926;
   outline-offset: -3px;
+}
+
+/* ---- the "Loading..." window (supplied picture, the classic Windows dialog) in the tool bar's colours; it stands in the middle of
+   the room, drawn in stage pixels ---- */
+.stage-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.stage-loading__window {
+  --face: #c7c7ba;
+  --light: #e8e8da;
+  --shade: #a4a696;
+  --dark: #646653;
+  --ink: #292926;
+  box-sizing: border-box;
+  width: 330px;
+  padding: 3px 3px 22px;
+  color: var(--ink);
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  box-shadow: 1px 1px 0 #000000, 6px 8px 0 rgba(0, 0, 0, 0.25);
+  font-family: Tahoma, 'MS Sans Serif', 'Helvetica Neue', Arial, sans-serif;
+  pointer-events: auto;
+}
+
+.stage-loading__title {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  height: 24px;
+  padding: 0 3px;
+  background: linear-gradient(to right, var(--dark), #b3b4a2);
+}
+
+.stage-loading__x {
+  position: relative;
+  width: 19px;
+  height: 17px;
+  padding: 0;
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  cursor: pointer;
+}
+
+.stage-loading__x::before,
+.stage-loading__x::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 9px;
+  height: 1px;
+  background: var(--ink);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.stage-loading__x::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.stage-loading__text {
+  margin: 30px 0 22px;
+  font-size: 19px;
+  line-height: 1;
+  text-align: center;
+}
+
+.stage-loading__bar {
+  display: flex;
+  gap: 2px;
+  height: 26px;
+  margin: 0 22px;
+  padding: 3px;
+  box-sizing: border-box;
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+}
+
+.stage-loading__bar i {
+  flex: 1 1 0;
+  background: transparent;
+}
+
+.stage-loading__bar i.is-lit {
+  background: var(--dark);
+}
+
+.stage-loading__keys {
+  display: flex;
+  justify-content: center;
+  gap: 38px;
+  margin-top: 30px;
+}
+
+.stage-loading__key {
+  width: 108px;
+  height: 30px;
+  padding: 0;
+  color: var(--ink);
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.stage-loading__key--default {
+  outline: 1px solid #000000;
+}
+
+.stage-loading__key:active:not(:disabled) {
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+}
+
+.stage-loading__key:disabled {
+  color: var(--shade);
+  cursor: default;
 }
