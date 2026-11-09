@@ -5785,16 +5785,22 @@ html[data-force-landscape] .stage {
   right: 0;
 }
 
-/* ---- box 2: the calendar, as the classic Windows date picker (supplied picture); drawn 344 x 636 and made to fit its box of 178 x 329 ---- */
+/* ---- box 2: the calendar, as the classic Windows date picker (supplied picture) in the main screen's colours (beige ground,
+   cream field, brown for what was navy, rosy for the greys); drawn 344 x 636 and made to fit its box of 178 x 329 ---- */
 .second-stage__box--calendar {
   display: block;
   overflow: hidden;
-  background: #c0c0c0;
+  background: #d4cdbf;
   border: 0;
 }
 
 .stage-calendar {
-  --navy: #000080;
+  --face: #d4cdbf;
+  --field: #eae2c4;
+  --light: #f6f1dc;
+  --shade: #967666;
+  --dark: #5e4a42;
+  --ink: #2b211d;
   position: absolute;
   left: 0;
   top: 0;
@@ -5802,7 +5808,8 @@ html[data-force-landscape] .stage {
   height: 636px;
   box-sizing: border-box;
   padding: 14px 14px 0;
-  background: #c0c0c0;
+  color: var(--ink);
+  background: var(--face);
   font-family: Tahoma, 'MS Sans Serif', 'Helvetica Neue', Arial, sans-serif;
   transform: scale(0.5174);
   transform-origin: 0 0;
@@ -5823,10 +5830,10 @@ html[data-force-landscape] .stage {
   height: 100%;
   font-size: 30px;
   line-height: 1;
-  background: #ffffff;
+  background: var(--field);
   border: 3px solid;
-  border-color: #808080 #ffffff #ffffff #808080;
-  box-shadow: inset 2px 2px 0 #404040;
+  border-color: var(--shade) var(--light) var(--light) var(--shade);
+  box-shadow: inset 2px 2px 0 var(--dark);
 }
 
 .stage-calendar__month {
@@ -5841,27 +5848,41 @@ html[data-force-landscape] .stage {
 
 .stage-calendar__month b,
 .stage-calendar__year b {
-  padding: 4px 6px;
+  padding: 4px 10px;
   font-weight: 400;
-  color: #000000;
+  color: var(--ink);
 }
 
 .stage-calendar__month b {
-  margin-left: 4px;
-  color: #ffffff;
-  background: var(--navy);
-  outline: 1px dotted #ffffff;
-  outline-offset: -3px;
+  cursor: pointer;
 }
 
 .stage-calendar__key {
   position: absolute;
   display: block;
   box-sizing: border-box;
-  background: #c0c0c0;
+  margin: 0;
+  padding: 0;
+  background: var(--face);
   border: 3px solid;
-  border-color: #ffffff #404040 #404040 #ffffff;
-  box-shadow: inset -2px -2px 0 #808080;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  box-shadow: inset -2px -2px 0 var(--shade);
+  cursor: pointer;
+}
+
+.stage-calendar__key:active:not(:disabled) {
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+  box-shadow: inset 2px 2px 0 var(--shade);
+}
+
+.stage-calendar__key:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.stage-calendar__key:focus-visible {
+  outline: 2px dotted var(--ink);
+  outline-offset: -6px;
 }
 
 .stage-calendar__key::after {
@@ -5870,7 +5891,6 @@ html[data-force-landscape] .stage {
   left: 50%;
   top: 50%;
   border: 6px solid transparent;
-  transform: translate(-50%, -25%);
 }
 
 .stage-calendar__key--drop {
@@ -5881,7 +5901,7 @@ html[data-force-landscape] .stage {
 }
 
 .stage-calendar__key--drop::after {
-  border-top-color: #000000;
+  border-top-color: var(--ink);
   transform: translate(-50%, -20%);
 }
 
@@ -5902,17 +5922,53 @@ html[data-force-landscape] .stage {
 
 .stage-calendar__key--up::after {
   border-width: 0 5px 5px;
-  border-bottom-color: #000000;
+  border-bottom-color: var(--ink);
   transform: translate(-50%, -50%);
 }
 
 .stage-calendar__key--down::after {
   border-width: 5px 5px 0;
-  border-top-color: #000000;
+  border-top-color: var(--ink);
   transform: translate(-50%, -50%);
 }
 
-/* the field of the days: white, sunken, the days in five columns */
+/* the list of the months, under the month box */
+.stage-calendar__menu {
+  position: absolute;
+  z-index: 5;
+  left: 14px;
+  top: 66px;
+  width: 150px;
+  margin: 0;
+  padding: 2px;
+  list-style: none;
+  background: var(--field);
+  border: 3px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  box-shadow: inset -2px -2px 0 var(--shade);
+}
+
+.stage-calendar__menu button {
+  display: block;
+  width: 100%;
+  padding: 3px 10px;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: 28px;
+  line-height: 1.15;
+  text-align: left;
+  cursor: pointer;
+}
+
+.stage-calendar__menu button:hover,
+.stage-calendar__menu button.is-current {
+  color: var(--field);
+  background: var(--dark);
+}
+
+/* the field of the days: sunken, the days in five columns */
 .stage-calendar__days {
   position: absolute;
   left: 14px;
@@ -5926,13 +5982,13 @@ html[data-force-landscape] .stage {
   margin: 0;
   padding: 6px 4px;
   list-style: none;
-  background: #ffffff;
+  background: var(--field);
   border: 3px solid;
-  border-color: #808080 #ffffff #ffffff #808080;
-  box-shadow: inset 2px 2px 0 #404040;
+  border-color: var(--shade) var(--light) var(--light) var(--shade);
+  box-shadow: inset 2px 2px 0 var(--dark);
 }
 
-/* a day: its figure, filled dark blue from the bottom as far as --fill (0 to 1) */
+/* a day: its figure, filled dark from the bottom as far as --fill (0 to 1) */
 .stage-calendar__day {
   position: relative;
   display: grid;
@@ -5947,8 +6003,7 @@ html[data-force-landscape] .stage {
   bottom: 2px;
   left: 6px;
   height: calc(var(--fill, 0) * 100% - 4px);
-  min-height: 0;
-  background: var(--navy);
+  background: var(--dark);
   opacity: 0.85;
 }
 
@@ -5963,12 +6018,11 @@ html[data-force-landscape] .stage {
   z-index: 1;
   font-size: 34px;
   line-height: 1;
-  color: #000000;
-  mix-blend-mode: normal;
+  color: var(--ink);
 }
 
 .stage-calendar__day.is-full .stage-calendar__number {
-  color: #ffffff;
+  color: var(--field);
 }
 
 /* ---- box 3: the tool bar of the map (supplied picture: the bar is 73 x 296 there, with one more place under the keys for

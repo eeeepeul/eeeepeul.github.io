@@ -38,9 +38,9 @@ test('the calendar shows 30 days with their own fill and a count for each', () =
   assert.match(html, /data-day="3" data-visitors="0" style="--fill:0"/)
   assert.match(html, /class="stage-calendar__day is-full"/)
   // the look of the classic date picker: a month box and a year box on top, the day numbers as text
-  assert.match(html, /class="stage-calendar__bar" role="img" aria-label="2026 Nov"/)
-  assert.match(html, /class="stage-calendar__month"[^>]*><b>Nov<\/b>/)
-  assert.match(html, /class="stage-calendar__year"[^>]*><b>2026<\/b>/)
+  assert.match(html, /class="stage-calendar__bar" role="group" aria-label="2026 Nov"/)
+  assert.match(html, /class="stage-calendar__month"><b>Nov<\/b>/)
+  assert.match(html, /class="stage-calendar__year"><b>2026<\/b>/)
   assert.match(html, /class="stage-calendar__number" aria-hidden="true">19<\/span>/)
 })
 
@@ -97,4 +97,12 @@ test('the drawing board is as wide as the pad: no empty space to its right', asy
   assert.match(source, /width: '100%',\s*height: ROWS \* SCALE/)
   const { DRAWING_BOARD } = await import('../components/site/DrawingPad.mjs')
   assert.ok(Math.abs(DRAWING_BOARD.columns * DRAWING_BOARD.scale + 2 - 203) <= 2)
+})
+
+test('the calendar knows how many days each month has', async () => {
+  const { getDaysInMonth } = await import('../components/site/StageCalendar.mjs')
+  assert.equal(getDaysInMonth(2026, 10), 30)
+  assert.equal(getDaysInMonth(2026, 11), 31)
+  assert.equal(getDaysInMonth(2026, 1), 28)
+  assert.equal(getDaysInMonth(2028, 1), 29)
 })

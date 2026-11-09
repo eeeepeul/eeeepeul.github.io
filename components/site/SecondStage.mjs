@@ -57,8 +57,8 @@ export function SecondStage({ children, houseHref, houseLabel }) {
             key: name,
             className: `second-stage__box second-stage__box--${name}`,
             'data-stage-box': number,
-            // (the status bar has keys of its own, so it is not hidden)
-            'aria-hidden': name === 'status-bar' ? undefined : 'true',
+            // (the status bar and the calendar have keys of their own, so they are not hidden)
+            'aria-hidden': name === 'status-bar' || name === 'calendar' ? undefined : 'true',
             style: { left, top, width, height },
           },
           // the calendar (2), the tool bar (3), the shelf of drawings (4-2), its input key (5) and the turning house (6) are
