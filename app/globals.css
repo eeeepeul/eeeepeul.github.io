@@ -6153,3 +6153,35 @@ html[data-force-landscape] .stage {
 body:has(.drawing-pad__canvas:hover) .compass-cursor-mark {
   opacity: 0;
 }
+
+/* ---- over the colour chooser's bars the pointer is a hand: open, and closed while pressed ---- */
+.compass-cursor-active .drawing-pad__bar,
+.compass-cursor-active .drawing-pad__bar::-webkit-slider-thumb {
+  cursor: image-set(url('/media/hand-open.png') 1x, url('/media/hand-open@2x.png') 2x) 16 16, grab !important;
+}
+
+.compass-cursor-active .drawing-pad__bar:active,
+.compass-cursor-active .drawing-pad__bar:active::-webkit-slider-thumb {
+  cursor: image-set(url('/media/hand-grab.png') 1x, url('/media/hand-grab@2x.png') 2x) 16 16, grabbing !important;
+}
+
+body:has(.drawing-pad__bar:hover) .compass-cursor-mark,
+body:has(.drawing-pad__bar:active) .compass-cursor-mark {
+  opacity: 0;
+}
+
+/* ---- over the whole left bar (the calendar, the tool bar, the pad, the shelf, the input key, the small model) the pointer is
+   the same hand; the drawing board keeps its paintbrush ---- */
+.compass-cursor-active :is(.second-stage__box--calendar, .second-stage__box--tools, .second-stage__box--panels-upper, .second-stage__box--panels-lower, .second-stage__box--satellite, .second-stage__box--small-map, .drawing-pad),
+.compass-cursor-active :is(.second-stage__box--calendar, .second-stage__box--tools, .second-stage__box--panels-upper, .second-stage__box--panels-lower, .second-stage__box--satellite, .second-stage__box--small-map, .drawing-pad) *:not(.drawing-pad__canvas) {
+  cursor: image-set(url('/media/hand-open.png') 1x, url('/media/hand-open@2x.png') 2x) 16 16, grab !important;
+}
+
+.compass-cursor-active :is(.second-stage__box--calendar, .second-stage__box--tools, .second-stage__box--panels-upper, .second-stage__box--panels-lower, .second-stage__box--satellite, .second-stage__box--small-map, .drawing-pad):active,
+.compass-cursor-active :is(.second-stage__box--calendar, .second-stage__box--tools, .second-stage__box--panels-upper, .second-stage__box--panels-lower, .second-stage__box--satellite, .second-stage__box--small-map, .drawing-pad) *:not(.drawing-pad__canvas):active {
+  cursor: image-set(url('/media/hand-grab.png') 1x, url('/media/hand-grab@2x.png') 2x) 16 16, grabbing !important;
+}
+
+body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-stage__box--panels-upper, .second-stage__box--panels-lower, .second-stage__box--satellite, .second-stage__box--small-map, .drawing-pad):hover) .compass-cursor-mark {
+  opacity: 0;
+}

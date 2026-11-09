@@ -50,7 +50,9 @@ test('renders the second page with six NPCs and a character-add control', async 
     html,
     /<nav class="stage-tools" aria-label="도구">.*<a class="stage-tools__house" href="\/" aria-label="메인 화면으로 이동"[^>]*>.*<\/a><\/nav>/
   )
-  assert.match(html, /<aside[^>]*class="color-panel sidebar-panel landing-panel is-fixed"[^>]*>.*<img class="sidebar-wordmark"[^>]*alt="M:MH".*<button[^>]*class="character-spawn-button"[^>]*aria-label="새 캐릭터 추가"[^>]*>.*<\/button>.*<img class="sidebar-footer-mark"[^>]*alt="".*<\/aside>/)
+  // the right panel is the character-custom sidebar on this page too (it is on both pages, so nothing disappears)
+  assert.match(html, /<aside[^>]*class="color-panel sidebar-panel landing-panel is-fixed"[^>]*>.*class="[^"]*pixel-custom-sidebar[^"]*".*<img class="sidebar-footer-mark"[^>]*alt="".*<\/aside>/)
+  assert.doesNotMatch(html, /aria-label="새 캐릭터 추가"/)
   assert.match(
     html,
     /<img class="wandering-character" src="\/media\/page3-character.png"[^>]*>/

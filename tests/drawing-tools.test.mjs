@@ -74,3 +74,19 @@ test('the swatch opens a chooser with a hue bar over a lightness bar, at the pad
   const css = readFileSync(new URL('../app/globals.css', import.meta.url), 'utf8')
   assert.match(css, /\.drawing-pad__chooser\s*\{[^}]*left:\s*8px;[^}]*bottom:/)
 })
+
+test('over the chooser bars the pointer is an open hand, and a closed one while pressed', () => {
+  const css = readFileSync(new URL('../app/globals.css', import.meta.url), 'utf8')
+  assert.match(css, /\.compass-cursor-active \.drawing-pad__bar\s*,[^{]*\{[^}]*hand-open\.png[^}]*grab !important/)
+  assert.match(css, /\.compass-cursor-active \.drawing-pad__bar:active\s*,[^{]*\{[^}]*hand-grab\.png[^}]*grabbing !important/)
+  assert.match(css, /body:has\(\.drawing-pad__bar:hover\) \.compass-cursor-mark/)
+})
+
+test('over the whole left bar the pointer is the hand too, except on the drawing board', () => {
+  const css = readFileSync(new URL('../app/globals.css', import.meta.url), 'utf8')
+  for (const part of ['calendar', 'tools', 'panels-upper', 'panels-lower', 'satellite', 'small-map']) {
+    assert.ok(css.includes(`.second-stage__box--${part}`), part)
+  }
+  assert.match(css, /\*:not\(\.drawing-pad__canvas\) \{\s*cursor: image-set\(url\('\/media\/hand-open\.png'\)/)
+  assert.match(css, /\*:not\(\.drawing-pad__canvas\):active \{\s*cursor: image-set\(url\('\/media\/hand-grab\.png'\)/)
+})
