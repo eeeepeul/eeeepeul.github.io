@@ -6,6 +6,7 @@ import { brushCursor } from '../../lib/brush-cursor.mjs'
 import { BRUSH_SIZES, DEFAULT_BRUSH, createHistory, hexText, hexToHsl, hslToHex, parseHex, stepBrush } from '../../lib/drawing-tools.mjs'
 import { saveDrawing } from '../../lib/drawing-gallery.mjs'
 import { getSharedDrawingStore } from '../../lib/supabase-browser.mjs'
+import { notifyBoard, registerBoard } from '../../lib/drawing-board.mjs'
 
 // A small drawing board for the custom page: a low-resolution canvas shown with hard pixels, and under it one row of
 // tools: the colour (a field with its hex text), undo and redo (< >), the brush size (+ -) and clear; then input and save.
@@ -224,6 +225,36 @@ export function DrawingPad() {
     window.setTimeout(() => setSaved(false), 1400)
   }
 
+  // What the large Paint window (StagePaint) works the board through: the pad's own canvas, colour, brush, history, input and
+  // save. It is handed over by a ref that is renewed at each render, so the window always finds the present state.
+  const boardRef = useRef(null)
+  boardRef.current = {
+    canvas: canvasRef.current,
+    columns: COLUMNS,
+    rows: ROWS,
+    colour,
+    brushIndex,
+    canUndo: historyRef.current.canUndo(),
+    canRedo: historyRef.current.canRedo(),
+    sent,
+    saved,
+    setColour: (next) => chooseColour(next),
+    setBrushIndex,
+    record: () => {
+      historyRef.current.record(snapshot())
+      redraw((count) => count + 1)
+    },
+    undo,
+    redo,
+    clear,
+    putOnMatch,
+    save,
+  }
+  useEffect(() => registerBoard({ now: () => boardRef.current }), [])
+  useEffect(() => {
+    notifyBoard()
+  })
+
   return createElement(
     'section',
     { className: 'drawing-pad', 'aria-label': '그림판', ref: padRef },
@@ -242,6 +273,14 @@ export function DrawingPad() {
       onPointerMove: onMove,
       onPointerUp: onUp,
       onPointerCancel: onUp,
+    }),
+    // the key that opens the large Paint window (StagePaint), at the board's upper right
+    createElement('button', {
+      type: 'button',
+      className: 'drawing-pad__expand',
+      'aria-label': '크게 그리기',
+      title: '크게 그리기',
+      onClick: () => window.dispatchEvent(new CustomEvent('stage:toggle-paint')),
     }),
     createElement(
       'div',

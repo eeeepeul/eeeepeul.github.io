@@ -6930,3 +6930,374 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
 .cd-player.is-folded {
   width: 240px;
 }
+
+/* the key at the upper right of the pad's board: it opens the large Paint window */
+.drawing-pad__expand {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: #c6c6c6;
+  border: 1px solid #111;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.drawing-pad__expand:hover {
+  opacity: 1;
+}
+
+.drawing-pad__expand::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  background: linear-gradient(135deg, transparent 45%, #111 45% 55%, transparent 55%);
+  border: 1px solid #111;
+  border-width: 1px 1px 0 0;
+}
+
+/* ---- the large Paint window (supplied picture, the classic Windows Paint) in the tool bar's colours; it stands in the middle
+   of the room, drawn in stage pixels (each square of the board is 4 here) ---- */
+.paint-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 56;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.paint {
+  --face: #c7c7ba;
+  --light: #e8e8da;
+  --shade: #a4a696;
+  --dark: #646653;
+  --ink: #292926;
+  box-sizing: border-box;
+  padding: 3px;
+  color: var(--ink);
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  box-shadow: 1px 1px 0 #000000, 6px 8px 0 rgba(0, 0, 0, 0.25);
+  font-family: Tahoma, 'MS Sans Serif', 'Helvetica Neue', Arial, sans-serif;
+  pointer-events: auto;
+}
+
+.paint__title {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 26px;
+  padding: 0 3px 0 4px;
+  color: var(--light);
+  background: linear-gradient(to right, var(--dark), #b3b4a2);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.paint__brushmark {
+  width: 17px;
+  height: 17px;
+  margin-right: 6px;
+  background: linear-gradient(135deg, #dcdccd 0 45%, var(--dark) 45% 60%, #a4a696 60%);
+  border: 1px solid var(--dark);
+}
+
+.paint__name {
+  flex: 1 1 auto;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.paint__wbtn {
+  position: relative;
+  width: 20px;
+  height: 18px;
+  padding: 0;
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  cursor: pointer;
+}
+
+.paint__wbtn::before,
+.paint__wbtn::after {
+  content: '';
+  position: absolute;
+  background: var(--ink);
+}
+
+.paint__wbtn--min::before {
+  left: 4px;
+  bottom: 3px;
+  width: 7px;
+  height: 2px;
+}
+
+.paint__wbtn--max::before {
+  left: 3px;
+  top: 2px;
+  width: 8px;
+  height: 7px;
+  background: transparent;
+  border: 1px solid var(--ink);
+  border-top-width: 2px;
+}
+
+.paint__wbtn--close::before,
+.paint__wbtn--close::after {
+  left: 50%;
+  top: 50%;
+  width: 9px;
+  height: 1.5px;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.paint__wbtn--close::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.paint__wbtn--min::after,
+.paint__wbtn--max::after {
+  display: none;
+}
+
+.paint__wbtn:active {
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+}
+
+.paint__menubar {
+  display: flex;
+  gap: 2px;
+  padding: 3px 2px 2px;
+  font-size: 13px;
+}
+
+.paint__menu {
+  position: relative;
+}
+
+.paint__menu > button {
+  padding: 2px 8px;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.paint__menu > button:hover,
+.paint__menu > button.is-open {
+  color: var(--light);
+  background: var(--dark);
+}
+
+.paint__drop {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  top: 100%;
+  min-width: 190px;
+  margin: 0;
+  padding: 2px;
+  list-style: none;
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.25);
+}
+
+.paint__drop button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 3px 10px 3px 4px;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.paint__drop button:hover:not(:disabled) {
+  color: var(--light);
+  background: var(--dark);
+}
+
+.paint__drop button:disabled {
+  color: var(--shade);
+  cursor: default;
+}
+
+.paint__tick {
+  display: inline-block;
+  width: 16px;
+}
+
+.paint__work {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.paint__side {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 8px;
+  width: 74px;
+}
+
+.paint__tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.paint__tool,
+.paint__size,
+.paint__colour {
+  padding: 0;
+  color: var(--ink);
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  cursor: pointer;
+}
+
+.paint__tool {
+  display: grid;
+  place-items: center;
+  height: 35px;
+}
+
+.paint__icon {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+.paint__tool.is-pressed,
+.paint__size.is-pressed,
+.paint__colour.is-pressed,
+.paint__tool:active:not(:disabled),
+.paint__size:active {
+  background-color: #bbbcac;
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+}
+
+.paint__tool:disabled {
+  color: var(--shade);
+  cursor: default;
+}
+
+.paint__sizes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  padding: 3px;
+  border: 2px solid;
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+}
+
+.paint__size {
+  display: grid;
+  place-items: center;
+  height: 24px;
+}
+
+.paint__size i {
+  display: block;
+  background: var(--ink);
+}
+
+.paint__sheet {
+  flex: 0 0 auto;
+  padding: 2px;
+  background: #787968;
+  border: 2px solid;
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+}
+
+.paint__canvas {
+  display: block;
+  background: #fbfbf7;
+  image-rendering: pixelated;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.paint__canvas.has-grid {
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+
+.paint__palette {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 3px;
+  border: 2px solid;
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+}
+
+.paint__now {
+  display: grid;
+  place-items: center;
+  flex: 0 0 38px;
+  height: 38px;
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+}
+
+.paint__now i {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--ink);
+}
+
+.paint__colours {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(14, 1fr);
+  gap: 0;
+}
+
+.paint__colour {
+  height: 20px;
+  border-width: 2px;
+}
+
+.paint__status {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.paint__status span {
+  flex: 1 1 0;
+  padding: 3px 6px;
+  white-space: nowrap;
+  border: 1px solid;
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+}
+
+.paint__status span:last-child {
+  flex: 0 0 120px;
+}
+
+.paint.is-folded {
+  width: 300px;
+}
