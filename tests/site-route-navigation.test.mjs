@@ -29,7 +29,7 @@ test('connects the map and custom pages without merging their layouts', () => {
 
 test('keeps the custom page world as the shared second-page house interior', () => {
   assert.match(secondaryLanding, /playfield:\s*createElement\(\s*Fragment,\s*null,\s*createElement\(HouseInteriorWorld/)
-  assert.match(secondaryLanding, /panel:\s*createElement\(CustomSidebarContent,\s*\{\s*onInput:\s*addCharacter\s*\}\)/)
+  assert.match(secondaryLanding, /panel:\s*createElement\(CustomSidebarContent,\s*\{\s*onInput:\s*handleInput\s*\}\)/)
   assert.doesNotMatch(secondaryLanding, /CustomWireframeWorld/)
 })
 

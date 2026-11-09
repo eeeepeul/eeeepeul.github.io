@@ -1,39 +1,34 @@
 'use client'
 
-import { createElement, useEffect, useState } from 'react'
+import { createElement, useEffect, useRef, useState } from 'react'
 import { LOADING_BLOCKS, getFilledBlocks, getLoadingProgress } from '../../lib/loading-progress.mjs'
 
 // The "Loading..." window of the classic Windows look (supplied picture) in the colours of the map's tool bar. It comes up
-// in the middle of the room when a character is put in with the input key, fills its bar while the job runs (the job is
-// the promise it is given: the character being recorded) and closes itself a moment after it is done. "Cancel" (or Esc, or
-// the x) closes it at once; the character stays in the room either way. "Done" is dimmed until the bar is full.
-export function StageLoadingDialog({ job, onClose }) {
+// in the middle of the room when the input key is pressed and fills its bar over a moment. Only when the bar is full is the
+// character put in (onComplete, once); then the window closes itself. "Cancel" (or Esc, or the x) before that takes the input
+// back: nothing is put in (onCancel). After it, they only close the window. "Done" is dimmed until the bar is full.
+export function StageLoadingDialog({ job, onComplete, onCancel }) {
   const [progress, setProgress] = useState(0)
+  const completed = useRef(false)
 
   useEffect(() => {
     if (!job) return undefined
     setProgress(0)
+    completed.current = false
     const startedAt = Date.now()
-    let settled = false
     let closeTimer = null
-    job.promise.then(
-      () => {
-        settled = true
-      },
-      () => {
-        settled = true
-      }
-    )
     const tick = setInterval(() => {
-      const next = getLoadingProgress(Date.now() - startedAt, settled)
+      const next = getLoadingProgress(Date.now() - startedAt, true)
       setProgress(next)
-      if (next >= 1 && !closeTimer) {
+      if (next >= 1 && !completed.current) {
+        completed.current = true
         clearInterval(tick)
-        closeTimer = setTimeout(onClose, 450)
+        onComplete(job)
+        closeTimer = setTimeout(() => onCancel(job), 450)
       }
     }, 50)
     const onKey = (event) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') onCancel(job)
     }
     window.addEventListener('keydown', onKey)
     return () => {
@@ -41,7 +36,7 @@ export function StageLoadingDialog({ job, onClose }) {
       clearTimeout(closeTimer)
       window.removeEventListener('keydown', onKey)
     }
-  }, [job, onClose])
+  }, [job]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!job) return null
   const filled = getFilledBlocks(progress)
@@ -60,7 +55,7 @@ export function StageLoadingDialog({ job, onClose }) {
           type: 'button',
           className: 'stage-loading__x',
           'aria-label': '닫기',
-          onClick: onClose,
+          onClick: () => onCancel(job),
         })
       ),
       createElement('p', { className: 'stage-loading__text' }, 'Loading...'),
@@ -80,8 +75,8 @@ export function StageLoadingDialog({ job, onClose }) {
       createElement(
         'div',
         { className: 'stage-loading__keys' },
-        createElement('button', { type: 'button', className: 'stage-loading__key', disabled: !finished, onClick: onClose }, 'Done'),
-        createElement('button', { type: 'button', className: 'stage-loading__key stage-loading__key--default', onClick: onClose }, 'Cancel')
+        createElement('button', { type: 'button', className: 'stage-loading__key', disabled: !finished, onClick: () => onCancel(job) }, 'Done'),
+        createElement('button', { type: 'button', className: 'stage-loading__key stage-loading__key--default', onClick: () => onCancel(job) }, 'Cancel')
       )
     )
   )

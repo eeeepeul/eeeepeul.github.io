@@ -41,7 +41,8 @@ export function SecondaryLanding({ initialCustomView = false }) {
   const nextCharacterNumber = useRef(7)
   // the "Loading..." window that shows while a character is being put in (see StageLoadingDialog)
   const [loadingJob, setLoadingJob] = useState(null)
-  const closeLoading = useCallback(() => setLoadingJob(null), [])
+  // the window closing is the same whether it was cancelled or has finished; what differs is whether the character was put in first
+  const closeLoading = useCallback((job) => setLoadingJob((current) => (current && job && current.id !== job.id ? current : null)), [])
 
   useEffect(() => {
     setCharacterCustomizations((currentCustomizations) => {
@@ -162,11 +163,14 @@ export function SecondaryLanding({ initialCustomView = false }) {
       })
   }
 
-  // the input key: the character goes into the room and the "Loading..." window shows until it is recorded
+  // the input key: the "Loading..." window comes up first; the character goes into the room when its bar is full, and
+  // "Cancel" before that takes the input back (nothing is put in)
   const handleInput = (customization) => {
-    const promise = addCharacter(customization)
-    setLoadingJob({ id: Date.now(), promise })
+    setLoadingJob({ id: Date.now(), customization })
   }
+  const completeLoading = useCallback((job) => {
+    void addCharacter(job.customization)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return createElement(LandingFrame, {
     stage: true,
@@ -185,7 +189,7 @@ export function SecondaryLanding({ initialCustomView = false }) {
       }),
       // box 4-1 of the stage: the pad is there on both pages, not only on the custom one
       createElement(DrawingPad),
-      createElement(StageLoadingDialog, { job: loadingJob, onClose: closeLoading })
+      createElement(StageLoadingDialog, { job: loadingJob, onComplete: completeLoading, onCancel: closeLoading })
     ),
     // the right bar is the same on both pages (the pad in box 4-1 is too), so nothing disappears between them
     panelLabel: '캐릭터 커스터마이징 사이드바',
