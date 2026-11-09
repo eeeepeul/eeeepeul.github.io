@@ -5785,22 +5785,22 @@ html[data-force-landscape] .stage {
   right: 0;
 }
 
-/* ---- box 2: the calendar, as the classic Windows date picker (supplied picture) in the main screen's colours (beige ground,
-   cream field, brown for what was navy, rosy for the greys); drawn 344 x 636 and made to fit its box of 178 x 329 ---- */
+/* ---- box 2: the calendar, as the classic Windows date picker (supplied picture) in the colours of the map's tool bar (olive-grey
+   ground #979887, pale field #dcdccd, light edge #e8e8da, dark #646653, shade #a4a696, ink #292926); drawn 344 x 636 and made to fit its box of 178 x 329 ---- */
 .second-stage__box--calendar {
   display: block;
   overflow: hidden;
-  background: #d4cdbf;
+  background: #979887;
   border: 0;
 }
 
 .stage-calendar {
-  --face: #d4cdbf;
-  --field: #eae2c4;
-  --light: #f6f1dc;
-  --shade: #967666;
-  --dark: #5e4a42;
-  --ink: #2b211d;
+  --face: #979887;
+  --field: #dcdccd;
+  --light: #e8e8da;
+  --shade: #a4a696;
+  --dark: #646653;
+  --ink: #292926;
   position: absolute;
   left: 0;
   top: 0;
@@ -5863,7 +5863,7 @@ html[data-force-landscape] .stage {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  background: var(--face);
+  background: var(--field);
   border: 3px solid;
   border-color: var(--light) var(--dark) var(--dark) var(--light);
   box-shadow: inset -2px -2px 0 var(--shade);
