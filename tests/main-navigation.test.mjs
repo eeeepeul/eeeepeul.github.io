@@ -36,7 +36,11 @@ test('renders the second page with six NPCs and a character-add control', async 
   // 4-2 holds the shelf of saved drawings, and box 5 its input key, so these two show no number
   assert.match(html, /data-stage-box="4-2"[^>]*><div class="drawing-shelf"/)
   assert.match(html, /data-stage-box="5"[^>]*><button[^>]*class="drawing-shelf-input"/)
-  assert.match(html, /data-stage-box="7"[^>]*><b class="second-stage__number">7<\/b>/)
+  // box 7 is the status bar: the view's zoom, place, camera and matches, and the two zoom keys
+  assert.match(html, /data-stage-box="7"[^>]*><div class="stage-room-status"/)
+  assert.match(html, /stage-room-status__field--zoom[^>]*>100%</)
+  assert.match(html, /aria-label="화면 축소"/)
+  assert.match(html, /aria-label="화면 확대"/)
   assert.match(html, /class="house-interior-world"/)
   assert.match(html, /class="house-interior-tilemap"/)
   // the house is the last key of the tool bar in box 3 (no box round it), not a button of its own in the room's corner
