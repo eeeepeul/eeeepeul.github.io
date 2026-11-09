@@ -13,6 +13,8 @@ import { computePeaks, formatClock } from '../../lib/waveform.mjs'
 // where it is now, the keys (play and pause, stop, the song before, a slider, the song after) and the two readings at the
 // foot (the whole record's length and the song's time). Music stops when the window is closed.
 export const OPEN_EVENT = 'stage:toggle-cd-player'
+// told to the tool bar whenever the window opens or closes, so the music key shows pressed while the window is open
+export const STATE_EVENT = 'stage:cd-player-state'
 
 // While the site is being worked on the sound is kept silent unless NEXT_PUBLIC_PLAY_MUSIC=1 (as in StagePlayer).
 const SILENT = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_PLAY_MUSIC !== '1'
@@ -71,6 +73,10 @@ export function StageCdPlayer() {
   loopRef.current = loop
   trackRef.current = track
   const playable = TRACKS.map((item, index) => (item.src ? index : -1)).filter((index) => index >= 0)
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent(STATE_EVENT, { detail: { open } }))
+  }, [open])
 
   useEffect(() => {
     const toggle = () => setOpen((current) => !current)

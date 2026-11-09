@@ -6115,6 +6115,14 @@ html[data-force-landscape] .stage {
   cursor: pointer;
 }
 
+/* pressed in while its window is open: the edges change places, the face goes a little darker */
+.stage-tools__tool.is-pressed,
+.stage-tools__tool:active {
+  background: #c4c5b3;
+  border-color: #949684 #e3e4d2 #e3e4d2 #949684;
+  box-shadow: inset 4px 4px 0 #7d7f6d;
+}
+
 .stage-tools__tool--one {
   top: 88px;
 }
@@ -6579,14 +6587,14 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
   cursor: default;
 }
 
-/* ---- the CD Player window (supplied picture, the classic Windows player) in the tool bar's colours; it stands in the middle
-   of the room, drawn in stage pixels ---- */
+/* ---- the CD Player window (supplied picture, the classic Windows player) in the tool bar's colours; it stands at the top left
+   of the room, against the tool bar, drawn in stage pixels ---- */
 .cd-player-layer {
   position: absolute;
   inset: 0;
   z-index: 55;
   display: grid;
-  place-items: center;
+  place-items: start;
   pointer-events: none;
 }
 
@@ -6836,21 +6844,66 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
 
 .cd-player__key i.is-back,
 .cd-player__key i.is-next {
-  width: 16px;
-  height: 13px;
-  clip-path: polygon(0 50%, 50% 0, 50% 50%, 100% 0, 100% 100%, 50% 50%, 50% 100%);
+  width: 17px;
+  height: 14px;
+  -webkit-mask: var(--arrows) center / 100% 100% no-repeat;
+  mask: var(--arrows) center / 100% 100% no-repeat;
+  /* two solid arrowheads side by side, pointing left */
+  --arrows: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 14'%3E%3Cpath d='M8 0v14L0 7zM17 0v14L9 7z'/%3E%3C/svg%3E");
 }
 
 .cd-player__key i.is-next {
   transform: scaleX(-1);
 }
 
+/* the slider as in the supplied picture: a pale, dotted track the height of the keys, and a raised block for the thumb */
 .cd-player__slider {
   flex: 1 1 auto;
   min-width: 0;
-  margin: 0 4px;
-  accent-color: var(--dark);
+  height: auto;
+  margin: 0;
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: #dcdccd;
+  background-image: linear-gradient(45deg, #cdcdbe 25%, transparent 25%, transparent 75%, #cdcdbe 75%),
+    linear-gradient(45deg, #cdcdbe 25%, transparent 25%, transparent 75%, #cdcdbe 75%);
+  background-position: 0 0, 1px 1px;
+  background-size: 2px 2px;
+  border: 0;
   cursor: pointer;
+}
+
+.cd-player__slider::-webkit-slider-runnable-track {
+  height: 100%;
+  background: transparent;
+}
+
+.cd-player__slider::-moz-range-track {
+  height: 100%;
+  background: transparent;
+}
+
+.cd-player__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  width: 19px;
+  height: 26px;
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  border-radius: 0;
+}
+
+.cd-player__slider::-moz-range-thumb {
+  box-sizing: border-box;
+  width: 19px;
+  height: 26px;
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  border-radius: 0;
 }
 
 .cd-player__status {

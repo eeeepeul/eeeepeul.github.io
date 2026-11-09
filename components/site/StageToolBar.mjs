@@ -1,4 +1,6 @@
-import { createElement } from 'react'
+'use client'
+
+import { createElement, useEffect, useState } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
 import { brandMarkSvg } from '../../lib/brand-mark.mjs'
 
@@ -41,6 +43,14 @@ const MUSIC = [
 ]
 
 export function StageToolBar({ houseHref = '/', houseLabel = '메인 화면으로 이동' }) {
+  // the music key shows pressed while the CD Player window is open (StageCdPlayer tells it)
+  const [musicOpen, setMusicOpen] = useState(false)
+  useEffect(() => {
+    const onState = (event) => setMusicOpen(Boolean(event.detail && event.detail.open))
+    window.addEventListener('stage:cd-player-state', onState)
+    return () => window.removeEventListener('stage:cd-player-state', onState)
+  }, [])
+
   return createElement(
     'nav',
     { className: 'stage-tools', 'aria-label': '도구' },
@@ -64,7 +74,8 @@ export function StageToolBar({ houseHref = '/', houseLabel = '메인 화면으�
       'button',
       {
         type: 'button',
-        className: 'stage-tools__tool stage-tools__tool--two',
+        className: `stage-tools__tool stage-tools__tool--two${musicOpen ? ' is-pressed' : ''}`,
+        'aria-pressed': musicOpen,
         'aria-label': '음악 플레이어',
         title: '음악 플레이어',
         // the CD Player window (StageCdPlayer) opens in the room, and closes when the key is pressed again
