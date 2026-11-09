@@ -25,7 +25,8 @@ export function LandingFrame({
     showNavigation ? createElement(PageNavigation, { current: navigationCurrent, onRouteSelect }) : null,
     createElement('div', { className: 'landing-space', 'aria-hidden': 'true' }, playfield),
     children,
-    showHouseLink
+    // on the stage the house is the last key of the tool bar (box 3, see StageToolBar), not a button of its own
+    showHouseLink && !stage
       ? createElement(HouseLink, {
           assetSrc: houseAssetSrc,
           href: houseHref,
@@ -40,6 +41,8 @@ export function LandingFrame({
             label: panelLabel,
             footer: sidebarFooter,
             scaleToViewport: scaleSidebarToViewport,
+            // on the stage the right panel stays open: it cannot be folded away
+            fixed: stage,
           },
           panel
         )
@@ -51,6 +54,6 @@ export function LandingFrame({
   return createElement(
     'main',
     { className: `experience-shell landing-shell${stage ? ' second-stage' : ''}` },
-    stage ? createElement(SecondStage, null, content) : content
+    stage ? createElement(SecondStage, { houseHref, houseLabel }, content) : content
   )
 }

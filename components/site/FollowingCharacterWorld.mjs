@@ -19,6 +19,10 @@ import {
 } from '../../lib/house-interior-navigation.mjs'
 
 const LIVING_ROOM_CAMERA_FOCUS = { x: 31, y: 24 }
+// Where the camera looks while no match is being followed: the part of the house picture of the supplied view (the
+// dining room, the bedroom under it and the pond), in map cells. A match that is added still starts in the living room
+// (LIVING_ROOM_CAMERA_FOCUS) and the camera follows it as before.
+export const OVERVIEW_CAMERA_FOCUS = { x: 24, y: 37.4 }
 const CUSTOM_MATCH_CHARACTER_SRC = assetPath('media/match-character.svg')
 const CUSTOM_MATCH_HEAD_SRC = assetPath('media/match-character-head.svg')
 const CUSTOM_SHOE_SRCS = SHOE_IMAGES.map((source) => assetPath(source))
@@ -31,9 +35,11 @@ const DEFAULT_CHARACTER_CELLS = [
   { x: 48, y: 26 },
 ]
 
+// A map may ask for its matches to stand in the middle of their cells (cellCenter: 0.5); the earlier room has them at
+// the corner, as before.
 const getMapPoint = (state, map) => ({
-  x: (state.x / map.width) * 100,
-  y: (state.y / map.height) * 100,
+  x: ((state.x + (map.cellCenter ?? 0)) / map.width) * 100,
+  y: ((state.y + (map.cellCenter ?? 0)) / map.height) * 100,
 })
 
 const applyCamera = (cameraWorld, viewport, target, map) => {
@@ -86,10 +92,12 @@ export function FollowingCharacterWorld({
     let previousTime = performance.now()
 
     const getInitialPosition = (characterId, index) => {
+      // a map may give its own places to start (the house picture does); the earlier room keeps its own
       if (characterId === activeCharacterRef.current) {
-        return navigation.resolveWalkableCell(LIVING_ROOM_CAMERA_FOCUS)
+        return navigation.resolveWalkableCell(map.startCell ?? LIVING_ROOM_CAMERA_FOCUS)
       }
-      return navigation.resolveWalkableCell(DEFAULT_CHARACTER_CELLS[index % DEFAULT_CHARACTER_CELLS.length])
+      const cells = map.spawnCells ?? DEFAULT_CHARACTER_CELLS
+      return navigation.resolveWalkableCell(cells[index % cells.length])
     }
 
     const animate = (currentTime) => {
@@ -106,7 +114,8 @@ export function FollowingCharacterWorld({
           previousState,
           navigation,
           deltaSeconds,
-          previousState.random ?? Math.random
+          previousState.random ?? Math.random,
+          map.walkSpeed
         )
 
         motionStatesRef.current.set(characterId, nextState)
@@ -117,7 +126,7 @@ export function FollowingCharacterWorld({
 
       const activeId = activeCharacterRef.current
       const activeState = activeId ? motionStatesRef.current.get(activeId) : null
-      const cameraTarget = activeState ?? LIVING_ROOM_CAMERA_FOCUS
+      const cameraTarget = activeState ?? map.overviewFocus ?? OVERVIEW_CAMERA_FOCUS
       applyCamera(cameraWorld, viewport, cameraTarget, map)
       cameraWorld.dataset.cameraMode = activeState ? 'following' : 'living-room'
 

@@ -5538,121 +5538,513 @@ html[data-force-landscape] .stage {
   width: min(100dvh, calc(100vw * 2000 / 1126));
 }
 
-/* ---- the second pages on a stage of fixed proportion (2000 x 1125, as the supplied layout) ---- */
-/* On a narrow screen the frame and the stage are not there (the page is as it was); on a wide one the room, the
-   page links, the house button, the drawing pad and the right panel stand in their places on the stage, which
-   is fitted to the window by --stage-scale (see SecondStage). The boxes are the left side, the top bar and the
-   bottom bar, plain for now. */
-.second-stage__frame,
+/* ---- the second pages on a stage of fixed proportion (2000 x 1125, 16:9, as the supplied layout) ---- */
+/* On every screen, wide or narrow, the room, the page links, the house button, the drawing pad and the right panel
+   stand in their places on the stage, which is fitted to the window by --stage-scale (see SecondStage) and always keeps
+   its 16:9 proportion (the rest of the window is left empty). The boxes are the left side, the top bar and the bottom
+   bar, plain for now. */
+.experience-shell.second-stage {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #e4e4e4;
+}
+
+.second-stage__frame {
+  --stage-scale: 0.5;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: block;
+  width: calc(2000px * var(--stage-scale));
+  height: calc(1125px * var(--stage-scale));
+  transform: translate(-50%, -50%);
+  visibility: hidden;
+}
+
+.second-stage__frame[data-ready='true'] {
+  visibility: visible;
+}
+
 .second-stage__canvas {
-  display: contents;
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  width: 2000px;
+  height: 1125px;
+  overflow: hidden;
+  background: #ececec;
+  transform: scale(var(--stage-scale));
+  transform-origin: 0 0;
 }
 
 .second-stage__box {
+  position: absolute;
+  z-index: 2;
+  display: block;
+  box-sizing: border-box;
+  background: #dcdcdc;
+  border: 1px solid #b9b9b9;
+}
+
+.second-stage__box--top-bar,
+.second-stage__box--status-bar {
+  background: #eeeeee;
+}
+
+/* the number of a box, in its middle */
+.second-stage__box {
+  display: grid;
+  place-items: center;
+}
+
+.second-stage__number {
+  color: #7d8383;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* the room: between the left side, the top bar, the right panel and the bottom bar */
+.second-stage .landing-space {
+  position: absolute;
+  left: 178px;
+  top: 24px;
+  z-index: 0;
+  width: 1412px;
+  height: 1058px;
+  min-height: 0;
+}
+
+.second-stage .page-route-nav {
+  position: absolute;
+  left: 244px;
+  top: 38px;
+}
+
+.second-stage .house-link {
+  position: absolute;
+  left: 186px;
+  top: 1002px;
+  z-index: 3;
+  margin: 0;
+}
+
+.second-stage .drawing-pad {
+  /* the drawing pad (custom page) stands in box 4-1, at the box's width: the pad is 221 wide as it is made, the box
+     178 wide, so it is drawn at 178 / 221 of its size, from the top left corner of the box. It is made 444 high (see
+     DrawingPad.mjs), so drawn it is 358 high, as high as the box. */
+  top: 353px;
+  right: auto;
+  bottom: auto;
+  left: 0;
+  width: auto;
+  transform: scale(0.80543);
+  transform-origin: 0 0;
+}
+
+/* the pad lies in the room's layer, which comes after the boxes: the box under it must not be above that layer */
+.second-stage__box--panels-upper {
+  z-index: 0;
+}
+
+/* the number of box 4-1 is not shown while the drawing pad stands in it */
+.second-stage__canvas:has(.drawing-pad) [data-stage-box='4-1'] .second-stage__number {
   display: none;
 }
 
-@media (min-width: 801px) {
-  .experience-shell.second-stage {
-    position: relative;
-    display: block;
-    width: 100%;
-    height: 100dvh;
-    min-height: 0;
-    padding: 0;
-    overflow: hidden;
-    background: #e4e4e4;
-  }
+/* the right panel, the page's own sidebar, at the width of the layout; its content grows with it */
+.second-stage .color-panel.sidebar-panel,
+.second-stage .color-panel.sidebar-panel.is-dismissed,
+.second-stage .color-panel:has(.pixel-custom-sidebar) {
+  position: absolute;
+  top: 24px;
+  right: 0;
+  z-index: 60;
+  box-sizing: border-box;
+  width: 410px;
+  height: 1101px;
+}
 
-  .second-stage__frame {
-    --stage-scale: 0.5;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    display: block;
-    width: calc(2000px * var(--stage-scale));
-    height: calc(1125px * var(--stage-scale));
-    transform: translate(-50%, -50%);
-    visibility: hidden;
-  }
+.second-stage .sidebar-menu-trigger.is-visible {
+  position: absolute;
+  top: 24px;
+  right: 0;
+}
 
-  .second-stage__frame[data-ready='true'] {
-    visibility: visible;
-  }
+/* ---- box 2: the calendar (supplied picture 344 wide, to the end of its last row of days at 636, made to fit its box of 178 x 329) ---- */
+.second-stage__box--calendar {
+  display: block;
+  overflow: hidden;
+  background: #eeeeee;
+  border: 0;
+}
 
-  .second-stage__canvas {
-    position: absolute;
-    left: 0;
-    top: 0;
-    display: block;
-    width: 2000px;
-    height: 1125px;
-    overflow: hidden;
-    background: #ececec;
-    transform: scale(var(--stage-scale));
-    transform-origin: 0 0;
-  }
+.stage-calendar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 344px;
+  height: 636px;
+  background: #eeeeee;
+  transform: scale(0.5174);
+  transform-origin: 0 0;
+}
 
-  .second-stage__box {
-    position: absolute;
-    z-index: 2;
-    display: block;
-    box-sizing: border-box;
-    background: #dcdcdc;
-    border: 1px solid #b9b9b9;
-  }
+.stage-calendar__bar {
+  height: 56px;
+  background: var(--bar) no-repeat left top / 344px 56px, #3a3a3a;
+}
 
-  .second-stage__box--top-bar,
-  .second-stage__box--status-bar {
-    background: #eeeeee;
-  }
+.stage-calendar__days {
+  position: absolute;
+  left: 4px;
+  top: 66px;
+  display: grid;
+  grid-template-columns: repeat(5, 64px);
+  grid-auto-rows: 90px;
+  gap: 6px 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 
-  /* the room: between the left side, the top bar, the right panel and the bottom bar */
-  .second-stage .landing-space {
-    position: absolute;
-    left: 178px;
-    top: 24px;
-    z-index: 0;
-    width: 1412px;
-    height: 1058px;
-    min-height: 0;
-  }
+/* a day: a light square, filled dark from the bottom as far as --fill (0 to 1) */
+.stage-calendar__day {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #aeaeae;
+}
 
-  .second-stage .page-route-nav {
-    position: absolute;
-    left: 244px;
-    top: 38px;
-  }
+.stage-calendar__day::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: calc(var(--fill, 0) * 100%);
+  background: #444444;
+}
 
-  .second-stage .house-link {
-    position: absolute;
-    left: 186px;
-    top: 1002px;
-    z-index: 3;
-    margin: 0;
-  }
+.stage-calendar__number {
+  position: absolute;
+  inset: 0;
+  background: var(--numbers) no-repeat;
+  background-size: 320px 540px;
+  background-position: calc(var(--col) * -64px) calc(var(--row) * -90px);
+}
 
-  .second-stage .drawing-pad {
-    left: 290px;
-    bottom: 59px;
-  }
+/* ---- box 3: the tool bar of the map (supplied picture: the bar is 73 x 296 there, with one more place under the keys for
+   the house, 363 high; made to fit the box's width of 52) ---- */
+.second-stage__box--tools {
+  display: block;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+}
 
-  /* the right panel, the page's own sidebar, at the width of the layout; its content grows with it */
-  .second-stage .color-panel.sidebar-panel,
-  .second-stage .color-panel.sidebar-panel.is-dismissed,
-  .second-stage .color-panel:has(.pixel-custom-sidebar) {
-    position: absolute;
-    top: 24px;
-    right: 0;
-    z-index: 60;
-    box-sizing: border-box;
-    width: 410px;
-    height: 1101px;
-  }
+.stage-tools {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 73px;
+  height: 363px;
+  box-sizing: border-box;
+  background: #858775;
+  box-shadow: inset -4px 0 0 #5d5f4d, inset 0 -4px 0 #5d5f4d;
+  transform: scale(0.71233);
+  transform-origin: 0 0;
+}
 
-  .second-stage .sidebar-menu-trigger.is-visible {
-    position: absolute;
-    top: 24px;
-    right: 0;
-  }
+.stage-tools__head {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 69px;
+  height: 26px;
+  background: #525442;
+  box-shadow: inset 0 -4px 0 #3b3c2a;
+}
+
+/* the fold box: a key with a dash on it */
+.stage-tools__fold {
+  position: absolute;
+  top: 0;
+  left: 43px;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  background: #d4d5c3;
+  border: solid #e3e4d2;
+  border-width: 3px 1px 1px 3px;
+  box-shadow: inset -3px -3px 0 #949684;
+}
+
+.stage-tools__fold i {
+  display: block;
+  width: 16px;
+  height: 4px;
+  background: #525442;
+}
+
+.stage-tools__logo {
+  position: absolute;
+  left: 4px;
+  top: 36px;
+  width: 59px;
+  height: 50px;
+  background: #e3e4d2;
+  -webkit-mask: var(--logo) center / 100% 100% no-repeat;
+  mask: var(--logo) center / 100% 100% no-repeat;
+}
+
+/* the keys: a light face with a light edge above and on the left and a dark one below and on the right */
+.stage-tools__tool {
+  position: absolute;
+  left: 2px;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: 63px;
+  height: 62px;
+  padding: 0;
+  color: #1b1c0a;
+  background: #d4d5c3;
+  border: solid #e3e4d2;
+  border-width: 6px 2px 2px 6px;
+  border-radius: 0;
+  box-shadow: inset -4px -4px 0 #949684;
+  cursor: default;
+}
+
+.stage-tools__tool--one {
+  top: 88px;
+}
+
+.stage-tools__tool--two {
+  top: 155px;
+}
+
+.stage-tools__tool--three {
+  top: 223px;
+}
+
+.stage-tools__icon {
+  display: block;
+  width: 38px;
+  height: 38px;
+}
+
+/* the house: no box, in a place of its own under the keys */
+.stage-tools__house {
+  position: absolute;
+  left: 2px;
+  top: 290px;
+  display: grid;
+  place-items: center;
+  width: 63px;
+  height: 62px;
+}
+
+.stage-tools__house .house-mark {
+  display: block;
+  width: 51px;
+  transform: rotate(90deg);
+  transform-origin: center;
+}
+
+.stage-tools__house .house-mark svg {
+  display: block;
+  width: 51px;
+}
+
+/* ---- the room of the second pages: the house picture as the ground ---- */
+/* The picture (media/house-map.webp, the supplied plan of the house) lies over the drawn room, the whole size of the
+   map, so the matches walk on it as they walked on the room. */
+.house-interior-map-picture {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* As close as the supplied view: the room (1412 wide) shows 588 of the picture's 2000, so the picture is drawn 2.4
+   times its size, 4800 x 3600 (340 of the room's widths). */
+.experience-shell.second-stage .house-interior-camera-viewport {
+  container-type: size;
+}
+
+.experience-shell.second-stage .house-interior-camera-world {
+  width: 339.9433cqi;
+  height: auto;
+  aspect-ratio: 4 / 3;
+}
+
+/* the matches keep the size they had on the screen (the map is now 4800 wide where it was 3983) */
+.experience-shell.second-stage .wandering-character {
+  width: 3.1117%;
+}
+
+.experience-shell.second-stage .wandering-character-entity > .wandering-character {
+  width: 100%;
+}
+
+/* ---- box 6: the house of red particles (StageModel), turning in the box ---- */
+.second-stage__box--small-map {
+  display: block;
+  overflow: hidden;
+}
+
+.stage-model {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- the right panel of the second pages stays open on every screen (no fold button, see ResponsiveSidebar `fixed`) ---- */
+.color-panel.sidebar-panel.is-fixed {
+  pointer-events: auto;
+  opacity: 1;
+  clip-path: none;
+  transform: none;
+}
+
+/* ---- the drawing pad's bar in two halves: input and save ---- */
+.drawing-pad__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+/* ---- box 4-2: the shelf of drawings, strewn at random (StageDrawingShelf) ---- */
+.second-stage__box--panels-lower {
+  display: block;
+  overflow: hidden;
+}
+
+/* ruled cells: black rules (the grid's gap) over an olive ground, as in the supplied picture */
+.drawing-shelf {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: calc((100% - 6px) / 4);
+  gap: 2px;
+  padding: 2px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: #5d5f4d;
+  scrollbar-width: none;
+}
+
+.drawing-shelf::-webkit-scrollbar {
+  display: none;
+}
+
+.drawing-shelf__cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 3px;
+  background: #d4d5c3;
+  border: solid #e3e4d2;
+  border-width: 2px 1px 1px 2px;
+  border-radius: 0;
+  box-shadow: inset -2px -2px 0 #949684;
+}
+
+.drawing-shelf__item {
+  cursor: pointer;
+}
+
+.drawing-shelf__picture {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
+}
+
+.drawing-shelf__item:hover,
+.drawing-shelf__item:focus-visible {
+  background: #e3e4d2;
+  outline: none;
+}
+
+.drawing-shelf__item.is-selected {
+  background: #858775;
+  border-color: #525442;
+  box-shadow: inset 0 0 0 2px #1b1c0a;
+}
+
+/* ---- box 5: the shelf's input key ---- */
+.second-stage__box--satellite {
+  display: block;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.drawing-shelf-input {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  color: #e3e4d2;
+  background: #1b1c0a;
+  border: 1px solid #1b1c0a;
+  border-radius: 0;
+  font: 10px/12px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.drawing-shelf-input:disabled {
+  color: #9a9a9a;
+  background: #cfcfcf;
+  border-color: #b9b9b9;
+  cursor: default;
+}
+
+.drawing-shelf-input.is-sent {
+  background: #4aa3b4;
+  border-color: #4aa3b4;
+}
+
+/* ---- over the drawing board the pointer is a paintbrush (lib/brush-cursor.mjs), not the compass mark ---- */
+.compass-cursor-active .drawing-pad__canvas {
+  cursor: var(--brush-cursor, crosshair) !important;
+}
+
+body:has(.drawing-pad__canvas:hover) .compass-cursor-mark {
+  opacity: 0;
 }

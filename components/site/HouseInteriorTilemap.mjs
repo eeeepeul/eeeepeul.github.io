@@ -471,6 +471,19 @@ export function HouseInteriorTilemap({ map = HOUSE_INTERIOR_MAP }) {
       draggable: false,
       'aria-hidden': 'true',
     }),
+    // The picture of the house seen from above (the supplied plan, 2000 x 1500, 4:3 as the map is), laid over the
+    // drawn room as the background the matches walk on. Only the picture changes: the map under it (where the
+    // matches may walk) is the same as before.
+    createElement('img', {
+      className: 'house-interior-map-picture',
+      src: assetPath('media/house-map.webp'),
+      width: 2000,
+      height: 1500,
+      alt: '',
+      decoding: 'async',
+      draggable: false,
+      'aria-hidden': 'true',
+    }),
     layers
   )
 }

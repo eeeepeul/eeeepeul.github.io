@@ -173,7 +173,8 @@ export function SecondaryLanding({ initialCustomView = false }) {
         characterCustomizations,
         characterAccessories,
       }),
-      isCustomView ? createElement(DrawingPad) : null
+      // box 4-1 of the stage: the pad is there on both pages, not only on the custom one
+      createElement(DrawingPad)
     ),
     panelLabel: isCustomView ? '캐릭터 커스터마이징 사이드바' : '캐릭터 선택 패널',
     panel: isCustomView

@@ -21,6 +21,8 @@ export function ResponsiveSidebar({
   label = '사이드 메뉴',
   footer = null,
   scaleToViewport = false,
+  // fixed: always open, with no button to fold it away or bring it back (the second pages)
+  fixed = false,
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
@@ -30,7 +32,7 @@ export function ResponsiveSidebar({
   const panelId = useId()
   const panelClassName = `color-panel sidebar-panel${className ? ` ${className}` : ''}${
     isOpen ? ' is-open' : ''
-  }${isDismissed ? ' is-dismissed' : ''}`
+  }${isDismissed ? ' is-dismissed' : ''}${fixed ? ' is-fixed' : ''}`
 
   const changeOpenState = (action) => {
     setIsOpen((currentState) => nextSidebarOpenState(currentState, action))
@@ -73,7 +75,7 @@ export function ResponsiveSidebar({
   return createElement(
     Fragment,
     null,
-    createElement(
+    fixed ? null : createElement(
       'button',
       {
         type: 'button',
@@ -90,7 +92,7 @@ export function ResponsiveSidebar({
         draggable: false,
       })
     ),
-    createElement('button', {
+    fixed ? null : createElement('button', {
       type: 'button',
       className: `sidebar-backdrop${isOpen ? ' is-open' : ''}`,
       'aria-hidden': !isOpen,
@@ -125,7 +127,7 @@ export function ResponsiveSidebar({
           alt: 'M:MH',
           draggable: false,
         }),
-        createElement(
+        fixed ? null : createElement(
           'button',
           {
             type: 'button',

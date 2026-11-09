@@ -2,14 +2,32 @@
 
 import { createElement, useEffect, useRef, useState } from 'react'
 import { addAccessory } from '../../lib/character-accessories.mjs'
+import { brushCursor } from '../../lib/brush-cursor.mjs'
+import { saveDrawing } from '../../lib/drawing-gallery.mjs'
+import { getSharedDrawingStore } from '../../lib/supabase-browser.mjs'
 
 // A small drawing board for the custom page: a low-resolution canvas shown with hard pixels,
 // a few colours from the room's own palette, an eraser and a clear button.
-const COLUMNS = 84
-const ROWS = 60
+// The board is as wide as the pad (the tools under it are 203 wide, the board 201 inside its line), so there is no
+// empty space to its right: 100 columns of about 2 pixels.
+const COLUMNS = 100
+// The board is tall: on the second page the pad stands in box 4-1, which is 358 high at the width of 178 the pad is
+// drawn at (221 wide as it is made: 178 / 221 of its size), so the pad is made 444 high, which is 188 rows of drawing
+// (2 pixels each) with the tools and the input bar under them.
+const ROWS = 188
 const SCALE = 2
+export const DRAWING_BOARD = { columns: COLUMNS, rows: ROWS, scale: SCALE }
 const COLOURS = ['#1c1c1c', '#4aa3b4', '#d9392b', '#f2c94c', '#ffffff']
 const PAPER = '#fbfbf7'
+
+// How wide a drawing of `columns` squares is, as a fraction of the match in the sidebar's preview, when it is to look as
+// large there as on the board. Without the match on the screen, the usual size (undefined).
+export function drawnWidthOnMatch(canvas, columns, match = document.querySelector('.pixel-sidebar-character')) {
+  const board = canvas?.getBoundingClientRect()
+  const body = match?.getBoundingClientRect()
+  if (!board?.width || !body?.width) return undefined
+  return (columns * (board.width / COLUMNS)) / body.width
+}
 
 export function DrawingPad() {
   const canvasRef = useRef(null)
@@ -18,6 +36,7 @@ export function DrawingPad() {
   const [colour, setColour] = useState(0)
   const [brush, setBrush] = useState(1)
   const [sent, setSent] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   const cellAt = (event) => {
     const box = canvasRef.current.getBoundingClientRect()
@@ -91,8 +110,9 @@ export function DrawingPad() {
     canvasRef.current.getContext('2d').clearRect(0, 0, COLUMNS, ROWS)
   }
 
-  // Put what is drawn on the match: cropped to the drawing, with the paper left transparent.
-  const putOnMatch = () => {
+  // What is drawn, cropped to the drawing, with the paper left transparent: its picture, its proportion and its width
+  // in squares. Nothing when nothing is drawn yet.
+  const cutDrawing = () => {
     const canvas = canvasRef.current
     const data = canvas.getContext('2d').getImageData(0, 0, COLUMNS, ROWS)
     let minX = COLUMNS
@@ -109,16 +129,33 @@ export function DrawingPad() {
         }
       }
     }
-    if (maxX < 0) return // nothing drawn yet
+    if (maxX < 0) return null // nothing drawn yet
     const width = maxX - minX + 1
     const height = maxY - minY + 1
     const cut = document.createElement('canvas')
     cut.width = width
     cut.height = height
     cut.getContext('2d').drawImage(canvas, minX, minY, width, height, 0, 0, width, height)
-    addAccessory(cut.toDataURL('image/png'), width / height)
+    return { src: cut.toDataURL('image/png'), aspect: width / height, columns: width }
+  }
+
+  // Put what is drawn on the match. It shows on the match in the sidebar as large as it was drawn on the pad (each square
+  // of the board as big there as here), so a drawing is not shrunk out of sight; it can still be moved and resized there.
+  const putOnMatch = () => {
+    const drawing = cutDrawing()
+    if (!drawing) return
+    addAccessory(drawing.src, drawing.aspect, drawnWidthOnMatch(canvasRef.current, drawing.columns))
     setSent(true)
     window.setTimeout(() => setSent(false), 1400)
+  }
+
+  // Save what is drawn on the shelf of box 4-2, where everyone can choose it.
+  const save = () => {
+    const drawing = cutDrawing()
+    if (!drawing) return
+    saveDrawing(drawing.src, drawing.aspect, getSharedDrawingStore())
+    setSaved(true)
+    window.setTimeout(() => setSaved(false), 1400)
   }
 
   return createElement(
@@ -129,7 +166,12 @@ export function DrawingPad() {
       className: 'drawing-pad__canvas',
       width: COLUMNS,
       height: ROWS,
-      style: { width: COLUMNS * SCALE, height: ROWS * SCALE },
+      // over the board the pointer is a paintbrush in the colour chosen (an eraser when the eraser is chosen)
+      style: {
+        width: '100%',
+        height: ROWS * SCALE,
+        '--brush-cursor': brushCursor(COLOURS[colour], { eraser: colour === COLOURS.length - 1 }),
+      },
       onPointerDown: onDown,
       onPointerMove: onMove,
       onPointerUp: onUp,
@@ -163,10 +205,20 @@ export function DrawingPad() {
       ),
       createElement('button', { type: 'button', className: 'drawing-pad__clear', 'aria-label': '모두 지우기', onClick: clear }, 'clear')
     ),
+    // the bar under the tools, in two halves: input (on the match) and save (on the shelf of box 4-2)
     createElement(
-      'button',
-      { type: 'button', className: `drawing-pad__input${sent ? ' is-sent' : ''}`, 'aria-label': '그린 그림을 성냥에 입히기', onClick: putOnMatch },
-      sent ? 'on the match' : 'input'
+      'div',
+      { className: 'drawing-pad__actions' },
+      createElement(
+        'button',
+        { type: 'button', className: `drawing-pad__input${sent ? ' is-sent' : ''}`, 'aria-label': '그린 그림을 성냥에 입히기', onClick: putOnMatch },
+        sent ? 'on the match' : 'input'
+      ),
+      createElement(
+        'button',
+        { type: 'button', className: `drawing-pad__input drawing-pad__save${saved ? ' is-sent' : ''}`, 'aria-label': '그린 그림을 아래 칸에 저장하기', onClick: save },
+        saved ? 'saved' : 'save'
+      )
     )
   )
 }
