@@ -27,7 +27,7 @@ export const SECOND_STAGE_BOXES = [
   ['panels-lower', 0, 711, 178, 179, '4-2'],
   ['satellite', 0, 890, 178, 27, '5'],
   ['small-map', 0, 917, 178, 208, '6'],
-  ['status-bar', 178, 1082, 1412, 43, '7'],
+  ['status-bar', 178, 1100, 1412, 25, '7'],
 ]
 
 export function SecondStage({ children, houseHref, houseLabel }) {
