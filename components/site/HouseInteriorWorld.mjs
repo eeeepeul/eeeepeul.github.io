@@ -2,6 +2,7 @@
 
 import { createElement, useRef } from 'react'
 import { HOUSE_INTERIOR_MAP } from '../../lib/house-interior-map.mjs'
+import { HOUSE_MAP_WALK } from '../../lib/house-map-walk.mjs'
 import { FollowingCharacterWorld } from './FollowingCharacterWorld.mjs'
 import { HouseInteriorTilemap } from './HouseInteriorTilemap.mjs'
 
@@ -16,6 +17,8 @@ export function HouseInteriorWorld({
   characterCustomizations = {},
   characterAccessories = {},
   map = HOUSE_INTERIOR_MAP,
+  // the floor the matches walk on: the walls, doors and furniture of the house picture (lib/house-map-walk.mjs)
+  walkMap = HOUSE_MAP_WALK,
 }) {
   const viewportRef = useRef(null)
   const cameraWorldRef = useRef(null)
@@ -36,7 +39,7 @@ export function HouseInteriorWorld({
           ref: cameraWorldRef,
           className: 'house-interior-camera-world',
           'data-camera-mode': activeCharacterId ? 'following' : 'living-room',
-          'data-camera-focus': '31:24',
+          'data-camera-focus': '24:37.4',
         },
         createElement(HouseInteriorTilemap, { map }),
         createElement(
@@ -47,7 +50,7 @@ export function HouseInteriorWorld({
             characterIds,
             characterCustomizations,
             characterAccessories,
-            map,
+            map: walkMap,
             cameraWorldRef,
             viewportRef,
           })

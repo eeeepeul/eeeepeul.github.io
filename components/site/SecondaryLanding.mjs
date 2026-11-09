@@ -159,6 +159,7 @@ export function SecondaryLanding({ initialCustomView = false }) {
   }
 
   return createElement(LandingFrame, {
+    stage: true,
     houseHref: assetPath(''),
     houseLabel: '메인 화면으로 이동',
     navigationCurrent: isCustomView ? 'custom' : '',
@@ -172,23 +173,11 @@ export function SecondaryLanding({ initialCustomView = false }) {
         characterCustomizations,
         characterAccessories,
       }),
-      isCustomView ? createElement(DrawingPad) : null
+      // box 4-1 of the stage: the pad is there on both pages, not only on the custom one
+      createElement(DrawingPad)
     ),
-    panelLabel: isCustomView ? '캐릭터 커스터마이징 사이드바' : '캐릭터 선택 패널',
-    panel: isCustomView
-      ? createElement(CustomSidebarContent, { onInput: addCharacter })
-      : createElement(
-          'button',
-          {
-            type: 'button',
-            className: 'character-spawn-button',
-            'aria-label': '새 캐릭터 추가',
-            onClick: addCharacter,
-          },
-          createElement('span', {
-            className: 'character-spawn-icon',
-            'aria-hidden': 'true',
-          })
-        ),
+    // the right bar is the same on both pages (the pad in box 4-1 is too), so nothing disappears between them
+    panelLabel: '캐릭터 커스터마이징 사이드바',
+    panel: createElement(CustomSidebarContent, { onInput: addCharacter }),
   })
 }

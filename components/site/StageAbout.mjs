@@ -2,6 +2,7 @@
 
 import { createElement, useEffect, useRef, useState } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
+import { FIRST_TRACK } from '../../lib/tracks.mjs'
 
 // Cell 3: "Description of Epeul's Data". A cover picture, a tree of folders that open and close
 // (a box with a dash opens onto its children, a box with a plus is closed), and the text below.
@@ -28,7 +29,6 @@ const SONGS = {
 // Each song has one "explain" under it. The first song's is out when the page opens; the others come out when
 // their song is pressed. Only one song is open at a time, so the tree always fits its box.
 const SONG_IDS = ['a', 'b', 'c', 'd']
-const FIRST_OPEN = { a: true, b: false, c: false, d: false }
 
 const TREE = {
   id: 'epeul',
@@ -51,6 +51,10 @@ const TREE = {
     },
   ],
 }
+
+// The page opens on the song the player starts with (FIRST_TRACK in lib/tracks.mjs).
+const OPENING = TREE.kids[0].kids[FIRST_TRACK] || TREE.kids[0].kids[0]
+const FIRST_OPEN = Object.fromEntries(SONG_IDS.map((id) => [id, id === OPENING.id]))
 
 // The second face ("2면") of the cell, the one a swipe to the left turns up.
 const NOTES = {
@@ -339,11 +343,11 @@ function TreeNode({ node, depth, last, open, selected, onToggle, onSelect }) {
 
 export function StageAbout() {
   const [open, setOpen] = useState(FIRST_OPEN)
-  // the page opens on the first song, with its explain selected (as for every song the player plays)
-  const [selected, setSelected] = useState('a1')
-  const [selectedLabel, setSelectedLabel] = useState('9+1')
+  // the page opens on the opening song, with its explain selected (as for every song the player plays)
+  const [selected, setSelected] = useState(OPENING.kids[0].id)
+  const [selectedLabel, setSelectedLabel] = useState(OPENING.label)
   // which song's note shows under the tree
-  const [song, setSong] = useState('9+1')
+  const [song, setSong] = useState(OPENING.song)
   const [typed, setTyped] = useState(0)
   const [noteRun, setNoteRun] = useState(0)
   // true while the second face's text is being typed out
@@ -355,7 +359,7 @@ export function StageAbout() {
   // The song playing in the player (cell 12) is the song the tree is on: its "explain" is selected, its folder
   // is the one that is open, and its note is the one that shows. `following` holds the song the tree is on now,
   // so a song chosen again (or the one the page opened on) does not set the typing off once more.
-  const following = useRef('9+1')
+  const following = useRef(OPENING.song)
   useEffect(() => {
     const folders = TREE.kids[0].kids
     const onTrack = (event) => {

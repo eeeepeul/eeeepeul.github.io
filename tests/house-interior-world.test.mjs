@@ -17,7 +17,8 @@ test('keeps tilemap and characters inside one camera world focused on living roo
     html,
     /class="house-interior-camera-world"[\s\S]*class="house-interior-tilemap"[\s\S]*class="house-interior-character-layer"/
   )
-  assert.match(html, /data-camera-focus="31:24"/)
+  // the camera looks at the dining room, the bedroom and the pond of the house picture (the supplied view)
+  assert.match(html, /data-camera-focus="24:37\.4"/)
 })
 
 test('keeps the server-rendered pixel poster and hydration canvas behind characters', () => {

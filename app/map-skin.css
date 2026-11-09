@@ -1849,6 +1849,13 @@ body[data-map-info="open"] .figma-deep-zoom-legend {
   top: 7%;
   width: 10.2%;
   height: 86%;
+  cursor: pointer;
+}
+
+.stage-house__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
 

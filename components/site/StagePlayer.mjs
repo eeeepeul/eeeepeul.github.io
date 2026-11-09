@@ -2,7 +2,7 @@
 
 import { createElement, useEffect, useRef, useState } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
-import { ARTIST, TRACKS } from '../../lib/tracks.mjs'
+import { ARTIST, FIRST_TRACK, TRACKS } from '../../lib/tracks.mjs'
 import { getVolume, setAnalyser, subscribeVolume } from '../../lib/stage-audio.mjs'
 
 // Cell 12: the player. An artist box, a track box with an arrow that opens the four songs of
@@ -118,11 +118,11 @@ export function StagePlayer() {
     }
   }, [])
 
-  // The first song starts on its own. Browsers keep sound locked until the visitor touches the
+  // The song chosen for the opening (FIRST_TRACK, the 2nd) starts on its own. Browsers keep sound locked until the visitor touches the
   // page, so if the start is blocked it waits and begins on the very first press or key.
   useEffect(() => {
     if (!playable.length) return undefined
-    load(playable[0])
+    load(playable.includes(FIRST_TRACK) ? FIRST_TRACK : playable[0])
     const events = ['pointerdown', 'keydown', 'touchstart']
     const release = () => events.forEach((name) => window.removeEventListener(name, unlock, true))
     function unlock(event) {
