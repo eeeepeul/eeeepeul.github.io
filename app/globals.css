@@ -6187,12 +6187,12 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
 }
 
 /* ---- box 7: the status bar. Drawn in stage pixels (the stage is scaled as a whole). It is the home page's visitor record
-   head: the same brown bar with its white/black one-pixel bevel, brown chips with the same bevel, the cream face at 11.6px
+   head: the map toolbar's colours (olive-grey bar #979887, pale chips #dcdccd, light edge #e8e8da, dark edge #646653/#a4a696, dark ink), the face at 11.6px
    (0.58cqw of a 2000-wide stage), chips inset 8.3% of the bar from its top and bottom and 2px from its left and right, and
    the head's chip paddings (14px / 12.4px / 9px at this width). ---- */
 .second-stage__box--status-bar {
   display: block;
-  background: #5e4a42;
+  background: #979887;
   border: 0;
 }
 
@@ -6204,10 +6204,10 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
   width: 100%;
   height: 100%;
   padding: 2px;
-  color: #eae2c4;
+  color: #292926;
   font: 400 11.6px/1 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  background: #5e4a42;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.7), inset -1px -1px 0 rgba(0, 0, 0, 0.3);
+  background: #979887;
+  box-shadow: inset 1px 1px 0 #e8e8da, inset -1px -1px 0 #646653;
 }
 
 .stage-room-status__field {
@@ -6216,8 +6216,8 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
   padding: 0 14px;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
-  background: #5e4a42;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.7), inset -1px -1px 0 rgba(0, 0, 0, 0.3);
+  background: #dcdccd;
+  box-shadow: inset 1px 1px 0 #e8e8da, inset -1px -1px 0 #a4a696;
 }
 
 .stage-room-status__field--zoom {
@@ -6244,30 +6244,30 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
 .stage-room-status__key {
   width: 36px;
   padding: 0 9px;
-  color: #eae2c4;
-  background: #5e4a42;
+  color: #292926;
+  background: #dcdccd;
   border: 0;
   font: inherit;
   font-size: 16px;
   cursor: pointer;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.7), inset -1px -1px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: inset 1px 1px 0 #e8e8da, inset -1px -1px 0 #a4a696;
 }
 
 .stage-room-status__key:hover:not(:disabled) {
-  background: #6b564d;
+  background: #e8e8da;
 }
 
 .stage-room-status__key:active:not(:disabled) {
-  background: #967666;
-  box-shadow: inset -1px -1px 0 rgba(255, 255, 255, 0.7), inset 1px 1px 0 rgba(0, 0, 0, 0.3);
+  background: #c9cab9;
+  box-shadow: inset 1px 1px 0 #a4a696, inset -1px -1px 0 #e8e8da;
 }
 
 .stage-room-status__key:disabled {
-  color: #967666;
+  color: #b9bba9;
   cursor: default;
 }
 
 .stage-room-status__key:focus-visible {
-  outline: 1px solid #eae2c4;
+  outline: 1px solid #292926;
   outline-offset: -3px;
 }
