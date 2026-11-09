@@ -231,3 +231,38 @@
   font-family: 'Nanum Gothic Coding', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-weight: 400;
 }
+
+/* the visitor record's list of days (MON, TUE ...) made as the calendar's list of months: a cream field with a raised
+   edge (light on the top and left, dark on the right and bottom), the names at the left in dark ink, and the chosen
+   one, or the one under the pointer, a dark brown bar with cream letters */
+.visitors-menu {
+  padding: 2px;
+  background: #eae2c4;
+  border: max(2px, 0.15cqw) solid;
+  border-color: #f6f1dc #5e4a42 #5e4a42 #f6f1dc;
+  box-shadow: inset -2px -2px 0 #967666, 0 0.5cqw 1.6cqw rgba(0, 0, 0, 0.25);
+}
+
+.visitors-menu::before {
+  display: none;
+}
+
+.visitors-menu li + li {
+  margin-top: 0;
+}
+
+.visitors-menu button,
+.visitors-menu button:active {
+  padding: 0.26cqw 0.7cqw;
+  text-align: left;
+  color: #2b211d;
+  background: transparent;
+  box-shadow: none;
+}
+
+.visitors-menu button:hover,
+.visitors-menu li[aria-selected='true'] button {
+  color: #eae2c4;
+  background: #5e4a42;
+  box-shadow: none;
+}
