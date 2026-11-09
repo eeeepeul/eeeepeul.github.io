@@ -290,35 +290,37 @@ export function DrawingPad() {
   return createElement(
     'section',
     { className: 'drawing-pad', 'aria-label': '그림판', ref: padRef },
-    // The board sits in a box of its own (as wide as the pad, ROWS * SCALE high) and the canvas fills the box without taking
-    // part in its size: the board may be made wider by the Paint window (more squares); the pad then shows only its first part, and
-    // that must not make the pad wider.
+    // The board sits in a box of its own, and the box in a frame as wide as the pad. The Paint window may have made the board
+    // wider (more squares): the pad then shows the first COLUMNS squares at their own size, with a bar under them (as in the
+    // classic Windows windows) to move to the part that is out of sight. The board never makes the pad wider: the frame is as wide
+    // as the pad's tools (203 is what the pad has always been wide inside: 221 with its padding and line).
     createElement(
       'div',
-      { className: 'drawing-pad__board', // 203 is what the pad has always been wide inside (221 with its padding and line, see .second-stage .drawing-pad)
-      style: { position: 'relative', width: '100%', minWidth: 203, height: ROWS * SCALE + 2, overflow: 'hidden' } },
-      createElement('canvas', {
-        ref: canvasRef,
-        className: 'drawing-pad__canvas',
-        width: COLUMNS,
-        height: ROWS,
-        // over the board the pointer is a paintbrush in the colour chosen (an eraser when the eraser is chosen)
-        style: {
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          // the pad shows the first COLUMNS squares of the board, at their own size; when the Paint window has made the board wider
-          // the rest lies beyond the pad's edge (it is not squeezed in)
-          width: `${(widthNow() / COLUMNS) * 100}%`,
-          height: '100%',
-          boxSizing: 'border-box',
-          '--brush-cursor': brushCursor(colour),
-        },
-        onPointerDown: onDown,
-        onPointerMove: onMove,
-        onPointerUp: onUp,
-        onPointerCancel: onUp,
-      })
+      { className: 'drawing-pad__scroll', style: { width: '100%', minWidth: 203 } },
+      createElement(
+        'div',
+        { className: 'drawing-pad__board', style: { position: 'relative', width: `${(widthNow() / COLUMNS) * 100}%`, height: ROWS * SCALE + 2 } },
+        createElement('canvas', {
+          ref: canvasRef,
+          className: 'drawing-pad__canvas',
+          width: COLUMNS,
+          height: ROWS,
+          // over the board the pointer is a paintbrush in the colour chosen (an eraser when the eraser is chosen)
+          style: {
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: '100%',
+            height: '100%',
+            boxSizing: 'border-box',
+            '--brush-cursor': brushCursor(colour),
+          },
+          onPointerDown: onDown,
+          onPointerMove: onMove,
+          onPointerUp: onUp,
+          onPointerCancel: onUp,
+        })
+      )
     ),
     // the key that opens the large Paint window (StagePaint), at the board's upper right
     createElement('button', {

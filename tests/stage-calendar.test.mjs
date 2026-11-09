@@ -95,7 +95,7 @@ test('the drawing board is as wide as the pad: no empty space to its right', asy
   const source = readFileSync(new URL('../components/site/DrawingPad.mjs', import.meta.url), 'utf8')
   // the board takes the whole width of the pad (its tools are 203 wide) and about 2 pixels for each column
   // (the board sits in a box of its own, so a board made wider by the Paint window cannot make the pad wider)
-  assert.match(source, /className: 'drawing-pad__board'[^}]*width: '100%'[^}]*minWidth: 203[^}]*height: ROWS \* SCALE/)
+  assert.match(source, /className: 'drawing-pad__scroll'[^}]*width: '100%'[^}]*minWidth: 203[\s\S]*className: 'drawing-pad__board'[\s\S]*height: ROWS \* SCALE/)
   const { DRAWING_BOARD } = await import('../components/site/DrawingPad.mjs')
   assert.ok(Math.abs(DRAWING_BOARD.columns * DRAWING_BOARD.scale + 2 - 203) <= 2)
 })
