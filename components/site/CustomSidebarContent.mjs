@@ -27,6 +27,7 @@ const SPOTS = [
 ]
 
 const CUSTOM_PAGE_SIZE = 4
+const SWATCH_GAP = 3 // px; the same as the gap of .pixel-custom-swatch-track
 const MATCH_CHARACTER_SRC = assetPath('media/match-character.svg')
 const MATCH_CHARACTER_HEAD_SRC = assetPath('media/match-character-head.svg')
 const MATCH_CHARACTER_HEAD_AVATAR_SRC = assetPath('media/match-character-head-avatar.svg')
@@ -130,10 +131,10 @@ export function getCustomRowLayout(itemCount, page) {
   const safeItemCount = Math.max(0, Number(itemCount) || 0)
   const visibleItemCount = Math.min(CUSTOM_PAGE_SIZE, safeItemCount)
   const firstItemIndex = getCustomWindowStart(safeItemCount, page)
-  const gapWidth = Math.max(0, visibleItemCount - 1) * 9
+  const gapWidth = Math.max(0, visibleItemCount - 1) * SWATCH_GAP
   const trackPercent = visibleItemCount ? (firstItemIndex / visibleItemCount) * 100 : 0
   const trackGapOffset = visibleItemCount
-    ? firstItemIndex * 9 - (firstItemIndex / visibleItemCount) * gapWidth
+    ? firstItemIndex * SWATCH_GAP - (firstItemIndex / visibleItemCount) * gapWidth
     : 0
   const trackOffset = firstItemIndex
     ? `calc(-${trackPercent}% - ${trackGapOffset}px)`

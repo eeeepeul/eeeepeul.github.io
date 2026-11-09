@@ -15,7 +15,7 @@
   width: 287px;
   height: calc(100% / var(--k));
   gap: 0;
-  padding: 0 16px 13px;
+  padding: 0 5px 5px;
   box-sizing: border-box;
   color: var(--ink);
   background: var(--ground);
@@ -38,12 +38,12 @@
 
 /* the mark at the top, on the right */
 .pixel-custom-sidebar .pixel-sidebar-logo {
-  flex: 0 0 73px;
-  height: 73px;
+  flex: 0 0 44px;
+  height: 44px;
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
-  padding-top: 27px;
+  padding-top: 6px;
   box-sizing: border-box;
 }
 
@@ -56,11 +56,11 @@
 
 /* the box that holds the question and the character */
 .pixel-custom-sidebar .pixel-sidebar-preview {
-  flex: 0 0 337px;
-  height: 337px;
-  padding: 12px;
-  grid-template-rows: 32px minmax(0, 1fr);
-  gap: 10.6px;
+  flex: 0 0 310px;
+  height: 310px;
+  padding: 4px;
+  grid-template-rows: 28px minmax(0, 1fr);
+  gap: 3px;
   background: var(--ground);
   border: 1px solid var(--dash);
   box-shadow: none;
@@ -69,7 +69,7 @@
 
 .pixel-custom-sidebar .pixel-sidebar-question {
   width: auto;
-  height: 32px;
+  height: 28px;
   justify-self: stretch;
   padding: 0 6px 0 12px;
   color: #5b5c49;
@@ -136,8 +136,8 @@
 
 /* the groups: a dashed grey bar for the title, the choices under it */
 .pixel-custom-sidebar .pixel-sidebar-custom-list {
-  margin-top: 10px;
-  gap: 10px;
+  margin-top: 3px;
+  gap: 3px;
   align-content: start;
   grid-auto-rows: max-content;
   scrollbar-width: none; /* it still scrolls; no bar is drawn, as in the picture */
@@ -145,13 +145,13 @@
 
 .pixel-custom-sidebar .pixel-custom-row {
   min-height: 0;
-  gap: 8px;
+  gap: 3px;
 }
 
 .pixel-custom-sidebar .pixel-custom-row-header {
   position: relative;
-  height: 21px;
-  padding: 0 4px 0 6px;
+  height: 19px;
+  padding: 0 3px 0 5px;
   color: var(--ink);
   background: var(--bar);
   border: 1px solid var(--dash);
@@ -216,11 +216,11 @@
 }
 
 .pixel-custom-sidebar .pixel-custom-swatch-track {
-  gap: 9px;
+  gap: 3px;
 }
 
 .pixel-custom-sidebar .pixel-custom-swatch {
-  height: 57px;
+  height: 66px;
   background: var(--box);
   border: 1px solid var(--edge);
   box-shadow: none;
@@ -249,9 +249,9 @@
 
 /* the input bar, dark red */
 .pixel-custom-sidebar .pixel-sidebar-input {
-  flex: 0 0 34px;
-  height: 34px;
-  margin-top: 8px;
+  flex: 0 0 30px;
+  height: 30px;
+  margin-top: 3px;
   color: #fff;
   background: var(--red);
   box-shadow: none;

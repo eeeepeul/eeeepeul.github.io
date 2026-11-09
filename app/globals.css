@@ -4993,7 +4993,7 @@ button:focus-visible,
 
 .pixel-custom-swatch-track {
   display: flex;
-  gap: 9px;
+  gap: 3px;
   transition: transform 280ms cubic-bezier(0.22, 0.61, 0.36, 1);
   will-change: transform;
 }

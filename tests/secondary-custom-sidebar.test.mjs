@@ -144,8 +144,8 @@ test('keeps four swatches visible when paging the five flame shapes', () => {
   assert.deepEqual(getCustomRowLayout(5, 1), {
     firstItemIndex: 1,
     trackWidth: '100%',
-    trackOffset: 'calc(-25% - 2.25px)',
-    swatchBasis: 'calc((100% - 27px) / 4)',
+    trackOffset: 'calc(-25% - 0.75px)',
+    swatchBasis: 'calc((100% - 9px) / 4)',
   })
 })
 
@@ -153,8 +153,8 @@ test('pages six expressions by one full card-and-gap step per hidden card', () =
   assert.deepEqual(getCustomRowLayout(6, 1), {
     firstItemIndex: 2,
     trackWidth: '100%',
-    trackOffset: 'calc(-50% - 4.5px)',
-    swatchBasis: 'calc((100% - 27px) / 4)',
+    trackOffset: 'calc(-50% - 1.5px)',
+    swatchBasis: 'calc((100% - 9px) / 4)',
   })
 })
 
