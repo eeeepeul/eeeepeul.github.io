@@ -1,13 +1,11 @@
 import { createElement } from 'react'
-import { assetPath } from '../../lib/asset-path.mjs'
 import { CALENDAR_DAYS, SAMPLE_VISITORS, getDayFills } from '../../lib/calendar-visitors.mjs'
 
-// Box 2 of the second pages: the calendar of the supplied pictures (a dark bar on top with the year and the month, then
-// the days in five columns). Each day's square is filled dark from the bottom as far as that day's visitors reach
-// (lib/calendar-visitors.mjs). It is drawn 344 x 718 as the pictures are and made to fit its box (see .stage-calendar in
-// globals.css). The lettering is the pictures' own, not a font: the bar is the supplied bar (media/calendar-bar.png,
-// "2026" and "Nov"), and the numbers of the days are cut out of the supplied calendar (media/calendar-numbers.png, the
-// 30 numbers laid out like the days). To change the year or the month, the bar picture has to be changed.
+// Box 2 of the second pages, in the look of the classic Windows date picker (supplied picture): a silver ground, on top
+// a month box (the month lit dark blue, with its drop-down key) and a year box (with its two small keys), under them a
+// white sunken field with the days in five columns. Each day's square is filled dark blue from the bottom as far as that
+// day's visitors reach (lib/calendar-visitors.mjs); a full day is dark blue with white figures. It is drawn 344 x 636 and
+// made to fit its box (see .stage-calendar in globals.css). The month and the year are only shown, as before.
 export function StageCalendar({ visitors = SAMPLE_VISITORS }) {
   const fills = getDayFills(visitors, CALENDAR_DAYS)
 
@@ -17,12 +15,24 @@ export function StageCalendar({ visitors = SAMPLE_VISITORS }) {
       className: 'stage-calendar',
       role: 'group',
       'aria-label': '달력, 날짜별 누적 방문자',
-      style: {
-        '--numbers': `url(${assetPath('media/calendar-numbers.png')})`,
-        '--bar': `url(${assetPath('media/calendar-bar.png')})`,
-      },
     },
-    createElement('div', { className: 'stage-calendar__bar', role: 'img', 'aria-label': '2026 Nov' }),
+    createElement(
+      'div',
+      { className: 'stage-calendar__bar', role: 'img', 'aria-label': '2026 Nov' },
+      createElement(
+        'span',
+        { className: 'stage-calendar__month', 'aria-hidden': 'true' },
+        createElement('b', null, 'Nov'),
+        createElement('i', { className: 'stage-calendar__key stage-calendar__key--drop' })
+      ),
+      createElement(
+        'span',
+        { className: 'stage-calendar__year', 'aria-hidden': 'true' },
+        createElement('b', null, '2026'),
+        createElement('i', { className: 'stage-calendar__key stage-calendar__key--up' }),
+        createElement('i', { className: 'stage-calendar__key stage-calendar__key--down' })
+      )
+    ),
     createElement(
       'ol',
       { className: 'stage-calendar__days' },
@@ -39,11 +49,7 @@ export function StageCalendar({ visitors = SAMPLE_VISITORS }) {
             style: { '--fill': fill },
             'aria-label': `${day}일, 방문자 ${count}명`,
           },
-          createElement('span', {
-            className: 'stage-calendar__number',
-            'aria-hidden': 'true',
-            style: { '--col': index % 5, '--row': Math.floor(index / 5) },
-          })
+          createElement('span', { className: 'stage-calendar__number', 'aria-hidden': 'true' }, day)
         )
       })
     )

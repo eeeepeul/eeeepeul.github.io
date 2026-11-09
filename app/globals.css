@@ -5785,68 +5785,190 @@ html[data-force-landscape] .stage {
   right: 0;
 }
 
-/* ---- box 2: the calendar (supplied picture 344 wide, to the end of its last row of days at 636, made to fit its box of 178 x 329) ---- */
+/* ---- box 2: the calendar, as the classic Windows date picker (supplied picture); drawn 344 x 636 and made to fit its box of 178 x 329 ---- */
 .second-stage__box--calendar {
   display: block;
   overflow: hidden;
-  background: #eeeeee;
+  background: #c0c0c0;
   border: 0;
 }
 
 .stage-calendar {
+  --navy: #000080;
   position: absolute;
   left: 0;
   top: 0;
   width: 344px;
   height: 636px;
-  background: #eeeeee;
+  box-sizing: border-box;
+  padding: 14px 14px 0;
+  background: #c0c0c0;
+  font-family: Tahoma, 'MS Sans Serif', 'Helvetica Neue', Arial, sans-serif;
   transform: scale(0.5174);
   transform-origin: 0 0;
 }
 
 .stage-calendar__bar {
-  height: 56px;
-  background: var(--bar) no-repeat left top / 344px 56px, #3a3a3a;
+  display: flex;
+  gap: 18px;
+  height: 52px;
 }
 
+.stage-calendar__month,
+.stage-calendar__year {
+  position: relative;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 100%;
+  font-size: 30px;
+  line-height: 1;
+  background: #ffffff;
+  border: 3px solid;
+  border-color: #808080 #ffffff #ffffff #808080;
+  box-shadow: inset 2px 2px 0 #404040;
+}
+
+.stage-calendar__month {
+  flex: 1 1 0;
+  padding-right: 46px;
+}
+
+.stage-calendar__year {
+  flex: 0 0 140px;
+  padding-right: 34px;
+}
+
+.stage-calendar__month b,
+.stage-calendar__year b {
+  padding: 4px 6px;
+  font-weight: 400;
+  color: #000000;
+}
+
+.stage-calendar__month b {
+  margin-left: 4px;
+  color: #ffffff;
+  background: var(--navy);
+  outline: 1px dotted #ffffff;
+  outline-offset: -3px;
+}
+
+.stage-calendar__key {
+  position: absolute;
+  display: block;
+  box-sizing: border-box;
+  background: #c0c0c0;
+  border: 3px solid;
+  border-color: #ffffff #404040 #404040 #ffffff;
+  box-shadow: inset -2px -2px 0 #808080;
+}
+
+.stage-calendar__key::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 6px solid transparent;
+  transform: translate(-50%, -25%);
+}
+
+.stage-calendar__key--drop {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 42px;
+}
+
+.stage-calendar__key--drop::after {
+  border-top-color: #000000;
+  transform: translate(-50%, -20%);
+}
+
+.stage-calendar__key--up,
+.stage-calendar__key--down {
+  right: 0;
+  width: 32px;
+  height: 50%;
+}
+
+.stage-calendar__key--up {
+  top: 0;
+}
+
+.stage-calendar__key--down {
+  bottom: 0;
+}
+
+.stage-calendar__key--up::after {
+  border-width: 0 5px 5px;
+  border-bottom-color: #000000;
+  transform: translate(-50%, -50%);
+}
+
+.stage-calendar__key--down::after {
+  border-width: 5px 5px 0;
+  border-top-color: #000000;
+  transform: translate(-50%, -50%);
+}
+
+/* the field of the days: white, sunken, the days in five columns */
 .stage-calendar__days {
   position: absolute;
-  left: 4px;
-  top: 66px;
+  left: 14px;
+  top: 82px;
+  right: 14px;
+  bottom: 6px;
   display: grid;
-  grid-template-columns: repeat(5, 64px);
-  grid-auto-rows: 90px;
-  gap: 6px 4px;
+  grid-template-columns: repeat(5, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 0;
   margin: 0;
-  padding: 0;
+  padding: 6px 4px;
   list-style: none;
+  background: #ffffff;
+  border: 3px solid;
+  border-color: #808080 #ffffff #ffffff #808080;
+  box-shadow: inset 2px 2px 0 #404040;
 }
 
-/* a day: a light square, filled dark from the bottom as far as --fill (0 to 1) */
+/* a day: its figure, filled dark blue from the bottom as far as --fill (0 to 1) */
 .stage-calendar__day {
   position: relative;
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: #aeaeae;
 }
 
 .stage-calendar__day::before {
   content: '';
   position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: calc(var(--fill, 0) * 100%);
-  background: #444444;
+  right: 6px;
+  bottom: 2px;
+  left: 6px;
+  height: calc(var(--fill, 0) * 100% - 4px);
+  min-height: 0;
+  background: var(--navy);
+  opacity: 0.85;
+}
+
+.stage-calendar__day.is-full::before {
+  height: calc(100% - 4px);
+  top: 2px;
+  opacity: 1;
 }
 
 .stage-calendar__number {
-  position: absolute;
-  inset: 0;
-  background: var(--numbers) no-repeat;
-  background-size: 320px 540px;
-  background-position: calc(var(--col) * -64px) calc(var(--row) * -90px);
+  position: relative;
+  z-index: 1;
+  font-size: 34px;
+  line-height: 1;
+  color: #000000;
+  mix-blend-mode: normal;
+}
+
+.stage-calendar__day.is-full .stage-calendar__number {
+  color: #ffffff;
 }
 
 /* ---- box 3: the tool bar of the map (supplied picture: the bar is 73 x 296 there, with one more place under the keys for

@@ -37,11 +37,11 @@ test('the calendar shows 30 days with their own fill and a count for each', () =
   assert.match(html, /data-day="2" data-visitors="24" style="--fill:0\.24"/)
   assert.match(html, /data-day="3" data-visitors="0" style="--fill:0"/)
   assert.match(html, /class="stage-calendar__day is-full"/)
-  // the lettering is the supplied pictures, not a font: the bar picture (2026, Nov) and the sprite of the numbers
-  assert.match(html, /--numbers:url\(\/media\/calendar-numbers\.png\)/)
-  assert.match(html, /--bar:url\(\/media\/calendar-bar\.png\)/)
+  // the look of the classic date picker: a month box and a year box on top, the day numbers as text
   assert.match(html, /class="stage-calendar__bar" role="img" aria-label="2026 Nov"/)
-  assert.match(html, /class="stage-calendar__number" aria-hidden="true" style="--col:1;--row:3"/)
+  assert.match(html, /class="stage-calendar__month"[^>]*><b>Nov<\/b>/)
+  assert.match(html, /class="stage-calendar__year"[^>]*><b>2026<\/b>/)
+  assert.match(html, /class="stage-calendar__number" aria-hidden="true">19<\/span>/)
 })
 
 test('the calendar stands in box 2 of the second pages', async () => {
