@@ -6187,7 +6187,7 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
 }
 
 /* ---- box 7: the status bar. Drawn in stage pixels (the stage is scaled as a whole). It is made as the home page's
-   visitor record head is (its face and size to the bar's height, its chips flat with a one-pixel line, each 83% of the
+   visitor record head is (its face at its size, 11.6px on the 2000-wide stage, its chips flat with a one-pixel line, each 83% of the
    bar's height), in the colours of the map's rulers: the pale olive of the margin, the ruler's white and its dark ink. ---- */
 .second-stage__box--status-bar {
   display: block;
@@ -6204,14 +6204,14 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
   height: 100%;
   padding: 3px 4px;
   color: #292926;
-  font: 400 20px/1 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font: 400 11.6px/1 'Helvetica Neue', Helvetica, Arial, sans-serif;
   letter-spacing: 0.02em;
 }
 
 .stage-room-status__field {
   display: flex;
   align-items: center;
-  padding: 0 22px;
+  padding: 0 13px;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
   background: #e3e3d8;
@@ -6219,16 +6219,16 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
 }
 
 .stage-room-status__field--zoom {
-  min-width: 100px;
+  min-width: 58px;
   justify-content: center;
 }
 
 .stage-room-status__field--place {
-  min-width: 210px;
+  min-width: 122px;
 }
 
 .stage-room-status__field--mode {
-  min-width: 110px;
+  min-width: 64px;
   justify-content: center;
 }
 
@@ -6239,13 +6239,13 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
 }
 
 .stage-room-status__key {
-  width: 60px;
+  width: 36px;
   padding: 0;
   color: #292926;
   background: #e3e3d8;
   border: 0;
   font: inherit;
-  font-size: 26px;
+  font-size: 16px;
   cursor: pointer;
   box-shadow: inset 0 0 0 1px #292926;
 }
