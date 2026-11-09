@@ -34,8 +34,8 @@ const CUSTOM_SHOE_SRCS = SHOE_IMAGES.map((source) => assetPath(source))
 const CUSTOM_SECTIONS = [
   { key: 'match-color', label: '성냥색', itemCount: 4 },
   { key: 'expression', label: '표정', itemCount: 6 },
-  { key: 'flame-color', label: '불 색', itemCount: 4 },
   { key: 'flame-shape', label: '불 형태', itemCount: 5 },
+  { key: 'flame-color', label: '불 색', itemCount: 4 },
   { key: 'shoes', label: '신발', itemCount: 4 },
 ]
 
@@ -250,8 +250,8 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
     createElement(
       'div',
       { className: 'pixel-sidebar-question' },
-      createElement('span', null, '오늘 어떤가요'),
-      createElement('i', { 'aria-hidden': 'true' })
+      createElement('span', null, '오늘은 어떠신가요?'),
+      createElement('i', { 'aria-hidden': 'true' }, '완료')
     ),
     createElement(
       'div',
@@ -363,7 +363,8 @@ export function PixelSidebarPreview({ matchColorIndex, expressionIndex, shoeInde
             '--tool-shoe-tone': shoeTone,
             '--tool-shoe-image': `url(${shoeSrc})`,
           },
-        })
+        }),
+        createElement('span', { className: 'pixel-sidebar-tool-spare', 'data-preview-tool': 'spare' })
       ),
       createElement(
         'span',
@@ -493,8 +494,18 @@ function PixelCustomRow({ section, selectedIndex, onSelect }) {
             ...(section.key === 'shoes'
               ? { '--shoe-tone': SHOE_TONES[itemIndex], '--shoe-image': `url(${CUSTOM_SHOE_SRCS[itemIndex]})` }
               : {}),
-            ...(section.key === 'match-color' ? { '--match-tone': MATCH_COLOR_TONES[itemIndex] } : {}),
-            ...(section.key === 'flame-color' ? { '--flame-tone': FLAME_COLOR_TONES[itemIndex] } : {}),
+            ...(section.key === 'match-color'
+              ? {
+                  '--match-tone': MATCH_COLOR_TONES[itemIndex],
+                  '--swatch-image': `url(${assetPath(`media/custom-swatch-match-${itemIndex + 1}.png`)})`,
+                }
+              : {}),
+            ...(section.key === 'flame-color'
+              ? {
+                  '--flame-tone': FLAME_COLOR_TONES[itemIndex],
+                  '--swatch-image': `url(${assetPath(`media/custom-swatch-flame-${itemIndex + 1}.png`)})`,
+                }
+              : {}),
           }
 
           return createElement(
@@ -545,7 +556,12 @@ export function CustomSidebarContent({ onInput }) {
     createElement(
       'div',
       { className: 'pixel-sidebar-logo', 'aria-label': 'EPEUL' },
-      createElement('span', null, 'epeul.')
+      createElement('img', {
+        className: 'pixel-sidebar-logo-mark',
+        src: assetPath('media/custom-logo-rb.png'),
+        alt: '',
+        draggable: false,
+      })
     ),
     createElement(PixelSidebarPreview, {
       matchColorIndex: selectedOptions['match-color'],

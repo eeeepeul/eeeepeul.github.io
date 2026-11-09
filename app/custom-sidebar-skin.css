@@ -1,0 +1,275 @@
+/* The right bar of second/custom/ in the supplied picture: a light grey ground, the dashed grey bars and boxes, the
+   framed pictures for the colours, the dark red input bar. Only the look: what each part does is as it was.
+   The bar is drawn 287 pixels wide and made as wide as its panel (--k), so everything in it keeps its proportion
+   (the supplied picture divided by 2.449). Loaded after max-ui.css, whose raised edges it takes off here. */
+
+.pixel-custom-sidebar {
+  --k: 1.1115; /* a panel 319 pixels wide */
+  --bar: #c9cdcd;
+  --ground: #eceeef;
+  --box: #dfe0e0;
+  --dash: #aeb8b6;
+  --ink: #6a6f6f;
+  --edge: #6b7474;
+  --red: #7a0006;
+  width: 287px;
+  height: calc(100% / var(--k));
+  gap: 0;
+  padding: 0 16px 13px;
+  box-sizing: border-box;
+  color: var(--ink);
+  background: var(--ground);
+  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 10px;
+  transform: scale(var(--k));
+  transform-origin: 0 0;
+}
+
+.second-stage .pixel-custom-sidebar {
+  --k: 1.4286; /* the panel of the layout, 410 pixels wide */
+}
+
+.color-panel:has(.pixel-custom-sidebar),
+.second-stage .color-panel:has(.pixel-custom-sidebar) {
+  padding: 0;
+  background: var(--ground, #eceeef);
+  box-shadow: none;
+}
+
+/* the mark at the top, on the right */
+.pixel-custom-sidebar .pixel-sidebar-logo {
+  flex: 0 0 73px;
+  height: 73px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding-top: 27px;
+  box-sizing: border-box;
+}
+
+.pixel-sidebar-logo-mark {
+  display: block;
+  width: 67px;
+  height: 38px;
+  user-select: none;
+}
+
+/* the box that holds the question and the character */
+.pixel-custom-sidebar .pixel-sidebar-preview {
+  flex: 0 0 337px;
+  height: 337px;
+  padding: 12px;
+  grid-template-rows: 32px minmax(0, 1fr);
+  gap: 10.6px;
+  background: var(--bar);
+  border: 1px dashed var(--dash);
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+.pixel-custom-sidebar .pixel-sidebar-question {
+  width: auto;
+  height: 32px;
+  justify-self: stretch;
+  padding: 0 6px 0 12px;
+  color: #a3a8a8;
+  background: var(--ground);
+  border: 0;
+  font-size: 10px;
+}
+
+.pixel-custom-sidebar .pixel-sidebar-question i {
+  width: 33px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  color: #5d6262;
+  background: var(--bar);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.pixel-custom-sidebar .pixel-sidebar-preview-frame {
+  background: var(--ground);
+  border: 0;
+  box-shadow: none;
+}
+
+.pixel-custom-sidebar .pixel-sidebar-character {
+  top: calc(50% + 2px);
+  transform: translate(-50%, -50%) scale(0.9);
+}
+
+/* the four places along the right edge (the chosen face, the colours, the shoes, and one free) */
+.pixel-custom-sidebar .pixel-sidebar-tool-stack {
+  top: 7px;
+  right: 7px;
+  gap: 6px;
+}
+
+.pixel-custom-sidebar .pixel-sidebar-tool-stack span {
+  width: 25px;
+  height: 25px;
+  background: var(--box);
+  border: 1px dashed var(--dash);
+  box-sizing: border-box;
+}
+
+.pixel-custom-sidebar .pixel-sidebar-tool-stack span:first-child {
+  border-color: #4d5251;
+}
+
+.pixel-custom-sidebar .pixel-sidebar-tool-expression img {
+  width: 16px;
+  height: 16px;
+}
+
+.pixel-custom-sidebar .pixel-sidebar-tool-shoes::before {
+  width: 18px;
+  height: 14px;
+}
+
+.pixel-custom-sidebar .pixel-sidebar-avatar-small {
+  background: var(--box);
+  border: 1px dashed var(--dash);
+}
+
+/* the groups: a dashed grey bar for the title, the choices under it */
+.pixel-custom-sidebar .pixel-sidebar-custom-list {
+  margin-top: 10px;
+  gap: 10px;
+  align-content: start;
+  grid-auto-rows: max-content;
+  scrollbar-width: none; /* it still scrolls; no bar is drawn, as in the picture */
+}
+
+.pixel-custom-sidebar .pixel-custom-row {
+  min-height: 0;
+  gap: 8px;
+}
+
+.pixel-custom-sidebar .pixel-custom-row-header {
+  position: relative;
+  height: 21px;
+  padding: 0 4px 0 6px;
+  color: var(--ink);
+  background: var(--bar);
+  border: 1px dashed var(--dash);
+  box-shadow: none;
+  box-sizing: border-box;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+/* the fold box is the whole bar, unseen: pressing the bar folds the group away (and brings it back) */
+.pixel-custom-sidebar .max-rollout-toggle {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  opacity: 0;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.pixel-custom-sidebar .max-rollout-toggle:focus-visible {
+  opacity: 1;
+  outline: 1px solid var(--red);
+  outline-offset: -2px;
+}
+
+.pixel-custom-sidebar .max-rollout-toggle::before,
+.pixel-custom-sidebar .max-rollout-toggle::after {
+  display: none;
+}
+
+.pixel-custom-sidebar .pixel-custom-row-header > span:not(.pixel-custom-row-arrows) {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.pixel-custom-sidebar .pixel-custom-row-arrows {
+  position: relative;
+  z-index: 2;
+  gap: 1px;
+  padding: 0;
+  background: transparent;
+}
+
+.pixel-custom-sidebar .pixel-custom-row-arrow {
+  width: 16px;
+  height: 15px;
+  color: #2d3231;
+  background: #9aa5a3;
+  box-shadow: none;
+  font-size: 13px;
+  line-height: 13px;
+}
+
+.pixel-custom-sidebar .pixel-custom-row-arrow:disabled {
+  opacity: 0.45;
+}
+
+.pixel-custom-sidebar .pixel-custom-swatches {
+  box-shadow: none;
+}
+
+.pixel-custom-sidebar .pixel-custom-swatch-track {
+  gap: 9px;
+}
+
+.pixel-custom-sidebar .pixel-custom-swatch {
+  height: 57px;
+  background: var(--box);
+  border: 1px solid var(--edge);
+  box-shadow: none;
+}
+
+/* the colours are the pictures of the supplied layout (each keeps the colour it stands for) */
+.pixel-custom-sidebar .pixel-custom-row[data-custom-label='성냥색'] .pixel-custom-swatch,
+.pixel-custom-sidebar .pixel-custom-row[data-custom-label='불 색'] .pixel-custom-swatch {
+  background: var(--swatch-image) center / cover no-repeat, var(--box);
+}
+
+.pixel-custom-sidebar .pixel-custom-row:nth-child(2) .pixel-custom-swatches .pixel-custom-swatch:nth-child(3) {
+  background: var(--box);
+}
+
+.pixel-custom-sidebar .pixel-shoe-swatch {
+  background: var(--box);
+  border: 1px solid var(--edge);
+}
+
+.pixel-custom-sidebar .pixel-custom-swatch.is-selected {
+  border-color: var(--edge);
+  outline: 0;
+  box-shadow: inset 0 0 0 2px var(--red); /* inside, so the row's edge does not cut it off */
+}
+
+/* the input bar, dark red */
+.pixel-custom-sidebar .pixel-sidebar-input {
+  flex: 0 0 34px;
+  height: 34px;
+  margin-top: 8px;
+  color: #fff;
+  background: var(--red);
+  box-shadow: none;
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+}
+
+.pixel-custom-sidebar .pixel-sidebar-input::before {
+  display: none;
+}
+
+.pixel-custom-sidebar .pixel-sidebar-input:not(:disabled):hover,
+.pixel-custom-sidebar .pixel-sidebar-input:not(:disabled):focus-visible {
+  color: #fff;
+  background: #94000a;
+}
+
+.pixel-custom-sidebar .pixel-sidebar-input:disabled {
+  color: #f3e7e7;
+  background: #b79a9b;
+}

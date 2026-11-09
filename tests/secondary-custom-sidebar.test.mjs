@@ -52,7 +52,9 @@ test('restores the previous character customization sidebar sections', () => {
   const html = renderToStaticMarkup(createElement(CustomSidebarContent))
 
   assert.match(html, /class="figma-custom-sidebar pixel-custom-sidebar"/)
-  assert.match(html, />epeul\.<\/span>/)
+  // the mark at the top is the supplied picture (a logo box), and the question has its finishing button
+  assert.match(html, /class="pixel-sidebar-logo-mark" src="\/media\/custom-logo-rb\.png"/)
+  assert.match(html, /오늘은 어떠신가요\?/)
   assert.match(html, /aria-label="오늘 어떤가요"/)
   assert.match(html, /class="pixel-sidebar-avatar-small"/)
   assert.match(html, /data-custom-label="성냥색" data-item-count="4"/)

@@ -26,7 +26,10 @@ test('renders the second page with six NPCs and a character-add control', async 
   assert.equal(typeof secondaryModule.SecondaryLanding, 'function')
 
   const html = renderToStaticMarkup(createElement(secondaryModule.SecondaryLanding))
-  assert.match(html, /<main class="experience-shell landing-shell">/)
+  // the page stands on the fixed-proportion stage (the left side, the bars and the room), as the supplied layout
+  assert.match(html, /<main class="experience-shell landing-shell second-stage"><div class="second-stage__frame">/)
+  assert.match(html, /second-stage__box--calendar/)
+  assert.match(html, /second-stage__box--status-bar/)
   assert.match(html, /class="house-interior-world"/)
   assert.match(html, /class="house-interior-tilemap"/)
   assert.match(

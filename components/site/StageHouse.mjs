@@ -1,12 +1,15 @@
 'use client'
 
 import { createElement, useEffect, useRef } from 'react'
+import { assetPath } from '../../lib/asset-path.mjs'
 import { HOUSE_ASPECT, HOUSE_OUTLINE } from '../../lib/house-outline.mjs'
 
 // The black house of the supplied picture (its outline traced) standing in a corner of the player strip,
 // as a solid with a depth of its own, turning slowly about its upright axis: a full turn in TURN_SECONDS.
 // It is drawn in one pure black with no light and no perspective, so it reads as a 2D silhouette whose
 // shape changes as the solid turns (it never thins to a line, as a flat sheet would).
+// It is also the house button: pressed, it goes to the second page (second/), where the house button of the
+// map page always went.
 const TURN_SECONDS = 16
 const DEPTH = 0.7 // how deep the house is, against its width (as in the supplied 3D model)
 const LOOK_DOWN = 0.09 // radians the view is raised above level, so the roof's top shows a little
@@ -83,10 +86,9 @@ export function StageHouse() {
     }
   }, [])
 
-  return createElement('canvas', {
-    ref: canvasRef,
-    className: 'stage-house',
-    role: 'img',
-    'aria-label': '천천히 도는 검은 집',
-  })
+  return createElement(
+    'a',
+    { className: 'stage-house', href: `${assetPath('second')}/`, 'aria-label': '두 번째 화면으로 이동' },
+    createElement('canvas', { ref: canvasRef, className: 'stage-house__canvas', 'aria-hidden': 'true' })
+  )
 }

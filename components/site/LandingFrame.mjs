@@ -1,7 +1,8 @@
-import { createElement } from 'react'
+import { Fragment, createElement } from 'react'
 import { HouseLink } from './HouseLink.mjs'
 import { PageNavigation } from './PageNavigation.mjs'
 import { ResponsiveSidebar } from './ResponsiveSidebar.mjs'
+import { SecondStage } from './SecondStage.mjs'
 
 export function LandingFrame({
   children,
@@ -18,16 +19,11 @@ export function LandingFrame({
   showNavigation = true,
   showHouseLink = true,
   showSidebar = true,
+  stage = false,
 }) {
-  return createElement(
-    'main',
-    { className: 'experience-shell landing-shell' },
+  const parts = [
     showNavigation ? createElement(PageNavigation, { current: navigationCurrent, onRouteSelect }) : null,
-    createElement(
-      'div',
-      { className: 'landing-space', 'aria-hidden': 'true' },
-      playfield
-    ),
+    createElement('div', { className: 'landing-space', 'aria-hidden': 'true' }, playfield),
     children,
     showHouseLink
       ? createElement(HouseLink, {
@@ -47,6 +43,14 @@ export function LandingFrame({
           },
           panel
         )
-      : null
+      : null,
+  ]
+  const content = createElement(Fragment, null, ...parts)
+
+  // `stage`: the parts stand on a fixed-proportion stage (see SecondStage) on wide screens
+  return createElement(
+    'main',
+    { className: `experience-shell landing-shell${stage ? ' second-stage' : ''}` },
+    stage ? createElement(SecondStage, null, content) : content
   )
 }

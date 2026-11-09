@@ -5537,3 +5537,122 @@ html[data-force-landscape] .stage-shell {
 html[data-force-landscape] .stage {
   width: min(100dvh, calc(100vw * 2000 / 1126));
 }
+
+/* ---- the second pages on a stage of fixed proportion (2000 x 1125, as the supplied layout) ---- */
+/* On a narrow screen the frame and the stage are not there (the page is as it was); on a wide one the room, the
+   page links, the house button, the drawing pad and the right panel stand in their places on the stage, which
+   is fitted to the window by --stage-scale (see SecondStage). The boxes are the left side, the top bar and the
+   bottom bar, plain for now. */
+.second-stage__frame,
+.second-stage__canvas {
+  display: contents;
+}
+
+.second-stage__box {
+  display: none;
+}
+
+@media (min-width: 801px) {
+  .experience-shell.second-stage {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #e4e4e4;
+  }
+
+  .second-stage__frame {
+    --stage-scale: 0.5;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: block;
+    width: calc(2000px * var(--stage-scale));
+    height: calc(1125px * var(--stage-scale));
+    transform: translate(-50%, -50%);
+    visibility: hidden;
+  }
+
+  .second-stage__frame[data-ready='true'] {
+    visibility: visible;
+  }
+
+  .second-stage__canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    width: 2000px;
+    height: 1125px;
+    overflow: hidden;
+    background: #ececec;
+    transform: scale(var(--stage-scale));
+    transform-origin: 0 0;
+  }
+
+  .second-stage__box {
+    position: absolute;
+    z-index: 2;
+    display: block;
+    box-sizing: border-box;
+    background: #dcdcdc;
+    border: 1px solid #b9b9b9;
+  }
+
+  .second-stage__box--top-bar,
+  .second-stage__box--status-bar {
+    background: #eeeeee;
+  }
+
+  /* the room: between the left side, the top bar, the right panel and the bottom bar */
+  .second-stage .landing-space {
+    position: absolute;
+    left: 178px;
+    top: 24px;
+    z-index: 0;
+    width: 1412px;
+    height: 1058px;
+    min-height: 0;
+  }
+
+  .second-stage .page-route-nav {
+    position: absolute;
+    left: 244px;
+    top: 38px;
+  }
+
+  .second-stage .house-link {
+    position: absolute;
+    left: 186px;
+    top: 1002px;
+    z-index: 3;
+    margin: 0;
+  }
+
+  .second-stage .drawing-pad {
+    left: 290px;
+    bottom: 59px;
+  }
+
+  /* the right panel, the page's own sidebar, at the width of the layout; its content grows with it */
+  .second-stage .color-panel.sidebar-panel,
+  .second-stage .color-panel.sidebar-panel.is-dismissed,
+  .second-stage .color-panel:has(.pixel-custom-sidebar) {
+    position: absolute;
+    top: 24px;
+    right: 0;
+    z-index: 60;
+    box-sizing: border-box;
+    width: 410px;
+    height: 1101px;
+  }
+
+  .second-stage .sidebar-menu-trigger.is-visible {
+    position: absolute;
+    top: 24px;
+    right: 0;
+  }
+}

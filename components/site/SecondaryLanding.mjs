@@ -159,6 +159,7 @@ export function SecondaryLanding({ initialCustomView = false }) {
   }
 
   return createElement(LandingFrame, {
+    stage: true,
     houseHref: assetPath(''),
     houseLabel: '메인 화면으로 이동',
     navigationCurrent: isCustomView ? 'custom' : '',
