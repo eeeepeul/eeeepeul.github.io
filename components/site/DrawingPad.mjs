@@ -29,7 +29,7 @@ export function drawnWidthOnMatch(canvas, columns, match = document.querySelecto
   const board = canvas?.getBoundingClientRect()
   const body = match?.getBoundingClientRect()
   if (!board?.width || !body?.width) return undefined
-  return (columns * (board.width / COLUMNS)) / body.width
+  return (columns * (board.width / ((canvas && canvas.width) || COLUMNS))) / body.width
 }
 
 export function DrawingPad() {
@@ -50,10 +50,13 @@ export function DrawingPad() {
   const [sent, setSent] = useState(false)
   const [saved, setSaved] = useState(false)
 
+  // the board is COLUMNS wide until the large Paint window is pulled wider: then it is as many squares wide as the window shows
+  const widthNow = () => (canvasRef.current ? canvasRef.current.width : COLUMNS)
   const cellAt = (event) => {
     const box = canvasRef.current.getBoundingClientRect()
+    const columns = widthNow()
     return [
-      Math.min(COLUMNS - 1, Math.max(0, Math.floor(((event.clientX - box.left) / box.width) * COLUMNS))),
+      Math.min(columns - 1, Math.max(0, Math.floor(((event.clientX - box.left) / box.width) * columns))),
       Math.min(ROWS - 1, Math.max(0, Math.floor(((event.clientY - box.top) / box.height) * ROWS))),
     ]
   }
@@ -98,11 +101,25 @@ export function DrawingPad() {
     }
   }, [chooserOpen])
 
+  // [ and ] make the brush smaller and larger, wherever the visitor is on the page unless a field is being typed in
+  useEffect(() => {
+    const onBracket = (event) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return
+      if (event.key !== '[' && event.key !== ']') return
+      if (event.target instanceof HTMLElement && event.target.closest('input, textarea, select, [contenteditable]')) return
+      setBrushIndex((index) => stepBrush(index, event.key === ']' ? 1 : -1))
+    }
+    window.addEventListener('keydown', onBracket)
+    return () => window.removeEventListener('keydown', onBracket)
+  }, [])
+
   // Undo and redo: the board as it was is kept before each stroke (and before clearing).
-  const snapshot = () => canvasRef.current.getContext('2d').getImageData(0, 0, COLUMNS, ROWS)
+  const snapshot = () => canvasRef.current.getContext('2d').getImageData(0, 0, widthNow(), ROWS)
   const goTo = (picture) => {
     if (!picture) return
-    canvasRef.current.getContext('2d').putImageData(picture, 0, 0)
+    const context = canvasRef.current.getContext('2d')
+    context.clearRect(0, 0, widthNow(), ROWS)
+    context.putImageData(picture, 0, 0)
     redraw((count) => count + 1)
   }
   const undo = () => goTo(historyRef.current.undo(snapshot()))
@@ -175,21 +192,22 @@ export function DrawingPad() {
   const clear = () => {
     historyRef.current.record(snapshot())
     redraw((count) => count + 1)
-    canvasRef.current.getContext('2d').clearRect(0, 0, COLUMNS, ROWS)
+    canvasRef.current.getContext('2d').clearRect(0, 0, widthNow(), ROWS)
   }
 
   // What is drawn, cropped to the drawing, with the paper left transparent: its picture, its proportion and its width
   // in squares. Nothing when nothing is drawn yet.
   const cutDrawing = () => {
     const canvas = canvasRef.current
-    const data = canvas.getContext('2d').getImageData(0, 0, COLUMNS, ROWS)
-    let minX = COLUMNS
+    const columns = canvas.width
+    const data = canvas.getContext('2d').getImageData(0, 0, columns, ROWS)
+    let minX = columns
     let minY = ROWS
     let maxX = -1
     let maxY = -1
     for (let y = 0; y < ROWS; y += 1) {
-      for (let x = 0; x < COLUMNS; x += 1) {
-        if (data.data[(y * COLUMNS + x) * 4 + 3] > 0) {
+      for (let x = 0; x < columns; x += 1) {
+        if (data.data[(y * columns + x) * 4 + 3] > 0) {
           minX = Math.min(minX, x)
           minY = Math.min(minY, y)
           maxX = Math.max(maxX, x)
@@ -231,8 +249,21 @@ export function DrawingPad() {
   const boardRef = useRef(null)
   boardRef.current = {
     canvas: canvasRef.current,
-    columns: COLUMNS,
+    columns: widthNow(),
     rows: ROWS,
+    // the board's width in squares: the Paint window pulls it wider or narrower (never under COLUMNS); what is drawn is kept
+    setColumns: (next) => {
+      const canvas = canvasRef.current
+      const columns = Math.max(COLUMNS, Math.round(next))
+      if (!canvas || columns === canvas.width) return
+      const keep = document.createElement('canvas')
+      keep.width = canvas.width
+      keep.height = canvas.height
+      keep.getContext('2d').drawImage(canvas, 0, 0)
+      canvas.width = columns
+      canvas.getContext('2d').drawImage(keep, 0, 0)
+      redraw((count) => count + 1)
+    },
     colour,
     brushIndex,
     canUndo: historyRef.current.canUndo(),

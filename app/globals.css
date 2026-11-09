@@ -7347,7 +7347,7 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
 }
 
 .paint__status span:last-child {
-  flex: 0 0 120px;
+  flex: 0 0 210px;
 }
 
 .paint.is-folded {
@@ -7376,9 +7376,12 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
 .paint__sheet {
   display: flex;
   flex: 1 1 auto;
-  justify-content: center;
-  align-items: flex-start;
   min-width: 0;
+}
+
+.paint__sheet > .paint__canvas {
+  flex: none;
+  margin: auto;
 }
 
 /* the square key: the window fills the whole screen of the page, over everything (it is made against the stage, which is

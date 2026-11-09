@@ -1,6 +1,6 @@
 'use client'
 
-import { createElement, useCallback, useEffect, useRef, useState } from 'react'
+import { createElement, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BRUSH_SIZES, hexToHsl, hslToHex } from '../../lib/drawing-tools.mjs'
 import { getBoard, subscribeBoard } from '../../lib/drawing-board.mjs'
@@ -62,6 +62,9 @@ export function StagePaint() {
   // the width the window was pulled to (null: its own width) and the least it can be
   const [width, setWidth] = useState(null)
   const naturalRef = useRef(0)
+  const chromeRef = useRef(0)
+  const sheetRef = useRef(null)
+  const anchorRef = useRef(null)
   const [, refresh] = useState(0)
   const canvasRef = useRef(null)
   const windowRef = useRef(null)
@@ -143,6 +146,64 @@ export function StagePaint() {
     }
   }, [open, menu, maximized])
 
+  // The board is as wide as the window lets it be: pulling the window wider makes the board wider (the same squares, never fewer
+  // than the pad's 100), and the pad shows it all, a little smaller. `chromeRef` is what the window is wider than its board.
+  useEffect(() => {
+    if (!open || maximized) return
+    const element = windowRef.current
+    const entry = board()
+    if (!element || !entry) return
+    if (width === null) {
+      chromeRef.current = element.offsetWidth - entry.columns * cell
+      naturalRef.current = chromeRef.current + 100 * cell
+      return
+    }
+    entry.setColumns(Math.max(100, Math.floor((width - chromeRef.current) / cell)))
+  }, [open, width, maximized, cell]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Full screen: the wheel (or a pinch on the trackpad) makes the board larger or smaller, round the point it is over. A sideways
+  // wheel, or the bars at the edges, still move about the board.
+  useEffect(() => {
+    if (!open || !maximized) return undefined
+    const sheet = sheetRef.current
+    if (!sheet) return undefined
+    const onWheel = (event) => {
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY) && !event.ctrlKey) return
+      event.preventDefault()
+      const canvas = canvasRef.current
+      if (!canvas) return
+      const box = canvas.getBoundingClientRect()
+      const entry = board()
+      if (!entry || !box.width) return
+      anchorRef.current = {
+        x: event.clientX,
+        y: event.clientY,
+        cx: ((event.clientX - box.left) / box.width) * entry.columns,
+        cy: ((event.clientY - box.top) / box.height) * entry.rows,
+      }
+      const factor = Math.exp(-event.deltaY * (event.ctrlKey ? 0.01 : 0.0015))
+      setCell((now) => Math.min(24, Math.max(1.5, Math.round(now * factor * 100) / 100)))
+    }
+    sheet.addEventListener('wheel', onWheel, { passive: false })
+    return () => sheet.removeEventListener('wheel', onWheel)
+  }, [open, maximized])
+
+  // after the board has its new size, the sheet is moved so the square under the pointer is still under it
+  useLayoutEffect(() => {
+    const anchor = anchorRef.current
+    const sheet = sheetRef.current
+    const canvas = canvasRef.current
+    const entry = board()
+    if (!anchor || !sheet || !canvas || !entry) return
+    anchorRef.current = null
+    const box = canvas.getBoundingClientRect()
+    const wantLeft = anchor.x - (anchor.cx / entry.columns) * box.width
+    const wantTop = anchor.y - (anchor.cy / entry.rows) * box.height
+    sheet.scrollLeft += box.left - wantLeft
+    sheet.scrollTop += box.top - wantTop
+  }, [cell])
+
+  // [ and ] (the pad's keys too) change the brush: the window only shows it
   if (!open) return null
 
   const current = board()
@@ -434,13 +495,13 @@ export function StagePaint() {
               ),
               createElement(
                 'div',
-                { className: 'paint__sheet' },
+                { className: 'paint__sheet', ref: sheetRef },
                 createElement('canvas', {
                   ref: canvasRef,
                   className: `paint__canvas${grid ? ' has-grid' : ''}`,
                   width: current ? current.columns : 100,
                   height: current ? current.rows : 188,
-                  style: { width: (current ? current.columns : 100) * cell, height: (current ? current.rows : 188) * cell },
+                  style: { width: (current ? current.columns : 100) * cell, height: (current ? current.rows : 188) * cell, backgroundSize: grid ? `${cell}px ${cell}px` : undefined },
                   onPointerDown: onDown,
                   onPointerMove: onMove,
                   onPointerUp: onUp,
@@ -502,7 +563,7 @@ export function StagePaint() {
               'div',
               { className: 'paint__status' },
               createElement('span', null, hint || 'For Help, press the Help menu.'),
-              createElement('span', null, current ? `${current.columns} x ${current.rows}` : '')
+              createElement('span', null, current ? `${current.columns} x ${current.rows}  [ ] brush ${BRUSH_SIZES[current.brushIndex]}` : '')
             )
           ),
       folded || maximized
