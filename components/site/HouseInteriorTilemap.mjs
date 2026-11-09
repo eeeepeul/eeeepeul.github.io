@@ -471,16 +471,16 @@ export function HouseInteriorTilemap({ map = HOUSE_INTERIOR_MAP }) {
       draggable: false,
       'aria-hidden': 'true',
     }),
-    // The picture of the house seen from above (the supplied plan, drawn again in its own pixels: 600 x 450, six greys,
+    // The picture of the house seen from above (the supplied plan, drawn again in its own pixels: 2400 x 1800, six greys,
     // 4:3 as the map is), laid over the drawn room as the background the matches walk on. Each of its pixels is drawn as a
-    // hard square (image-rendering: pixelated), 8 of the room's pixels wide when the room is shown at its size (4800 / 600), so
+    // hard square (image-rendering: pixelated), 2 of the room's pixels wide when the room is shown at its size (4800 / 2400), so
     // it does not blur when it is made larger. The map under it (where the matches may walk) is the plan's own
     // (public/media/house-map.webp, 2000 x 1500), whose layout this picture has.
     createElement('img', {
       className: 'house-interior-map-picture',
       src: assetPath('media/house-map-pixel.png'),
-      width: 600,
-      height: 450,
+      width: 2400,
+      height: 1800,
       alt: '',
       decoding: 'async',
       draggable: false,
