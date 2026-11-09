@@ -5,11 +5,11 @@
 
 .pixel-custom-sidebar {
   --k: 1.1115; /* a panel 319 pixels wide */
-  --bar: #646655;
+  --bar: #dcdccd;
   --ground: #979887;
   --box: #dcdccd;
   --dash: #595948;
-  --ink: #e8e8da;
+  --ink: #292926;
   --edge: #595948;
   --red: #7a0006;
   width: 287px;
@@ -61,7 +61,7 @@
   padding: 12px;
   grid-template-rows: 32px minmax(0, 1fr);
   gap: 10.6px;
-  background: var(--bar);
+  background: var(--ground);
   border: 1px solid var(--dash);
   box-shadow: none;
   box-sizing: border-box;
@@ -72,8 +72,8 @@
   height: 32px;
   justify-self: stretch;
   padding: 0 6px 0 12px;
-  color: #c7c7ba;
-  background: var(--bar);
+  color: #5b5c49;
+  background: var(--box);
   border: 0;
   font-size: 10px;
 }
@@ -201,7 +201,7 @@
   width: 16px;
   height: 15px;
   color: #292926;
-  background: #dcdccd;
+  background: #c7c7ba;
   box-shadow: none;
   font-size: 13px;
   line-height: 13px;
@@ -272,4 +272,37 @@
 .pixel-custom-sidebar .pixel-sidebar-input:disabled {
   color: #f3e7e7;
   background: #b79a9b;
+}
+
+/* the look of the map's toolbar: every box is a raised plate, a light rim two pixels thick with a soft shade along its
+   right and lower sides, on the olive-grey ground (the pictures' edges in the supplied toolbar picture). */
+.pixel-custom-sidebar .pixel-sidebar-preview,
+.pixel-custom-sidebar .pixel-sidebar-question,
+.pixel-custom-sidebar .pixel-sidebar-tool-stack span,
+.pixel-custom-sidebar .pixel-sidebar-avatar-small,
+.pixel-custom-sidebar .pixel-custom-row-header,
+.pixel-custom-sidebar .pixel-custom-swatch,
+.pixel-custom-sidebar .pixel-shoe-swatch {
+  border: 2px solid #e8e8da;
+  box-shadow: inset -2px -2px 0 #a4a696;
+}
+
+.pixel-custom-sidebar .pixel-sidebar-preview-frame {
+  border: 2px solid #a4a696;
+  box-shadow: inset 2px 2px 0 #646655;
+}
+
+.pixel-custom-sidebar .pixel-custom-row-arrow {
+  border: 1px solid #e8e8da;
+  box-shadow: inset -1px -1px 0 #a4a696;
+}
+
+.pixel-custom-sidebar .pixel-sidebar-input {
+  border: 2px solid #e8e8da;
+  box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.pixel-custom-sidebar .pixel-custom-swatch.is-selected {
+  border-color: #e8e8da;
+  box-shadow: inset 0 0 0 2px var(--red);
 }
