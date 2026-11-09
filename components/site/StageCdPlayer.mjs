@@ -65,8 +65,6 @@ export function StageCdPlayer() {
   const [lengths, setLengths] = useState({})
   const [peaks, setPeaks] = useState(null)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
-  // true while the window slides back to its place before it closes (the x key)
-  const [returning, setReturning] = useState(false)
   const audioRef = useRef(null)
   const canvasRef = useRef(null)
   const windowRef = useRef(null)
@@ -84,7 +82,6 @@ export function StageCdPlayer() {
       setOffset({ x: 0, y: 0 })
       setFolded(false)
       setMenu(null)
-      setReturning(false)
     }
   }, [open])
 
@@ -226,16 +223,10 @@ export function StageCdPlayer() {
     if (!audio || !Number.isFinite(audio.duration)) return
     audio.currentTime = (Number(event.target.value) / 1000) * audio.duration
   }
-  // the x key: a window that was dragged away slides back to where it stands at first, then closes
+  // the x key: the window goes at once; a closed window is set back in its first place (see the effect on `open`), so it opens there again
   const closeHome = () => {
     setMenu(null)
-    if (offset.x === 0 && offset.y === 0) {
-      setOpen(false)
-      return
-    }
-    setReturning(true)
-    setOffset({ x: 0, y: 0 })
-    window.setTimeout(() => setOpen(false), 220)
+    setOpen(false)
   }
   const beginDrag = (event) => {
     if (event.target.closest('button')) return
@@ -285,7 +276,7 @@ export function StageCdPlayer() {
         className: `cd-player${folded ? ' is-folded' : ''}`,
         role: 'dialog',
         'aria-label': 'CD Player',
-        style: { transform: `translate(${offset.x}px, ${offset.y}px)`, transition: returning ? 'transform 200ms ease-out' : undefined },
+        style: { transform: `translate(${offset.x}px, ${offset.y}px)` },
       },
       createElement(
         'div',
