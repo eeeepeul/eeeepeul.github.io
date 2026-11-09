@@ -7510,3 +7510,45 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
 .paint__sheet.is-grabbed .paint__canvas {
   cursor: grabbing;
 }
+
+/* ---- the pointer on the second pages: over what can be pressed (keys, menus, colours, links) a black arrow with a white edge;
+   over what is taken hold of (the title bars of the windows, the sliders) the open hand; while it is pressed or dragged the
+   closed hand (the same hands as on the left bar); the drawing boards keep their own pointers ---- */
+.compass-cursor-active .second-stage :is(button, a[href], select, summary, label, [role='button'], [role='menuitem'], [role='option']):not(:disabled):not(.drawing-pad__canvas):not(.paint__canvas):not(.paint__grip) {
+  cursor: url('/media/cursor-arrow.svg') 6 4, pointer !important;
+}
+
+.compass-cursor-active .second-stage :is(.cd-player__title, .paint__title, .drawing-pad__bar, .paint__bar, .cd-player__slider, .paint__sheet),
+.compass-cursor-active .second-stage :is(.drawing-pad__bar, .paint__bar, .cd-player__slider)::-webkit-slider-thumb {
+  cursor: image-set(url('/media/hand-open.png') 1x, url('/media/hand-open@2x.png') 2x) 16 16, grab !important;
+}
+
+.compass-cursor-active .second-stage :is(button, a[href], select, summary, label, [role='button'], [role='menuitem'], [role='option']):not(:disabled):not(.drawing-pad__canvas):not(.paint__canvas):not(.paint__grip):active,
+.compass-cursor-active .second-stage :is(.cd-player__title, .paint__title, .drawing-pad__bar, .paint__bar, .cd-player__slider):active,
+.compass-cursor-active .second-stage :is(.drawing-pad__bar, .paint__bar, .cd-player__slider):active::-webkit-slider-thumb,
+.compass-cursor-active .second-stage .paint__sheet.is-grabbed {
+  cursor: image-set(url('/media/hand-grab.png') 1x, url('/media/hand-grab@2x.png') 2x) 16 16, grabbing !important;
+}
+
+/* the title bars hold their buttons: over a button it is the arrow, as above */
+.compass-cursor-active .second-stage :is(.cd-player__title, .paint__title) :is(button):not(:disabled) {
+  cursor: url('/media/cursor-arrow.svg') 6 4, pointer !important;
+}
+
+/* the compass mark steps aside wherever one of these pointers shows */
+body:has(.second-stage :is(button, a[href], select, summary, label, [role='button'], [role='menuitem'], [role='option'], .cd-player__title, .paint__title, .cd-player__slider, .drawing-pad__bar, .paint__bar, .paint__sheet, .paint__grip, .paint__canvas):not(:disabled):not(.drawing-pad__canvas):hover) .compass-cursor-mark {
+  opacity: 0;
+}
+
+/* the grip along the window's right edge pulls it wider; the Paint board has a crosshair (the pad's board keeps its brush) */
+.compass-cursor-active .second-stage .paint__grip {
+  cursor: ew-resize !important;
+}
+
+.compass-cursor-active .second-stage .paint__canvas {
+  cursor: crosshair !important;
+}
+
+.compass-cursor-active .second-stage .paint__sheet.is-grabbed .paint__canvas {
+  cursor: image-set(url('/media/hand-grab.png') 1x, url('/media/hand-grab@2x.png') 2x) 16 16, grabbing !important;
+}
