@@ -6185,3 +6185,79 @@ body:has(.drawing-pad__bar:active) .compass-cursor-mark {
 body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-stage__box--panels-upper, .second-stage__box--panels-lower, .second-stage__box--satellite, .second-stage__box--small-map, .drawing-pad):hover) .compass-cursor-mark {
   opacity: 0;
 }
+
+/* ---- box 7: the status bar. Drawn in stage pixels (the stage is scaled as a whole). ---- */
+.second-stage__box--status-bar {
+  display: block;
+}
+
+.stage-room-status {
+  box-sizing: border-box;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  padding: 4px 6px;
+  color: #4a4a4a;
+  font: 400 17px/1 Tahoma, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.stage-room-status__field {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.35), inset -1px -1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.stage-room-status__field--zoom {
+  min-width: 86px;
+  justify-content: center;
+}
+
+.stage-room-status__field--place {
+  min-width: 190px;
+}
+
+.stage-room-status__field--mode {
+  min-width: 96px;
+  justify-content: center;
+}
+
+.stage-room-status__keys {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.stage-room-status__key {
+  width: 52px;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.95), inset -1px -1px 0 rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.stage-room-status__key:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.stage-room-status__key:active:not(:disabled) {
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.4), inset -1px -1px 0 rgba(255, 255, 255, 0.95), 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.stage-room-status__key:disabled {
+  color: #a6a6a6;
+  cursor: default;
+}
+
+.stage-room-status__key:focus-visible {
+  outline: 2px solid #4a4a4a;
+  outline-offset: 1px;
+}

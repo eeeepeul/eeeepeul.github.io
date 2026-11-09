@@ -1,5 +1,6 @@
 'use client'
 
+import { getRoomZoom } from '../../lib/room-zoom.mjs'
 import { createElement, useEffect, useRef } from 'react'
 import { assetPath } from '../../lib/asset-path.mjs'
 import {
@@ -42,21 +43,28 @@ const getMapPoint = (state, map) => ({
   y: ((state.y + (map.cellCenter ?? 0)) / map.height) * 100,
 })
 
-const applyCamera = (cameraWorld, viewport, target, map) => {
+// `zoom` is how much the room is enlarged about the view (see lib/room-zoom.mjs); the middle of the view, in cells of the
+// map, is left on the world for the status bar to read
+const applyCamera = (cameraWorld, viewport, target, map, zoom = 1) => {
   const worldWidth = cameraWorld.clientWidth
   const worldHeight = cameraWorld.clientHeight
   const viewportWidth = viewport.clientWidth
   const viewportHeight = viewport.clientHeight
   if (!worldWidth || !worldHeight || !viewportWidth || !viewportHeight) return
 
-  const targetX = (target.x / map.width) * worldWidth
-  const targetY = (target.y / map.height) * worldHeight
-  const minX = Math.min(0, viewportWidth - worldWidth)
-  const minY = Math.min(0, viewportHeight - worldHeight)
+  const shownWidth = worldWidth * zoom
+  const shownHeight = worldHeight * zoom
+  const targetX = (target.x / map.width) * shownWidth
+  const targetY = (target.y / map.height) * shownHeight
+  const minX = Math.min(0, viewportWidth - shownWidth)
+  const minY = Math.min(0, viewportHeight - shownHeight)
   const x = Math.min(0, Math.max(minX, viewportWidth / 2 - targetX))
   const y = Math.min(0, Math.max(minY, viewportHeight / 2 - targetY))
 
-  cameraWorld.style.transform = `translate3d(${x}px, ${y}px, 0)`
+  cameraWorld.style.transformOrigin = '0 0'
+  cameraWorld.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${zoom})`
+  cameraWorld.dataset.viewX = (((viewportWidth / 2 - x) / shownWidth) * map.width).toFixed(1)
+  cameraWorld.dataset.viewY = (((viewportHeight / 2 - y) / shownHeight) * map.height).toFixed(1)
 }
 
 export function FollowingCharacterWorld({
@@ -90,6 +98,7 @@ export function FollowingCharacterWorld({
     navigationRef.current = navigation
     let frameId = 0
     let previousTime = performance.now()
+    let zoomNow = getRoomZoom()
 
     const getInitialPosition = (characterId, index) => {
       // a map may give its own places to start (the house picture does); the earlier room keeps its own
@@ -127,7 +136,11 @@ export function FollowingCharacterWorld({
       const activeId = activeCharacterRef.current
       const activeState = activeId ? motionStatesRef.current.get(activeId) : null
       const cameraTarget = activeState ?? map.overviewFocus ?? OVERVIEW_CAMERA_FOCUS
-      applyCamera(cameraWorld, viewport, cameraTarget, map)
+      // the zoom the keys ask for is reached smoothly, not in one jump
+      const wanted = getRoomZoom()
+      zoomNow += (wanted - zoomNow) * (1 - Math.exp(-deltaSeconds / 0.1))
+      if (Math.abs(wanted - zoomNow) < 0.0005) zoomNow = wanted
+      applyCamera(cameraWorld, viewport, cameraTarget, map, zoomNow)
       cameraWorld.dataset.cameraMode = activeState ? 'following' : 'living-room'
 
       frameId = requestAnimationFrame(animate)

@@ -4,14 +4,15 @@ import { createElement, useEffect, useState } from 'react'
 import { StageCalendar } from './StageCalendar.mjs'
 import { StageDrawingShelf, StageShelfInput } from './StageDrawingShelf.mjs'
 import { StageModel } from './StageModel.mjs'
+import { StageRoomStatus } from './StageRoomStatus.mjs'
 import { StageToolBar } from './StageToolBar.mjs'
 
 // The frame of the second pages (second/ and second/custom/): a fixed-proportion stage of 2000 x 1125, as the
 // supplied layout, fitted to the window and kept in its proportion (the room, the right panel and the rest
 // grow and shrink together). The room, the page links, the house button, the drawing pad and the right panel are
 // the ones the page always had, in the same places of the room; here they only take the new proportions.
-// The left side (calendar, tools, panels, satellite, small map), the bar along the top and the bar along the
-// bottom are plain boxes for now, each in its place, to be filled later.
+// The left side (calendar, tools, panels, satellite, small map) and the bar along the top are plain boxes for now, each
+// in its place, to be filled later; the bar along the bottom is the status bar (StageRoomStatus).
 export const SECOND_STAGE = { width: 2000, height: 1125 }
 
 // the boxes, in stage pixels: [class, left, top, width, height, number]. Each shows its number so it can be talked
@@ -56,7 +57,8 @@ export function SecondStage({ children, houseHref, houseLabel }) {
             key: name,
             className: `second-stage__box second-stage__box--${name}`,
             'data-stage-box': number,
-            'aria-hidden': 'true',
+            // (the status bar has keys of its own, so it is not hidden)
+            'aria-hidden': name === 'status-bar' ? undefined : 'true',
             style: { left, top, width, height },
           },
           // the calendar (2), the tool bar (3), the shelf of drawings (4-2), its input key (5) and the turning house (6) are
@@ -71,6 +73,8 @@ export function SecondStage({ children, houseHref, houseLabel }) {
             ? createElement(StageDrawingShelf)
             : name === 'satellite'
             ? createElement(StageShelfInput)
+            : name === 'status-bar'
+            ? createElement(StageRoomStatus)
             : createElement('b', { className: 'second-stage__number' }, number)
         )
       ),
