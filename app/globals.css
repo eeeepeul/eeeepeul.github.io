@@ -6115,12 +6115,13 @@ html[data-force-landscape] .stage {
   cursor: pointer;
 }
 
-/* pressed in while its window is open: the edges change places, the face goes a little darker */
+/* pressed in while its window is open (as in the supplied picture): the light rim stays, the face goes a shade darker and a
+   shade runs along the top and the left inside it; nothing is left of the raised edge below and on the right */
 .stage-tools__tool.is-pressed,
 .stage-tools__tool:active {
-  background: #c4c5b3;
-  border-color: #949684 #e3e4d2 #e3e4d2 #949684;
-  box-shadow: inset 4px 4px 0 #7d7f6d;
+  background: #bbbcac;
+  border-color: #e3e4d2;
+  box-shadow: inset 3px 3px 0 #8b8d7c;
 }
 
 .stage-tools__tool--one {
@@ -6606,6 +6607,8 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
   --ink: #292926;
   box-sizing: border-box;
   width: 380px;
+  /* it stands right against the tool bar: the bar (box 3) is 52 wide at the room's left edge, so the window starts after it */
+  margin-left: 52px;
   padding: 3px;
   color: var(--ink);
   background: var(--face);
