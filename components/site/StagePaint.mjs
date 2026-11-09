@@ -1,7 +1,8 @@
 'use client'
 
 import { createElement, useCallback, useEffect, useRef, useState } from 'react'
-import { BRUSH_SIZES } from '../../lib/drawing-tools.mjs'
+import { createPortal } from 'react-dom'
+import { BRUSH_SIZES, hexToHsl, hslToHex } from '../../lib/drawing-tools.mjs'
 import { getBoard, subscribeBoard } from '../../lib/drawing-board.mjs'
 import { PAINT_PALETTE, ellipseCells, floodFill, hexToRgba, lineCells, rectCells } from '../../lib/paint-tools.mjs'
 
@@ -50,11 +51,17 @@ function Icon({ name }) {
 export function StagePaint() {
   const [open, setOpen] = useState(false)
   const [folded, setFolded] = useState(false)
+  // the square key: the window fills the whole screen of the page (not a new window), and the board is drawn as large as fits
+  const [maximized, setMaximized] = useState(false)
+  const [cell, setCell] = useState(CELL)
   const [menu, setMenu] = useState(null)
   const [tool, setTool] = useState('pencil')
   const [grid, setGrid] = useState(false)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [hint, setHint] = useState('')
+  // the width the window was pulled to (null: its own width) and the least it can be
+  const [width, setWidth] = useState(null)
+  const naturalRef = useRef(0)
   const [, refresh] = useState(0)
   const canvasRef = useRef(null)
   const windowRef = useRef(null)
@@ -74,8 +81,23 @@ export function StagePaint() {
       setOffset({ x: 0, y: 0 })
       setFolded(false)
       setMenu(null)
+      setWidth(null)
+      setMaximized(false)
+      setCell(CELL)
     }
   }, [open])
+
+  // when it fills the screen the board gets as large as the height allows (the rest of the window, about 190, stays)
+  useEffect(() => {
+    if (!open) return
+    if (!maximized) {
+      setCell(CELL)
+      return
+    }
+    const element = windowRef.current
+    const rows = (board() && board().rows) || 188
+    if (element) setCell(Math.max(CELL, Math.floor(((element.offsetHeight - 214) / rows) * 10) / 10))
+  }, [open, maximized]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const board = () => {
     const entry = getBoard()
@@ -94,17 +116,19 @@ export function StagePaint() {
   useEffect(() => {
     if (!open) return undefined
     show()
+    window.requestAnimationFrame(show)
     return subscribeBoard(() => {
       show()
       refresh((count) => count + 1)
     })
-  }, [open, show])
+  }, [open, show, maximized])
 
   useEffect(() => {
     if (!open) return undefined
     const onKey = (event) => {
       if (event.key === 'Escape') {
         if (menu) setMenu(null)
+        else if (maximized) setMaximized(false)
         else setOpen(false)
       }
     }
@@ -117,12 +141,13 @@ export function StagePaint() {
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('pointerdown', onDown)
     }
-  }, [open, menu])
+  }, [open, menu, maximized])
 
   if (!open) return null
 
   const current = board()
   const colour = current ? current.colour : '#1c1c1c'
+  const hsl = hexToHsl(colour)
 
   const cellAt = (event) => {
     const box = canvasRef.current.getBoundingClientRect()
@@ -218,12 +243,33 @@ export function StagePaint() {
   }
 
   const beginDrag = (event) => {
-    if (event.target.closest('button')) return
+    if (event.target.closest('button') || maximized) return
     const box = windowRef.current.getBoundingClientRect()
     const scale = box.width / windowRef.current.offsetWidth || 1
     const start = { x: event.clientX, y: event.clientY, from: offset }
     const move = (moveEvent) =>
       setOffset({ x: start.from.x + (moveEvent.clientX - start.x) / scale, y: start.from.y + (moveEvent.clientY - start.y) / scale })
+    const end = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', end)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', end)
+  }
+
+  // the grip on the right edge: pull it to make the window wider (not narrower than it is at first)
+  const beginResize = (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    const element = windowRef.current
+    const box = element.getBoundingClientRect()
+    const scale = box.width / element.offsetWidth || 1
+    if (!naturalRef.current) naturalRef.current = element.offsetWidth
+    const startWidth = element.offsetWidth
+    const startX = event.clientX
+    const room = element.parentElement.offsetWidth
+    const move = (moveEvent) =>
+      setWidth(Math.round(Math.min(room - 8, Math.max(naturalRef.current, startWidth + (moveEvent.clientX - startX) / scale))))
     const end = () => {
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', end)
@@ -269,17 +315,14 @@ export function StagePaint() {
     { name: 'Help', items: [{ label: 'Esc closes the window', disabled: true }, { label: 'Drag the title bar to move it', disabled: true }] },
   ]
 
-  return createElement(
-    'div',
-    { className: 'paint-layer' },
-    createElement(
+  const windowElement = createElement(
       'div',
       {
         ref: windowRef,
-        className: `paint${folded ? ' is-folded' : ''}`,
+        className: `paint${folded ? ' is-folded' : ''}${maximized ? ' is-maximized' : ''}`,
         role: 'dialog',
         'aria-label': 'untitled - Paint',
-        style: { transform: `translate(${offset.x}px, ${offset.y}px)` },
+        style: maximized ? undefined : { transform: `translate(${offset.x}px, ${offset.y}px)`, width: width ?? undefined },
       },
       createElement(
         'div',
@@ -287,7 +330,7 @@ export function StagePaint() {
         createElement('span', { className: 'paint__brushmark', 'aria-hidden': 'true' }),
         createElement('span', { className: 'paint__name' }, 'untitled - Paint'),
         createElement('button', { type: 'button', className: 'paint__wbtn paint__wbtn--min', 'aria-label': '접기', onClick: () => { setFolded(true); setMenu(null) } }),
-        createElement('button', { type: 'button', className: 'paint__wbtn paint__wbtn--max', 'aria-label': '펴기', onClick: () => setFolded(false) }),
+        createElement('button', { type: 'button', className: 'paint__wbtn paint__wbtn--max', 'aria-label': folded ? '펴기' : maximized ? '원래 크기로' : '전체 화면', 'aria-pressed': maximized, onClick: () => { if (folded) setFolded(false); else setMaximized((value) => !value) } }),
         createElement('button', { type: 'button', className: 'paint__wbtn paint__wbtn--close', 'aria-label': '닫기', onClick: () => setOpen(false) })
       ),
       folded
@@ -397,7 +440,7 @@ export function StagePaint() {
                   className: `paint__canvas${grid ? ' has-grid' : ''}`,
                   width: current ? current.columns : 100,
                   height: current ? current.rows : 188,
-                  style: { width: (current ? current.columns : 100) * CELL, height: (current ? current.rows : 188) * CELL },
+                  style: { width: (current ? current.columns : 100) * cell, height: (current ? current.rows : 188) * cell },
                   onPointerDown: onDown,
                   onPointerMove: onMove,
                   onPointerUp: onUp,
@@ -406,6 +449,8 @@ export function StagePaint() {
                 })
               )
             ),
+            // the colours, made as the pad's colour chooser is: the colour now in a framed box, the 28 colours in two rows of fourteen,
+            // and under them the hue bar and the lightness bar
             createElement(
               'div',
               { className: 'paint__palette' },
@@ -416,18 +461,41 @@ export function StagePaint() {
               ),
               createElement(
                 'div',
-                { className: 'paint__colours', role: 'group', 'aria-label': '색' },
-                PAINT_PALETTE.map((hex) =>
-                  createElement('button', {
-                    key: hex,
-                    type: 'button',
-                    className: `paint__colour${colour.toLowerCase() === hex ? ' is-pressed' : ''}`,
-                    style: { background: hex },
-                    'aria-label': hex,
-                    title: hex,
-                    onClick: () => current && current.setColour(hex),
-                  })
-                )
+                { className: 'paint__chooser' },
+                createElement(
+                  'div',
+                  { className: 'paint__colours', role: 'group', 'aria-label': '색' },
+                  PAINT_PALETTE.map((hex) =>
+                    createElement('button', {
+                      key: hex,
+                      type: 'button',
+                      className: `paint__colour${colour.toLowerCase() === hex ? ' is-pressed' : ''}`,
+                      style: { background: hex },
+                      'aria-label': hex,
+                      title: hex,
+                      onClick: () => current && current.setColour(hex),
+                    })
+                  )
+                ),
+                createElement('input', {
+                  type: 'range',
+                  className: 'paint__bar paint__bar--hue',
+                  min: 0,
+                  max: 360,
+                  value: hsl.h,
+                  'aria-label': '색상',
+                  onChange: (event) => current && current.setColour(hslToHex({ h: Number(event.target.value), s: hsl.s === 0 ? 100 : hsl.s, l: hsl.l })),
+                }),
+                createElement('input', {
+                  type: 'range',
+                  className: 'paint__bar paint__bar--light',
+                  min: 0,
+                  max: 100,
+                  value: hsl.l,
+                  style: { '--track': `linear-gradient(90deg, hsl(${hsl.h} ${hsl.s}% 0%), hsl(${hsl.h} ${hsl.s}% 50%), hsl(${hsl.h} ${hsl.s}% 100%))` },
+                  'aria-label': '명도',
+                  onChange: (event) => current && current.setColour(hslToHex({ h: hsl.h, s: hsl.s, l: Number(event.target.value) })),
+                })
               )
             ),
             createElement(
@@ -436,7 +504,21 @@ export function StagePaint() {
               createElement('span', null, hint || 'For Help, press the Help menu.'),
               createElement('span', null, current ? `${current.columns} x ${current.rows}` : '')
             )
-          )
+          ),
+      folded || maximized
+        ? null
+        : createElement('button', {
+            type: 'button',
+            className: 'paint__grip',
+            'aria-label': '창 가로 길이 조절',
+            title: '끌어서 가로로 늘리기',
+            tabIndex: -1,
+            onPointerDown: beginResize,
+          })
     )
-  )
+
+  // filling the screen the window is drawn against the stage itself, above all its boxes; otherwise it stands in the room
+  const stageRoot = typeof document !== 'undefined' ? document.querySelector('.second-stage__canvas') : null
+  const layer = createElement('div', { className: `paint-layer${maximized ? ' is-maximized' : ''}` }, windowElement)
+  return maximized && stageRoot ? createPortal(layer, stageRoot) : layer
 }

@@ -7,6 +7,7 @@ import { BRUSH_SIZES, DEFAULT_BRUSH, createHistory, hexText, hexToHsl, hslToHex,
 import { saveDrawing } from '../../lib/drawing-gallery.mjs'
 import { getSharedDrawingStore } from '../../lib/supabase-browser.mjs'
 import { notifyBoard, registerBoard } from '../../lib/drawing-board.mjs'
+import { PAINT_PALETTE } from '../../lib/paint-tools.mjs'
 
 // A small drawing board for the custom page: a low-resolution canvas shown with hard pixels, and under it one row of
 // tools: the colour (a field with its hex text), undo and redo (< >), the brush size (+ -) and clear; then input and save.
@@ -360,6 +361,27 @@ export function DrawingPad() {
       ? createElement(
           'div',
           { className: 'drawing-pad__chooser', role: 'group', 'aria-label': '색 조절' },
+          // the palette of the Paint window (StagePaint): the colour now in a box, and the 28 colours beside it
+          createElement(
+            'div',
+            { className: 'drawing-pad__palette' },
+            createElement('span', { className: 'drawing-pad__now', title: '지금 색' }, createElement('i', { style: { background: colour } })),
+            createElement(
+              'div',
+              { className: 'drawing-pad__colours' },
+              PAINT_PALETTE.map((hexColour) =>
+                createElement('button', {
+                  key: hexColour,
+                  type: 'button',
+                  className: `drawing-pad__pal${colour.toLowerCase() === hexColour ? ' is-pressed' : ''}`,
+                  style: { background: hexColour },
+                  'aria-label': hexColour,
+                  title: hexColour,
+                  onClick: () => chooseColour(hexColour),
+                })
+              )
+            )
+          ),
           createElement('input', {
             type: 'range',
             className: 'drawing-pad__bar drawing-pad__bar--hue',

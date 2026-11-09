@@ -5381,13 +5381,60 @@ button:focus-visible,
   bottom: 58px;
   z-index: 5;
   display: grid;
-  gap: 8px;
-  width: 150px;
+  gap: 5px;
+  width: 195px;
   box-sizing: border-box;
-  padding: 10px 10px 12px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+  padding: 4px;
+  background: #c7c7ba;
+  border: 2px solid;
+  border-color: #e8e8da #646653 #646653 #e8e8da;
+  border-radius: 0;
+  box-shadow: 1px 1px 0 #000, 3px 4px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* the palette, as in the large Paint window: the colour now in a box, the 28 colours in two rows of fourteen */
+.drawing-pad__palette {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px;
+  border: 2px solid;
+  border-color: #646653 #e8e8da #e8e8da #646653;
+}
+
+.drawing-pad__now {
+  display: grid;
+  place-items: center;
+  flex: 0 0 26px;
+  height: 26px;
+  background: #c7c7ba;
+  border: 2px solid;
+  border-color: #646653 #e8e8da #e8e8da #646653;
+}
+
+.drawing-pad__now i {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #292926;
+}
+
+.drawing-pad__colours {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(14, 1fr);
+}
+
+.drawing-pad__pal {
+  height: 12px;
+  padding: 0;
+  border: 1px solid;
+  border-color: #e8e8da #646653 #646653 #e8e8da;
+  cursor: pointer;
+}
+
+.drawing-pad__pal.is-pressed {
+  border-color: #292926;
 }
 
 .drawing-pad__bar {
@@ -5397,7 +5444,10 @@ button:focus-visible,
   margin: 0;
   padding: 0;
   background: var(--track, linear-gradient(90deg, #ee3a2c, #f5c542 12%, #7be03a 30%, #4af0f0 50%, #1a1ae8 66%, #e83af0 82%, #ee3a2c));
-  border-radius: 6px;
+  border: 2px solid;
+  border-color: #646653 #e8e8da #e8e8da #646653;
+  border-radius: 0;
+  box-sizing: border-box;
   outline: none;
   appearance: none;
   -webkit-appearance: none;
@@ -5405,23 +5455,25 @@ button:focus-visible,
 }
 
 .drawing-pad__bar::-webkit-slider-thumb {
-  width: 16px;
-  height: 16px;
-  background: radial-gradient(circle, var(--dot, #d9392b) 0 36%, #fff 40%);
-  border: 0;
-  border-radius: 50%;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  width: 8px;
+  height: 14px;
+  background: #c7c7ba;
+  border: 2px solid;
+  border-color: #e8e8da #646653 #646653 #e8e8da;
+  border-radius: 0;
+  box-sizing: border-box;
   appearance: none;
   -webkit-appearance: none;
 }
 
 .drawing-pad__bar::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  background: radial-gradient(circle, var(--dot, #d9392b) 0 36%, #fff 40%);
-  border: 0;
-  border-radius: 50%;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  width: 8px;
+  height: 14px;
+  background: #c7c7ba;
+  border: 2px solid;
+  border-color: #e8e8da #646653 #646653 #e8e8da;
+  border-radius: 0;
+  box-sizing: border-box;
 }
 
 .drawing-pad__hex {
@@ -7300,4 +7352,148 @@ body:has(:is(.second-stage__box--calendar, .second-stage__box--tools, .second-st
 
 .paint.is-folded {
   width: 300px;
+}
+
+/* the window can be made wider: the grip along its right edge; the drawing stays as it is (it is the pad's board) in the middle of
+   a wider grey sheet, and the palette and the status bar spread with the window */
+.paint {
+  position: relative;
+}
+
+.paint__grip {
+  position: absolute;
+  top: 28px;
+  right: -4px;
+  bottom: 0;
+  width: 8px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.paint__sheet {
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+/* the square key: the window fills the whole screen of the page, over everything (it is made against the stage, which is
+   scaled as a whole, so "fixed" here is the stage's own edges) */
+.paint.is-maximized {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  width: auto;
+  border-width: 0;
+  box-shadow: none;
+}
+
+.paint.is-maximized .paint__title {
+  cursor: default;
+}
+
+.paint.is-maximized .paint__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.paint.is-maximized .paint__work {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.paint.is-maximized .paint__sheet {
+  overflow: auto;
+}
+
+.paint-layer.is-maximized {
+  z-index: 300;
+  pointer-events: none;
+}
+
+/* the colours of the window, as the pad's colour chooser is: a framed box with the colour now, 28 square colours with a little
+   space between them, and the hue bar and the lightness bar under them; kept at their own size however wide the window is */
+.paint__palette {
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px;
+}
+
+.paint__now {
+  flex: 0 0 62px;
+  height: 62px;
+}
+
+.paint__now i {
+  width: 34px;
+  height: 34px;
+  border-width: 2px;
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+}
+
+.paint__chooser {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.paint__colours {
+  flex: none;
+  grid-template-columns: repeat(14, 26px);
+  gap: 3px;
+}
+
+.paint__colour {
+  height: 22px;
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+}
+
+.paint__colour.is-pressed {
+  border-color: var(--ink);
+}
+
+.paint__bar {
+  display: block;
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  background: var(--track, linear-gradient(90deg, #ee3a2c, #f5c542 12%, #7be03a 30%, #4af0f0 50%, #1a1ae8 66%, #e83af0 82%, #ee3a2c));
+  border: 2px solid;
+  border-color: var(--dark) var(--light) var(--light) var(--dark);
+  box-sizing: border-box;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.paint__bar::-webkit-slider-thumb {
+  width: 12px;
+  height: 20px;
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.paint__bar::-moz-range-thumb {
+  width: 12px;
+  height: 20px;
+  background: var(--face);
+  border: 2px solid;
+  border-color: var(--light) var(--dark) var(--dark) var(--light);
+  box-sizing: border-box;
+  border-radius: 0;
 }
