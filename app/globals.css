@@ -6115,13 +6115,16 @@ html[data-force-landscape] .stage {
   cursor: pointer;
 }
 
-/* pressed in while its window is open (as in the supplied picture): the light rim stays, the face goes a shade darker and a
-   shade runs along the top and the left inside it; nothing is left of the raised edge below and on the right */
+/* pressed in, as the tool bar of the main page's map presses its keys (its raised edges change places and its face goes a shade
+   darker), measured from the supplied picture of the pressed key: the light rim is thin above and on the left (1px) and stays
+   2px below and on the right, a shade 2px thick runs along the top and the left inside it, the face is #bbbcac, and the
+   raised shade below and on the right is gone */
 .stage-tools__tool.is-pressed,
 .stage-tools__tool:active {
   background: #bbbcac;
   border-color: #e3e4d2;
-  box-shadow: inset 3px 3px 0 #8b8d7c;
+  border-width: 1px 2px 2px 1px;
+  box-shadow: inset 2px 2px 0 #8b8d7c;
 }
 
 .stage-tools__tool--one {
