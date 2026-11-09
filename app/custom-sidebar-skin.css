@@ -1,16 +1,16 @@
-/* The right bar of second/custom/ in the supplied picture: a light grey ground, the dashed grey bars and boxes, the
+/* The right bar of second/custom/ in the olive grid of the map's tool picture (olive ground #837d50, cells #898346 and #696336, black one-pixel lines); first it was a light grey ground, the dashed grey bars and boxes, the
    framed pictures for the colours, the dark red input bar. Only the look: what each part does is as it was.
    The bar is drawn 287 pixels wide and made as wide as its panel (--k), so everything in it keeps its proportion
    (the supplied picture divided by 2.449). Loaded after max-ui.css, whose raised edges it takes off here. */
 
 .pixel-custom-sidebar {
   --k: 1.1115; /* a panel 319 pixels wide */
-  --bar: #c9cdcd;
-  --ground: #eceeef;
-  --box: #dfe0e0;
-  --dash: #aeb8b6;
-  --ink: #6a6f6f;
-  --edge: #6b7474;
+  --bar: #696336;
+  --ground: #837d50;
+  --box: #898346;
+  --dash: #080500;
+  --ink: #e6e0b0;
+  --edge: #080500;
   --red: #7a0006;
   width: 287px;
   height: calc(100% / var(--k));
@@ -32,7 +32,7 @@
 .color-panel:has(.pixel-custom-sidebar),
 .second-stage .color-panel:has(.pixel-custom-sidebar) {
   padding: 0;
-  background: var(--ground, #eceeef);
+  background: var(--ground, #837d50);
   box-shadow: none;
 }
 
@@ -62,7 +62,7 @@
   grid-template-rows: 32px minmax(0, 1fr);
   gap: 10.6px;
   background: var(--bar);
-  border: 1px dashed var(--dash);
+  border: 1px solid var(--dash);
   box-shadow: none;
   box-sizing: border-box;
 }
@@ -72,8 +72,8 @@
   height: 32px;
   justify-self: stretch;
   padding: 0 6px 0 12px;
-  color: #a3a8a8;
-  background: var(--ground);
+  color: #c9c38f;
+  background: var(--bar);
   border: 0;
   font-size: 10px;
 }
@@ -83,14 +83,14 @@
   height: 22px;
   display: grid;
   place-items: center;
-  color: #5d6262;
-  background: var(--bar);
+  color: #e6e0b0;
+  background: var(--box);
   font-size: 10px;
   font-style: normal;
 }
 
 .pixel-custom-sidebar .pixel-sidebar-preview-frame {
-  background: var(--ground);
+  background: var(--box);
   border: 0;
   box-shadow: none;
 }
@@ -111,12 +111,12 @@
   width: 25px;
   height: 25px;
   background: var(--box);
-  border: 1px dashed var(--dash);
+  border: 1px solid var(--dash);
   box-sizing: border-box;
 }
 
 .pixel-custom-sidebar .pixel-sidebar-tool-stack span:first-child {
-  border-color: #4d5251;
+  border-color: #e6e0b0;
 }
 
 .pixel-custom-sidebar .pixel-sidebar-tool-expression img {
@@ -131,7 +131,7 @@
 
 .pixel-custom-sidebar .pixel-sidebar-avatar-small {
   background: var(--box);
-  border: 1px dashed var(--dash);
+  border: 1px solid var(--dash);
 }
 
 /* the groups: a dashed grey bar for the title, the choices under it */
@@ -154,7 +154,7 @@
   padding: 0 4px 0 6px;
   color: var(--ink);
   background: var(--bar);
-  border: 1px dashed var(--dash);
+  border: 1px solid var(--dash);
   box-shadow: none;
   box-sizing: border-box;
   font-size: 10px;
@@ -200,8 +200,8 @@
 .pixel-custom-sidebar .pixel-custom-row-arrow {
   width: 16px;
   height: 15px;
-  color: #2d3231;
-  background: #9aa5a3;
+  color: #080500;
+  background: #a39d62;
   box-shadow: none;
   font-size: 13px;
   line-height: 13px;
