@@ -65,9 +65,12 @@ export function StageCdPlayer() {
   const [lengths, setLengths] = useState({})
   const [peaks, setPeaks] = useState(null)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
+  // true while the window slides back to its place before it closes (the x key)
+  const [returning, setReturning] = useState(false)
   const audioRef = useRef(null)
   const canvasRef = useRef(null)
   const windowRef = useRef(null)
+  const closeHomeRef = useRef(() => {})
   const loopRef = useRef(loop)
   const trackRef = useRef(track)
   loopRef.current = loop
@@ -76,6 +79,13 @@ export function StageCdPlayer() {
 
   useEffect(() => {
     window.dispatchEvent(new CustomEvent(STATE_EVENT, { detail: { open } }))
+    // a closed window comes back in its own place, unfolded
+    if (!open) {
+      setOffset({ x: 0, y: 0 })
+      setFolded(false)
+      setMenu(null)
+      setReturning(false)
+    }
   }, [open])
 
   useEffect(() => {
@@ -172,7 +182,7 @@ export function StageCdPlayer() {
     const onKey = (event) => {
       if (event.key === 'Escape') {
         if (menu) setMenu(null)
-        else setOpen(false)
+        else closeHomeRef.current()
       }
     }
     const onDown = (event) => {
@@ -216,6 +226,17 @@ export function StageCdPlayer() {
     if (!audio || !Number.isFinite(audio.duration)) return
     audio.currentTime = (Number(event.target.value) / 1000) * audio.duration
   }
+  // the x key: a window that was dragged away slides back to where it stands at first, then closes
+  const closeHome = () => {
+    setMenu(null)
+    if (offset.x === 0 && offset.y === 0) {
+      setOpen(false)
+      return
+    }
+    setReturning(true)
+    setOffset({ x: 0, y: 0 })
+    window.setTimeout(() => setOpen(false), 220)
+  }
   const beginDrag = (event) => {
     if (event.target.closest('button')) return
     const box = windowRef.current.getBoundingClientRect()
@@ -231,6 +252,7 @@ export function StageCdPlayer() {
     window.addEventListener('pointerup', end)
   }
 
+  closeHomeRef.current = closeHome
   const total = Object.values(lengths).reduce((sum, value) => sum + (Number.isFinite(value) ? value : 0), 0)
   const trackTime = remaining && Number.isFinite(time.length) ? time.length - time.now : time.now
   const knownAll = TRACKS.filter((item) => item.src).every((item, index) => Number.isFinite(lengths[TRACKS.indexOf(item)]))
@@ -263,7 +285,7 @@ export function StageCdPlayer() {
         className: `cd-player${folded ? ' is-folded' : ''}`,
         role: 'dialog',
         'aria-label': 'CD Player',
-        style: { transform: `translate(${offset.x}px, ${offset.y}px)` },
+        style: { transform: `translate(${offset.x}px, ${offset.y}px)`, transition: returning ? 'transform 200ms ease-out' : undefined },
       },
       createElement(
         'div',
@@ -272,7 +294,7 @@ export function StageCdPlayer() {
         createElement('span', { className: 'cd-player__name' }, 'CD Player'),
         createElement('button', { type: 'button', className: 'cd-player__wbtn cd-player__wbtn--min', 'aria-label': '접기', onClick: () => { setFolded(true); setMenu(null) } }),
         createElement('button', { type: 'button', className: 'cd-player__wbtn cd-player__wbtn--max', 'aria-label': '펴기', onClick: () => setFolded(false) }),
-        createElement('button', { type: 'button', className: 'cd-player__wbtn cd-player__wbtn--close', 'aria-label': '닫기', onClick: () => setOpen(false) })
+        createElement('button', { type: 'button', className: 'cd-player__wbtn cd-player__wbtn--close', 'aria-label': '닫기', onClick: closeHome })
       ),
       folded
         ? null
