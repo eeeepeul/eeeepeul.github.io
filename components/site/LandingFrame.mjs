@@ -16,7 +16,8 @@ export function LandingFrame({
   onRouteSelect,
   sidebarFooter,
   scaleSidebarToViewport = false,
-  showNavigation = true,
+  // the MAP / CUSTOM buttons at the top are not shown (PageNavigation is kept, for a page that asks for it)
+  showNavigation = false,
   showHouseLink = true,
   showSidebar = true,
   stage = false,

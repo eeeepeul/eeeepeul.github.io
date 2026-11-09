@@ -41,7 +41,8 @@ test('links to a dedicated custom route that renders the current sidebar in the 
 
   assert.match(navigationHtml, /href="\/second\/custom\/"[^>]*>custom<\/a>/)
   assert.match(customHtml, /class="[^"]*pixel-custom-sidebar[^"]*"/)
-  assert.match(customHtml, /aria-current="page"[^>]*>custom<\/a>/)
+  // the MAP / CUSTOM buttons are not shown on the page itself
+  assert.doesNotMatch(customHtml, /class="page-route-nav"/)
   assert.match(customHtml, /aria-label="캐릭터 커스터마이징 사이드바"/)
   assert.doesNotMatch(customHtml, /aria-label="새 캐릭터 추가"/)
 })
