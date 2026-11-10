@@ -31,20 +31,30 @@ test('every place a match may go can be reached from every other (one floor, thr
   assert.ok(seen.size > 5000)
 })
 
-test('the walls, the pond and the outside are not floor', () => {
-  // the outside (the black round the house), the left outer wall (picture x 375), the pond (picture 950, 1100),
-  // and the wall between the dining room and the bedroom under it (picture 550, 1095)
-  ;[[5, 5], [100, 20], [37, 80], [95, 110], [55, 109]].forEach(([x, y]) => assert.equal(walkable(x, y), false, `${x}:${y}`))
-  // the corridor in front of the pond room (picture 1000, 1225) and the dining room floor (picture 440, 1060) are floor
-  ;[[100, 122], [44, 106]].forEach(([x, y]) => assert.equal(walkable(x, y), true, `${x}:${y}`))
+test('the walls and the outside are not floor, the rooms and the corridors are', () => {
+  // the dark outside (the sheet's corner, the dark ground left of the house, above the V), the house's left wall (cell 43:66)
+  // and the top wall of the room under it (cell 75:63)
+  ;[[5, 5], [25, 100], [100, 20], [43, 66], [75, 63]].forEach(([x, y]) => assert.equal(walkable(x, y), false, `${x}:${y}`))
+  // the middle hall (106:81), the room under the wall (75:66) and the corridor along the bottom (48:129, 125:129) are floor
+  ;[[106, 81], [75, 66], [48, 129], [125, 129]].forEach(([x, y]) => assert.equal(walkable(x, y), true, `${x}:${y}`))
 })
 
-test('the matches start on the floor, in the part of the house the camera shows first, and walk only on floor', () => {
+test('the doors are ways through: the room under 75:63 is joined to the rest of the floor', () => {
+  // (the one connected floor test above holds for every cell, so a room whose door were closed would be left out of it)
+  assert.equal(walkable(75, 66), true)
+  assert.ok(HOUSE_MAP_WALK_ROWS.join('').split('.').length - 1 > 8000)
+})
+
+test('the matches start on the floor, in the open and spread over the house, and walk only on floor', () => {
   const navigation = createInteriorNavigation(HOUSE_MAP_WALK)
+  const open = (x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1], [2, 0], [-2, 0], [0, 2], [0, -2]].every(([dx, dy]) => walkable(x + dx, y + dy))
   HOUSE_MAP_WALK.spawnCells.forEach(({ x, y }) => {
     assert.ok(walkable(x, y))
-    assert.ok(x >= 45 && x <= 104 && y >= 94 && y <= 139)
+    assert.ok(open(x, y), `${x}:${y} is not in the open`)
   })
+  assert.equal(HOUSE_MAP_WALK.spawnCells.length, 6)
+  const spread = HOUSE_MAP_WALK.spawnCells.flatMap((a, i) => HOUSE_MAP_WALK.spawnCells.slice(i + 1).map((b) => Math.hypot(a.x - b.x, a.y - b.y)))
+  assert.ok(Math.min(...spread) > 20, 'the starting places are spread')
   let state = createWanderState(HOUSE_MAP_WALK.spawnCells[0], () => 0.37)
   let draw = 0.11
   for (let step = 0; step < 4000; step += 1) {

@@ -6221,7 +6221,7 @@ html[data-force-landscape] .stage {
 }
 
 /* ---- the room of the second pages: the house picture as the ground ---- */
-/* The picture (media/house-map.webp, the supplied plan of the house) lies over the drawn room, the whole size of the
+/* The picture (media/house-map-pixel.png, the supplied plan of the house) lies over the drawn room, the whole size of the
    map, so the matches walk on it as they walked on the room. */
 .house-interior-map-picture {
   position: absolute;
