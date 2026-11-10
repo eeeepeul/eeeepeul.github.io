@@ -28,21 +28,28 @@ test('every place a match may go can be reached from every other (one floor, thr
     }
   }
   assert.equal(seen.size, navigation.walkableCells.length)
-  assert.ok(seen.size > 5000)
+  assert.ok(seen.size > 1500)
 })
 
-test('the walls and the outside are not floor, the rooms and the corridors are', () => {
+test('the walls and the outside are not floor, the corridors are, and the rooms are not entered', () => {
   // the dark outside (the sheet's corner, the dark ground left of the house, above the V), the house's left wall (cell 43:66)
-  // and the top wall of the room under it (cell 75:63)
-  ;[[5, 5], [25, 100], [100, 20], [43, 66], [75, 63]].forEach(([x, y]) => assert.equal(walkable(x, y), false, `${x}:${y}`))
-  // the middle hall (106:81), the room under the wall (75:66) and the corridor along the bottom (48:129, 125:129) are floor
-  ;[[106, 81], [75, 66], [48, 129], [125, 129]].forEach(([x, y]) => assert.equal(walkable(x, y), true, `${x}:${y}`))
+  ;[[5, 5], [25, 100], [100, 20], [43, 66]].forEach(([x, y]) => assert.equal(walkable(x, y), false, `${x}:${y}`))
+  // the rooms are walled boxes with a door each (a match keeps to the corridors): the middle hall (106:81), the room under the
+  // wall at 75:63 (75:66), the room under the hall (100:100), the top left room (30:25) and a room of the right side (160:60)
+  ;[[106, 81], [75, 66], [100, 100], [30, 25], [160, 60]].forEach(([x, y]) => assert.equal(walkable(x, y), false, `room ${x}:${y}`))
+  // the corridor along the bottom of the house is floor
+  ;[[100, 123], [75, 125], [50, 127]].forEach(([x, y]) => assert.equal(walkable(x, y), true, `${x}:${y}`))
 })
 
-test('the doors are ways through: the room under 75:63 is joined to the rest of the floor', () => {
-  // (the one connected floor test above holds for every cell, so a room whose door were closed would be left out of it)
-  assert.equal(walkable(75, 66), true)
-  assert.ok(HOUSE_MAP_WALK_ROWS.join('').split('.').length - 1 > 8000)
+test('the floor keeps away from the edge of the sheet and from the dark outside (the generator keeps a cell round every floor cell)', () => {
+  HOUSE_MAP_WALK_ROWS.forEach((row, y) => {
+    for (let x = 0; x < row.length; x += 1) {
+      if (row[x] !== '.') continue
+      assert.ok(x > 2 && y > 2 && x < row.length - 3 && y < HOUSE_MAP_WALK_ROWS.length - 3, `${x}:${y} is at the edge`)
+      // the dark ground left of the house (cells 15 to 43 across, 42 to 141 down) is never reached
+      assert.ok(!(x >= 15 && x <= 44 && y >= 42 && y <= 141), `${x}:${y} is on the dark ground`)
+    }
+  })
 })
 
 test('the matches start on the floor, in the open and spread over the house, and walk only on floor', () => {
@@ -54,7 +61,7 @@ test('the matches start on the floor, in the open and spread over the house, and
   })
   assert.equal(HOUSE_MAP_WALK.spawnCells.length, 6)
   const spread = HOUSE_MAP_WALK.spawnCells.flatMap((a, i) => HOUSE_MAP_WALK.spawnCells.slice(i + 1).map((b) => Math.hypot(a.x - b.x, a.y - b.y)))
-  assert.ok(Math.min(...spread) > 20, 'the starting places are spread')
+  assert.ok(Math.min(...spread) > 10, 'the starting places are spread')
   let state = createWanderState(HOUSE_MAP_WALK.spawnCells[0], () => 0.37)
   let draw = 0.11
   for (let step = 0; step < 4000; step += 1) {

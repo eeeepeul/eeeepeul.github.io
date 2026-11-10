@@ -3,9 +3,10 @@
 // - public/media/house-map-pixel.png: the plan in its own pixels (1024 x 800), laid in the middle of a 1200 x 900 sheet of the
 //   plan's dark outside, so the picture is 4:3 as the room is and drawn 4800 / 1200 = 4 room pixels for each of its pixels
 //   (hard squares: image-rendering: pixelated).
-// - lib/house-map-walk.mjs: 200 x 150 cells of 6 x 6 pixels of that sheet. A cell is floor when it is nearly all white (or
-//   the grey of a door); walls, the house's own walls and stairs, the plants and the dark outside are not. Only the largest
-//   connected floor is kept (every place can be reached from every other, through the doors).
+// - lib/house-map-walk.mjs: 200 x 150 cells of 6 x 6 pixels of that sheet. A cell is floor when it is nearly all white; walls,
+//   the doors (a match keeps to the corridors and does not go into the rooms, so a door is a wall to it), the house's own
+//   walls and stairs, the plants and the dark outside are not. Only the largest connected floor is kept, and it is kept
+//   CLEARANCE cells away from everything that is not floor, so that a match never stands on or against a wall.
 import { writeFileSync } from 'node:fs'
 import sharp from 'sharp'
 
@@ -14,7 +15,8 @@ if (!SOURCE) throw new Error('usage: node scripts/generate-house-map.mjs <plan.p
 const SHEET = { width: 1200, height: 900 }
 const CELLS = { width: 200, height: 150 }
 const CELL = SHEET.width / CELLS.width // 6
-const FLOOR_SHARE = 0.75 // a cell is floor when this much of it is floor
+const FLOOR_SHARE = 0.8 // a cell is floor when this much of it is white
+const CLEARANCE = 1 // cells between a match's cell and the nearest wall (or anything else that is not floor)
 
 const { data, info } = await sharp(SOURCE).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
 const offsetX = Math.round((SHEET.width - info.width) / 2)
@@ -39,7 +41,7 @@ writeFileSync('public/media/house-map-pixel.png', sheet)
 const isWhite = ([r, g, b, a]) => a >= 200 && r >= 245 && g >= 245 && b >= 240
 // a door is drawn as a thin grey mark in the wall: a cell with some of it is a way through
 const isDoor = ([r, g, b, a]) => a >= 200 && Math.abs(r - g) <= 3 && Math.abs(g - b) <= 3 && r >= 185 && r <= 220
-const DOOR_SHARE = 0.1
+const DOOR_SHARE = 0.1 // (a door is a wall to a match: it does not go into the rooms)
 let floor = []
 for (let cy = 0; cy < CELLS.height; cy += 1) {
   const row = []
@@ -54,7 +56,7 @@ for (let cy = 0; cy < CELLS.height; cy += 1) {
         else if (isDoor(p)) door += 1
       }
     }
-    row.push((white + door) / (CELL * CELL) >= FLOOR_SHARE || door / (CELL * CELL) >= DOOR_SHARE)
+    row.push(white / (CELL * CELL) >= FLOOR_SHARE && door / (CELL * CELL) < DOOR_SHARE)
   }
   floor.push(row)
 }
@@ -83,10 +85,55 @@ for (let y = 0; y < CELLS.height; y += 1) {
     if (part.length > best.length) best = part
   }
 }
-const keep = floor.map((row) => row.map(() => false))
-best.forEach(([x, y]) => {
-  keep[y][x] = true
-})
+const largest = (grid) => {
+  const done = grid.map((row) => row.map(() => false))
+  let top = []
+  for (let y = 0; y < CELLS.height; y += 1) {
+    for (let x = 0; x < CELLS.width; x += 1) {
+      if (!grid[y][x] || done[y][x]) continue
+      const part = []
+      const stack = [[x, y]]
+      done[y][x] = true
+      while (stack.length) {
+        const [px, py] = stack.pop()
+        part.push([px, py])
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = px + dx
+          const ny = py + dy
+          if (nx >= 0 && ny >= 0 && nx < CELLS.width && ny < CELLS.height && grid[ny][nx] && !done[ny][nx]) {
+            done[ny][nx] = true
+            stack.push([nx, ny])
+          }
+        }
+      }
+      if (part.length > top.length) top = part
+    }
+  }
+  const out = grid.map((row) => row.map(() => false))
+  top.forEach(([x, y]) => {
+    out[y][x] = true
+  })
+  return { grid: out, size: top.length }
+}
+// the corridors: the largest connected floor, then only what is CLEARANCE cells (a square round the cell, so the corners too)
+// from everything that is not floor, then the largest connected part of that
+const firstPass = largest(floor)
+const clear = firstPass.grid.map((row, y) =>
+  row.map((v, x) => {
+    if (!v) return false
+    for (let dy = -CLEARANCE; dy <= CLEARANCE; dy += 1) {
+      for (let dx = -CLEARANCE; dx <= CLEARANCE; dx += 1) {
+        const nx = x + dx
+        const ny = y + dy
+        if (nx < 0 || ny < 0 || nx >= CELLS.width || ny >= CELLS.height || !firstPass.grid[ny][nx]) return false
+      }
+    }
+    return true
+  })
+)
+const secondPass = largest(clear)
+const keep = secondPass.grid
+best = new Array(secondPass.size)
 
 // how far each floor cell is from the nearest cell that is not floor (4-neighbour), to put the matches in the open
 const far = keep.map((row) => row.map((v) => (v ? Infinity : 0)))
@@ -106,7 +153,7 @@ for (let head = 0; head < queue.length; head += 1) {
 // the starting places: in the open (4 cells or more from a wall), the first the most open cell of the middle of the house, the
 // others as far from the ones before as they can be
 const open = []
-far.forEach((row, y) => row.forEach((d, x) => { if (d >= 4) open.push({ x, y, d }) }))
+far.forEach((row, y) => row.forEach((d, x) => { if (d >= 5) open.push({ x, y, d }) }))
 const centre = { x: CELLS.width / 2, y: CELLS.height * 0.6 }
 const first = open.reduce((a, b) => (b.d - 0.05 * Math.hypot(b.x - centre.x, b.y - centre.y) > a.d - 0.05 * Math.hypot(a.x - centre.x, a.y - centre.y) ? b : a))
 const spawn = [first]
@@ -136,7 +183,7 @@ export const HOUSE_MAP_WALK_HEIGHT = HOUSE_MAP_WALK_ROWS.length
 // - walkSpeed: cells a second, so a match walks as fast on the screen as it did on the earlier room (2.2 of its
 //   64 cells a second, there 3983 pixels wide; here 200 cells over 4800 pixels),
 // - spawnCells: where the matches of the room start; startCell: where a match that is added starts;
-// - overviewFocus: what the camera looks at while it follows no match (the first starting place, in the open middle of the house).
+// - overviewFocus: what the camera looks at while it follows no match (a little above the first starting place, so that the corridor is in the middle of the view and not the dark ground under the house).
 const collision = []
 HOUSE_MAP_WALK_ROWS.forEach((row, y) => {
   for (let x = 0; x < row.length; x += 1) if (row[x] !== '.') collision.push({ x, y })
@@ -150,10 +197,10 @@ export const HOUSE_MAP_WALK = Object.freeze({
   walkSpeed: (2.2 * 3983) / 64 / (4800 / HOUSE_MAP_WALK_WIDTH),
   spawnCells: HOUSE_MAP_SPAWN_CELLS,
   startCell: HOUSE_MAP_SPAWN_CELLS[0],
-  overviewFocus: { x: ${first.x}, y: ${first.y} },
+  overviewFocus: { x: ${first.x}, y: ${first.y - 8} },
 })
 `
 writeFileSync('lib/house-map-walk.mjs', text)
 console.log('sheet', SHEET.width, 'x', SHEET.height, 'offset', offsetX, offsetY, 'outside', outside)
-console.log('floor cells', floor.flat().filter(Boolean).length, 'kept (largest connected)', best.length)
+console.log('floor cells', floor.flat().filter(Boolean).length, 'largest connected', firstPass.size, 'kept with clearance', secondPass.size)
 console.log('spawn', spawn.map(({ x, y, d }) => `${x}:${y}(d${d})`).join(' '))

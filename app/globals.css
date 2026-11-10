@@ -6247,9 +6247,14 @@ html[data-force-landscape] .stage {
   aspect-ratio: 4 / 3;
 }
 
-/* the matches keep the size they had on the screen (the map is now 4800 wide where it was 3983) */
+/* the matches were 3.1117% of the map wide (the size they had on the screen when the map was 3983 wide); they are a fifth larger now
+   (3.73%), and the ones made in the sidebar the same (37px to 44px) */
 .experience-shell.second-stage .wandering-character {
-  width: 3.1117%;
+  width: 3.7341%;
+}
+
+.experience-shell.second-stage .wandering-character-entity {
+  width: 44px;
 }
 
 .experience-shell.second-stage .wandering-character-entity > .wandering-character {
