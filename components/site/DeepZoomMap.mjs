@@ -25,6 +25,7 @@ import {
   setCameraProgress,
   VIDEO_FRAME_CODE,
 } from '../../lib/deep-zoom-map.mjs'
+import { HOUSE_PATCHES } from '../../lib/house-patches.mjs'
 
 // Old wheel and touch amounts were in clip progress; this many units of zoom (z) make one.
 const Z_PER_PROGRESS = 3.5
@@ -42,7 +43,7 @@ const MAX_SPIN_SPEED = 0.16
 const SPIN_IDLE_MS = 90
 // Changes with every new set of the map's pictures: browsers keep pictures for minutes, and an old
 // copy of one picture next to the new others (e.g. frames without the land channel) breaks the look.
-const PICTURES = 'v=5'
+const PICTURES = 'v=7'
 const withVersion = (url) => `${url}?${PICTURES}`
 // This close below the hand-over the clip is already sought to its frame, so it is ready.
 const PRESEEK_Z = 0.45
@@ -214,6 +215,15 @@ function setFrameGeometry(node, state) {
 // The frame number is read from a small strip of its own, so the big frame canvas never has to be
 // read back (which would keep it off the graphics card and make every frame slow to draw and upload).
 let codeStrip = null
+// The atlas of the houses' new shapes for the clip's last frames (lib/house-patches.mjs), once it has loaded.
+let housePatchAtlas = null
+function layHousePatch(context, frame) {
+  const patch = HOUSE_PATCHES.frames[frame]
+  if (!patch || !housePatchAtlas) return
+  const [x, y, width, height, atlasX, atlasY] = patch
+  const unit = context.canvas.width / ZOOM_VIDEO.bufferWidth
+  context.drawImage(housePatchAtlas, atlasX, atlasY, width, height, x * unit, y * unit, width * unit, height * unit)
+}
 function drawFrame(canvasNode, videoNode) {
   if (!canvasNode || !videoNode || videoNode.readyState < 2) return null
   const context = canvasNode.getContext('2d')
@@ -235,6 +245,7 @@ function drawFrame(canvasNode, videoNode) {
       const x = Math.round(bit * blockWidth + blockWidth / 2)
       frame = (frame << 1) | (strip[x * 4] < 128 ? 1 : 0)
     }
+    layHousePatch(context, frame)
     return frame
   } catch {
     return Math.round(videoNode.currentTime * 24)
@@ -700,6 +711,9 @@ export function DeepZoomMap() {
       }
       image.src = withVersion(assetPath(src.slice(1)))
     }
+    loadImage(HOUSE_PATCHES.src, (image) => {
+      housePatchAtlas = image
+    })
     loadImage(ZOOM_PATH.houses.lastFrame, (image) => {
       lastFrame = darkenRoads(image)
       if (housesDrawn) show()
